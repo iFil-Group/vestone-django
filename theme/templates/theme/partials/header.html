@@ -1,0 +1,82 @@
+{% load static %}
+<header class="site-header" data-header>
+    <div class="site-topbar">
+        <div class="site-topbar__inner">
+            <ul class="site-topbar__list">
+                <li>
+                    <a href="tel:+48227555044" class="site-topbar__link">
+                        <span class="site-topbar__label">Tel.</span>
+                        +48 22 755 50 44
+                    </a>
+                </li>
+                <li>
+                    <a href="mailto:informacja@vestone.pl" class="site-topbar__link">
+                        <span class="site-topbar__label">E-mail</span>
+                        informacja@vestone.pl
+                    </a>
+                </li>
+                <li class="site-topbar__item--accent">
+                    <a href="tel:+48518518518" class="site-topbar__link">
+                        <span class="site-topbar__label">Infolinia</span>
+                        518 518 518
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="site-header__bar">
+        <div class="site-header__inner">
+            <a href="/" class="site-logo" aria-label="Vestone — strona główna">
+                <img
+                    src="{% static 'img/logo.png' %}"
+                    alt="Vestone"
+                    class="site-logo__img"
+                    width="190"
+                    height="52"
+                >
+            </a>
+
+            <button
+                type="button"
+                class="site-nav-toggle"
+                aria-expanded="false"
+                aria-controls="site-nav-panel"
+                data-nav-toggle
+            >
+                <span class="site-nav-toggle__lines" aria-hidden="true"></span>
+                <span class="visually-hidden">Menu</span>
+            </button>
+
+            <nav class="site-nav" id="site-nav-panel" aria-label="Główne menu" data-nav-panel>
+                <ul class="site-nav__list">
+                    {% for item in nav_items %}
+                    <li class="site-nav__item{% if item.children %} site-nav__item--has-sub{% endif %}">
+                        {% if item.children %}
+                        <details class="site-nav__details">
+                            <summary class="site-nav__link {{ item.active }}">
+                                <span>{{ item.label }}</span>
+                                <svg class="site-nav__chevron" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
+                                    <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </summary>
+                            <ul class="site-nav__sub">
+                                {% for child in item.children %}
+                                <li>
+                                    <a href="{{ child.url }}" class="site-nav__sublink">{{ child.label }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </details>
+                        {% else %}
+                        <a href="{{ item.url }}" class="site-nav__link {{ item.active }}">{{ item.label }}</a>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <a href="/gdzie-kupic/" class="site-header__cta">Gdzie kupić</a>
+            </nav>
+        </div>
+    </div>
+</header>

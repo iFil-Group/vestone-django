@@ -1,0 +1,81 @@
+{% load static %}
+<footer class="site-footer">
+    <div class="site-footer__top">
+        <div class="site-footer__inner site-footer__grid">
+            <div class="site-footer__brand">
+                <a href="/" class="site-footer__logo-link">
+                    <img
+                        src="{% static 'img/logo-white.png' %}"
+                        alt="Vestone"
+                        class="site-footer__logo"
+                        width="235"
+                        height="65"
+                    >
+                </a>
+                <p class="site-footer__tagline">
+                    Kostka brukowa, płyty tarasowe i rozwiązania do przestrzeni na zewnątrz.
+                </p>
+            </div>
+
+            <div class="site-footer__col">
+                <h2 class="site-footer__heading">Kontakt</h2>
+                <address class="site-footer__address">
+                    <span class="site-footer__company">Budokrusz S.A. Odrano Wola</span>
+                    ul. Osowiecka 47<br>
+                    05-825 Grodzisk Mazowiecki
+                </address>
+                <ul class="site-footer__contacts">
+                    <li>
+                        <span class="site-footer__label">Telefon</span>
+                        <a href="tel:+48227555044">+48 22 755 50 44</a>
+                    </li>
+                    <li>
+                        <span class="site-footer__label">E-mail</span>
+                        <a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a>
+                    </li>
+                    <li>
+                        <span class="site-footer__label">Infolinia</span>
+                        <a href="tel:+48518518518">518 518 518</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="site-footer__col">
+                <h2 class="site-footer__heading">Nasza oferta</h2>
+                <ul class="site-footer__links site-footer__links--empty">
+                </ul>
+            </div>
+
+            <div class="site-footer__col site-footer__col--nav">
+                <h2 class="site-footer__heading">O nas</h2>
+                <ul class="site-footer__links">
+                    {% for link in about_footer_links %}
+                    <li><a href="{{ link.url }}">{{ link.label }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="site-footer__col site-footer__col--nav">
+                <h2 class="site-footer__heading">Przydatne linki</h2>
+                <ul class="site-footer__links">
+                    <li><a href="/produkty/">Produkty</a></li>
+                    <li><a href="/barwy-i-powierzchnie/">Barwy i powierzchnie</a></li>
+                    <li><a href="/gdzie-kupic/">Gdzie kupić</a></li>
+                    <li><a href="/porady/">Porady</a></li>
+                    <li><a href="/do-pobrania/">Do pobrania</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="site-footer__bottom">
+        <div class="site-footer__inner site-footer__bottom-inner">
+            <p class="site-footer__copy">&copy; {% now "Y" %} Vestone — Budokrusz S.A.</p>
+            <ul class="site-footer__legal">
+                <li><a href="/dokumenty/polityka-prywatnosci/">Polityka prywatności</a></li>
+                <li><a href="/dokumenty/regulamin-serwisu/">Regulamin serwisu</a></li>
+                <li><a href="/dokumenty/obowiazek-informacyjny/">Obowiązek informacyjny</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>

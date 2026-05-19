@@ -1,0 +1,45 @@
+{% extends "theme/base_cms.html" %}
+
+{% block title %}Logowanie — Vestone CMS{% endblock %}
+
+{% block content %}
+<div class="login-card">
+    <div class="login-card__brand">
+        <span class="login-card__logo">Vestone</span>
+        <p class="login-card__subtitle">Panel CMS</p>
+    </div>
+
+    {% if form.errors %}
+    <div class="login-alert" role="alert">
+        Nieprawidłowy login lub hasło. Spróbuj ponownie.
+    </div>
+    {% endif %}
+
+    <form method="post" class="login-form" novalidate>
+        {% csrf_token %}
+        <div class="login-field">
+            <label for="id_username">Login</label>
+            <input
+                type="text"
+                name="username"
+                id="id_username"
+                autocomplete="username"
+                required
+                autofocus
+                {% if form.username.value %}value="{{ form.username.value }}"{% endif %}
+            >
+        </div>
+        <div class="login-field">
+            <label for="id_password">Hasło</label>
+            <input
+                type="password"
+                name="password"
+                id="id_password"
+                autocomplete="current-password"
+                required
+            >
+        </div>
+        <button type="submit" class="login-submit">Zaloguj się</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dostęp — Vestone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'theme/css/site-access.css' %}">
+</head>
+<body class="site-access">
+    <div class="site-access__backdrop" aria-hidden="true"></div>
+
+    <main class="site-access__main">
+        <div class="site-access__card">
+            <img
+                src="{% static 'img/logo-white.png' %}"
+                alt="Vestone"
+                class="site-access__logo"
+                width="220"
+                height="60"
+            >
+
+            {% if error %}
+            <p class="site-access__error" role="alert">Nieprawidłowe hasło. Spróbuj ponownie.</p>
+            {% endif %}
+
+            <form method="post" class="site-access__form">
+                {% csrf_token %}
+                {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+                <label class="site-access__field" for="site-access-password">
+                    <span class="site-access__label">Hasło</span>
+                    <input
+                        type="password"
+                        name="password"
+                        id="site-access-password"
+                        autocomplete="current-password"
+                        required
+                        autofocus
+                    >
+                </label>
+                <button type="submit" class="site-access__submit">Wejdź na stronę</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{% extends "theme/base_public.html" %}
+
+{% block body %}
+<div class="site-shell">
+    {% include "theme/partials/header.html" %}
+
+    <main class="site-main" id="main">
+        {% block main %}{% endblock %}
+    </main>
+
+    {% include "theme/partials/footer.html" %}
+</div>
+{% endblock %}

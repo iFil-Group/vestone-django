@@ -1,0 +1,13 @@
+{% extends "website/layout.html" %}
+
+{% block title %}{{ page_title }} — Vestone{% endblock %}
+
+{% block main %}
+{% include "website/partials/page_hero.html" %}
+
+<section class="page-body">
+    <div class="page-body__inner">
+        {% block page_content %}{% endblock %}
+    </div>
+</section>
+{% endblock %}

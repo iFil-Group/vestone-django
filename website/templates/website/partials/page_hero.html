@@ -1,0 +1,9 @@
+<header class="page-hero{% if page_hero_modifier %} {{ page_hero_modifier }}{% endif %}">
+    <div class="page-hero__inner">
+        {% include "website/partials/breadcrumbs.html" %}
+        <h1 class="page-hero__title">{{ page_heading }}</h1>
+        {% if page_lead %}
+        <p class="page-hero__lead">{{ page_lead }}</p>
+        {% endif %}
+    </div>
+</header>

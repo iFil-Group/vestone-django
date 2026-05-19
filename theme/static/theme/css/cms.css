@@ -1,0 +1,116 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body.cms-body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #1a1a1a;
+    background: linear-gradient(145deg, #f0f2f5 0%, #e4e8ec 100%);
+}
+
+.cms-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2.5rem 2rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.login-card__brand {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-card__logo {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.login-card__subtitle {
+    margin: 0.35rem 0 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.login-alert {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: #9b1c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.login-field label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.login-field input {
+    padding: 0.65rem 0.85rem;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-field input:focus {
+    outline: none;
+    border-color: #1a1a1a;
+    box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
+}
+
+.login-submit {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.login-submit:hover {
+    background: #333;
+}
+
+.login-submit:focus-visible {
+    outline: 2px solid #1a1a1a;
+    outline-offset: 2px;
+}
