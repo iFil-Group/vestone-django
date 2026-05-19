@@ -22,6 +22,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "website.middleware.SiteAccessMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -84,6 +85,13 @@ USE_I18N = config("USE_I18N", cast=bool)
 USE_TZ = config("USE_TZ", cast=bool)
 
 STATIC_URL = config("STATIC_URL")
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="",
+    cast=Csv(),
+)
 
 LOGIN_URL = config("LOGIN_URL")
 LOGIN_REDIRECT_URL = config("LOGIN_REDIRECT_URL")
