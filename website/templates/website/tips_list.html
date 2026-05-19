@@ -1,0 +1,18 @@
+{% extends "website/page.html" %}
+{% load static %}
+
+{% block title %}Porady — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<ul class="tips-grid">
+    {% for tip in tips %}
+    <li>
+        {% include "website/partials/tip_card.html" with tip=tip placeholder_img=placeholder_img %}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

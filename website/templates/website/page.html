@@ -2,10 +2,13 @@
 
 {% block title %}{{ page_title }} — Vestone{% endblock %}
 
+{% block extra_head %}{% endblock %}
+{% block extra_scripts %}{% endblock %}
+
 {% block main %}
 {% include "website/partials/page_hero.html" %}
 
-<section class="page-body">
+<section class="page-body{% if page_body_class %} {{ page_body_class }}{% endif %}">
     <div class="page-body__inner">
         {% block page_content %}{% endblock %}
     </div>

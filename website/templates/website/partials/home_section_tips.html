@@ -1,0 +1,56 @@
+<section class="home-tips" aria-labelledby="{{ section_id|default:'home-tips-heading' }}">
+    <div class="home-tips__inner">
+        <div class="home-tips__header">
+            {% include "website/partials/section_heading.html" with title="Porady" id=section_id|default:'home-tips-heading' %}
+            <div class="home-tips__header-side">
+                <p class="home-tips__lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+                <a href="/porady/" class="home-tips__btn">Zobacz wszystkie</a>
+            </div>
+        </div>
+
+        <ul class="home-tips__grid">
+            <li>
+                <article class="home-tip-card">
+                    <a href="/porady/" class="home-tip-card__link">
+                        <span class="home-tip-card__media">
+                            <img src="{{ placeholder_img }}" alt="" loading="lazy" width="400" height="260">
+                        </span>
+                        <span class="home-tip-card__body">
+                            <time class="home-tip-card__date" datetime="2026-03-12">12.03.2026</time>
+                            <h3 class="home-tip-card__title">Lorem ipsum dolor sit amet</h3>
+                            <span class="home-tip-card__more">Lorem ipsum</span>
+                        </span>
+                    </a>
+                </article>
+            </li>
+            <li>
+                <article class="home-tip-card">
+                    <a href="/porady/" class="home-tip-card__link">
+                        <span class="home-tip-card__media">
+                            <img src="{{ placeholder_img }}" alt="" loading="lazy" width="400" height="260">
+                        </span>
+                        <span class="home-tip-card__body">
+                            <time class="home-tip-card__date" datetime="2026-02-28">28.02.2026</time>
+                            <h3 class="home-tip-card__title">Consectetur adipiscing elit</h3>
+                            <span class="home-tip-card__more">Lorem ipsum</span>
+                        </span>
+                    </a>
+                </article>
+            </li>
+            <li>
+                <article class="home-tip-card">
+                    <a href="/porady/" class="home-tip-card__link">
+                        <span class="home-tip-card__media">
+                            <img src="{{ placeholder_img }}" alt="" loading="lazy" width="400" height="260">
+                        </span>
+                        <span class="home-tip-card__body">
+                            <time class="home-tip-card__date" datetime="2026-01-15">15.01.2026</time>
+                            <h3 class="home-tip-card__title">Sed do eiusmod tempor incididunt</h3>
+                            <span class="home-tip-card__more">Lorem ipsum</span>
+                        </span>
+                    </a>
+                </article>
+            </li>
+        </ul>
+    </div>
+</section>

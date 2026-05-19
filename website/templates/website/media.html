@@ -1,0 +1,24 @@
+{% extends "website/page.html" %}
+{% load static %}
+
+{% block title %}Dla mediów — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<div class="split-page">
+    <div class="split-page__content prose">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec sed odio dui.</p>
+        <h3>Materiały prasowe</h3>
+        <p>Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean eu leo quam.</p>
+        <h3>Kontakt dla mediów</h3>
+        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante.</p>
+        <p>Donec ullamcorper nulla non metus auctor fringilla. Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+    </div>
+    <aside class="split-page__aside">
+        {% include "website/partials/contact_form_sticky.html" with form_id_prefix="media" form_title="Zapytanie medialne" %}
+    </aside>
+</div>
+{% endblock %}

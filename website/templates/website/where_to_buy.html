@@ -1,0 +1,22 @@
+{% extends "website/layout.html" %}
+{% load static %}
+
+{% block title %}Gdzie kupić — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+{% endblock %}
+
+{% block main %}
+{% include "website/partials/page_hero.html" %}
+
+<div class="map-fullpage">
+    <img
+        class="map-fullpage__img"
+        src="{{ placeholder_img }}"
+        alt=""
+        width="1920"
+        height="1080"
+    >
+</div>
+{% endblock %}

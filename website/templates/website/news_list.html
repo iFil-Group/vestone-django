@@ -1,0 +1,18 @@
+{% extends "website/page.html" %}
+{% load static %}
+
+{% block title %}Aktualności — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<ul class="tips-grid">
+    {% for post in news_posts %}
+    <li>
+        {% include "website/partials/tip_card.html" with tip=post placeholder_img=placeholder_img detail_url_prefix="/o-nas/aktualnosci" %}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

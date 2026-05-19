@@ -1,0 +1,33 @@
+<section class="home-contact" aria-labelledby="{{ section_id|default:'home-contact-heading' }}">
+    <div class="home-contact__bg" aria-hidden="true">
+        <img src="{{ placeholder_img }}" alt="" width="1920" height="900">
+    </div>
+    <div class="home-contact__inner">
+        <div class="home-contact__intro">
+            {% include "website/partials/section_heading.html" with title="Kontakt" id=section_id|default:'home-contact-heading' modifier="light" %}
+            <p class="home-contact__lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu leo quam pellentesque ornare sem lacinia quam venenatis.</p>
+        </div>
+
+        <form class="home-contact__form" action="#" method="post" novalidate>
+            <div class="home-contact__field">
+                <label class="home-contact__label" for="{{ form_prefix|default:'contact' }}-email">E-mail</label>
+                <input class="home-contact__input" type="email" id="{{ form_prefix|default:'contact' }}-email" name="email" autocomplete="email" placeholder="np. jan.kowalski@example.com" required>
+            </div>
+            <div class="home-contact__field">
+                <label class="home-contact__label" for="{{ form_prefix|default:'contact' }}-phone">Telefon</label>
+                <input class="home-contact__input" type="tel" id="{{ form_prefix|default:'contact' }}-phone" name="phone" autocomplete="tel" placeholder="np. +48 500 000 000">
+            </div>
+            <div class="home-contact__field">
+                <label class="home-contact__label" for="{{ form_prefix|default:'contact' }}-subject">Temat rozmowy</label>
+                <input class="home-contact__input" type="text" id="{{ form_prefix|default:'contact' }}-subject" name="subject" placeholder="W czym możemy pomóc?" required>
+            </div>
+            <div class="home-contact__field home-contact__field--checkbox">
+                <input class="home-contact__checkbox" type="checkbox" id="{{ form_prefix|default:'contact' }}-gdpr" name="gdpr" required>
+                <label class="home-contact__checkbox-label" for="{{ form_prefix|default:'contact' }}-gdpr">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="/dokumenty/polityka-prywatnosci/">Polityka prywatności</a>.
+                </label>
+            </div>
+            <button type="submit" class="home-contact__submit">Wyślij wiadomość</button>
+        </form>
+    </div>
+</section>

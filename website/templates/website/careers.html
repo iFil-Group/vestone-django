@@ -1,0 +1,84 @@
+{% extends "website/page.html" %}
+{% load static %}
+
+{% block title %}Praca i kariera — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<div class="careers">
+    <div class="careers__jobs">
+        <h2 class="careers__jobs-title">Aktualne oferty</h2>
+        <ul class="careers__list">
+            {% for job in jobs %}
+            <li>
+                <article class="job-card" id="oferta-{{ job.id }}">
+                    <h3 class="job-card__title">{{ job.title }}</h3>
+                    <p class="job-card__meta">
+                        <span class="job-card__location">{{ job.location }}</span>
+                        <span class="job-card__type">{{ job.type }}</span>
+                    </p>
+                    <p class="job-card__excerpt">{{ job.excerpt }}</p>
+                    <a href="#rekrutacja" class="job-card__apply" data-job-apply="{{ job.id }}">
+                        Aplikuj na to stanowisko
+                    </a>
+                </article>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="careers__form-wrap" id="rekrutacja">
+        <form class="careers__form" action="#" method="post" enctype="multipart/form-data" novalidate data-careers-form>
+            <h2 class="careers__form-title">Formularz rekrutacyjny</h2>
+
+            <div class="form-field">
+                <label class="form-field__label" for="career-name">Imię i nazwisko</label>
+                <input class="form-field__input" type="text" id="career-name" name="name" placeholder="Jan Kowalski" required>
+            </div>
+            <div class="form-field">
+                <label class="form-field__label" for="career-email">E-mail</label>
+                <input class="form-field__input" type="email" id="career-email" name="email" placeholder="jan.kowalski@example.com" required>
+            </div>
+            <div class="form-field">
+                <label class="form-field__label" for="career-phone">Telefon</label>
+                <input class="form-field__input" type="tel" id="career-phone" name="phone" placeholder="+48 500 000 000" required>
+            </div>
+            <div class="form-field">
+                <label class="form-field__label" for="career-position">Stanowisko</label>
+                <select class="form-field__input form-field__select" id="career-position" name="position" required data-careers-position>
+                    {% for job in jobs %}
+                    <option value="{{ job.id }}">{{ job.title }} — {{ job.location }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-field">
+                <span class="form-field__label">CV</span>
+                <label class="file-drop" data-file-drop>
+                    <input type="file" class="file-drop__input" name="cv" accept=".pdf,.doc,.docx" required data-file-input>
+                    <span class="file-drop__inner">
+                        <svg class="file-drop__icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="file-drop__text" data-file-label>Przeciągnij plik lub kliknij, aby wybrać</span>
+                        <span class="file-drop__hint">PDF, DOC, DOCX — max. 10 MB</span>
+                    </span>
+                </label>
+            </div>
+            <div class="form-field form-field--checkbox">
+                <input class="form-field__checkbox" type="checkbox" id="career-gdpr" name="gdpr" required>
+                <label class="form-field__checkbox-label" for="career-gdpr">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="/dokumenty/polityka-prywatnosci/">Polityka prywatności</a>.
+                </label>
+            </div>
+            <button type="submit" class="form-field__submit">Wyślij aplikację</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'theme/js/careers.js' %}" defer></script>
+{% endblock %}

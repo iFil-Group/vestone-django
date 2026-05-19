@@ -1,0 +1,27 @@
+<form class="sticky-form" action="#" method="post" novalidate>
+    <h2 class="sticky-form__title">{{ form_title|default:"Formularz kontaktowy" }}</h2>
+
+    <div class="form-field">
+        <label class="form-field__label" for="{{ form_id_prefix }}-name">Imię i nazwisko</label>
+        <input class="form-field__input" type="text" id="{{ form_id_prefix }}-name" name="name" placeholder="Jan Kowalski" required>
+    </div>
+    <div class="form-field">
+        <label class="form-field__label" for="{{ form_id_prefix }}-email">E-mail</label>
+        <input class="form-field__input" type="email" id="{{ form_id_prefix }}-email" name="email" placeholder="jan.kowalski@example.com" required>
+    </div>
+    <div class="form-field">
+        <label class="form-field__label" for="{{ form_id_prefix }}-phone">Telefon</label>
+        <input class="form-field__input" type="tel" id="{{ form_id_prefix }}-phone" name="phone" placeholder="+48 500 000 000">
+    </div>
+    <div class="form-field">
+        <label class="form-field__label" for="{{ form_id_prefix }}-message">Wiadomość</label>
+        <textarea class="form-field__input form-field__textarea" id="{{ form_id_prefix }}-message" name="message" rows="4" placeholder="Lorem ipsum dolor sit amet…" required></textarea>
+    </div>
+    <div class="form-field form-field--checkbox">
+        <input class="form-field__checkbox" type="checkbox" id="{{ form_id_prefix }}-gdpr" name="gdpr" required>
+        <label class="form-field__checkbox-label" for="{{ form_id_prefix }}-gdpr">
+            Lorem ipsum dolor sit amet. <a href="/dokumenty/polityka-prywatnosci/">Polityka prywatności</a>.
+        </label>
+    </div>
+    <button type="submit" class="form-field__submit">Wyślij</button>
+</form>

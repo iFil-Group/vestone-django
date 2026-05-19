@@ -1,0 +1,102 @@
+{% extends "website/layout.html" %}
+{% load static %}
+
+{% block title %}{{ product.title }} — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}">
+{% endblock %}
+
+{% block main %}
+<div class="product-page product-page--detail">
+    {% include "website/partials/page_hero.html" %}
+
+    <article class="product-detail" id="karta-produktu">
+        <div class="product-detail__shell">
+            <div class="product-detail__main">
+                <div class="product-detail__copy">
+                    <p class="product-detail__text">{{ product.description }}</p>
+                    <p class="product-detail__text">{{ product.description_extra }}</p>
+
+                    <dl class="product-detail__specs">
+                        {% for spec in product.specs %}
+                        <div class="product-detail__spec">
+                            <dt>{{ spec.label }}</dt>
+                            <dd>{{ spec.value }}</dd>
+                        </div>
+                        {% endfor %}
+                    </dl>
+                </div>
+
+                <div class="product-detail__visual" data-product-pins>
+                    <div class="product-detail__image-wrap">
+                        <img
+                            class="product-detail__image"
+                            src="{{ placeholder_img }}"
+                            alt="{{ product.title }}"
+                            width="800"
+                            height="600"
+                        >
+                        {% for pin in product.pins %}
+                        <button
+                            type="button"
+                            class="product-pin"
+                            style="--pin-x: {{ pin.x }}%; --pin-y: {{ pin.y }}%;"
+                            aria-describedby="pin-tip-{{ forloop.counter }}"
+                            data-product-pin
+                        >
+                            <span class="product-pin__dot" aria-hidden="true"></span>
+                            <span class="product-pin__tooltip" id="pin-tip-{{ forloop.counter }}" role="tooltip">
+                                {{ pin.text }}
+                            </span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="product-gallery" aria-label="Galeria zdjęć produktu" data-product-gallery>
+            <div class="product-gallery__viewport">
+                <div class="product-gallery__track" data-product-gallery-track>
+                    {% for image in product.gallery %}
+                    <div class="product-gallery__slide">
+                        <img
+                            class="product-gallery__img"
+                            src="{{ placeholder_img }}"
+                            alt="{{ image.alt }}"
+                            width="640"
+                            height="480"
+                            loading="lazy"
+                        >
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </article>
+
+    <section class="product-related" aria-labelledby="product-related-heading">
+        <div class="product-related__inner">
+            {% include "website/partials/section_heading.html" with title="Sprawdź inne produkty" id="product-related-heading" %}
+            <ul class="products-grid">
+                {% for item in related_products %}
+                <li>
+                    {% include "website/partials/product_card.html" with product=item placeholder_img=placeholder_img %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+
+    {% include "website/partials/home_section_map.html" with placeholder_img=placeholder_img section_id="product-map-heading" %}
+    {% include "website/partials/home_section_tips.html" with placeholder_img=placeholder_img section_id="product-tips-heading" %}
+    {% include "website/partials/home_section_contact.html" with placeholder_img=placeholder_img section_id="product-contact-heading" form_prefix="product-contact" %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'theme/js/product-pins.js' %}" defer></script>
+<script src="{% static 'theme/js/product-gallery.js' %}" defer></script>
+{% endblock %}
