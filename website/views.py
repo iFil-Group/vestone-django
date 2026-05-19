@@ -13,11 +13,7 @@ def _safe_next_url(request, url):
 
 
 def _site_access_password_ok(password):
-    if not password:
-        return False
-    if settings.SITE_ACCESS_PASSWORD and password == settings.SITE_ACCESS_PASSWORD:
-        return True
-    return password == settings.SITE_ACCESS_FALLBACK_PASSWORD
+    return bool(password) and password in settings.SITE_ACCESS_PASSWORDS
 
 
 def site_unlock(request):
