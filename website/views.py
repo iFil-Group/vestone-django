@@ -144,7 +144,18 @@ def product_detail(request, category_slug, product_slug):
 
 
 def surfaces(request):
-    return _page(request, "Barwy i powierzchnie")
+    from .content_data import PLACEHOLDER_IMG, PRODUCT_FILTERS
+
+    return render(
+        request,
+        "website/surfaces.html",
+        {
+            "page_title": "Barwy i powierzchnie",
+            "page_heading": "Barwy i powierzchnie",
+            "product_filters": PRODUCT_FILTERS,
+            "placeholder_img": PLACEHOLDER_IMG,
+        },
+    )
 
 
 def where_to_buy(request):

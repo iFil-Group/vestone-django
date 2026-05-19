@@ -546,6 +546,20 @@
     color: var(--vestone-gray-muted);
 }
 
+.product-page__empty {
+    margin: 0;
+    padding: 2.5rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--vestone-gray-muted);
+    background: #f7f8f9;
+    border: 1px solid var(--vestone-line);
+    border-radius: 3px;
+}
+
 /* —— Product detail card —— */
 
 .product-detail {

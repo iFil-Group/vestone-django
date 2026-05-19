@@ -1,0 +1,24 @@
+{% extends "website/layout.html" %}
+{% load static %}
+
+{% block title %}Barwy i powierzchnie — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}">
+{% endblock %}
+
+{% block main %}
+<div class="product-page product-page--category product-page--surfaces">
+    {% include "website/partials/product_filters.html" with product_filters=product_filters page_heading=page_heading %}
+
+    <div class="product-page__results product-page__results--category">
+        <div class="product-page__results-inner">
+            <p class="product-page__empty">Brak produktów</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'theme/js/product-filters.js' %}" defer></script>
+{% endblock %}
