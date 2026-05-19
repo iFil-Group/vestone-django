@@ -12,13 +12,21 @@ def _safe_next_url(request, url):
     return "/"
 
 
+def _site_access_password_ok(password):
+    if not password:
+        return False
+    if settings.SITE_ACCESS_PASSWORD and password == settings.SITE_ACCESS_PASSWORD:
+        return True
+    return password == settings.SITE_ACCESS_FALLBACK_PASSWORD
+
+
 def site_unlock(request):
     if request.session.get("site_access_granted"):
         return redirect(_safe_next_url(request, request.GET.get("next")))
 
     error = False
     if request.method == "POST":
-        if request.POST.get("password") == settings.SITE_ACCESS_PASSWORD:
+        if _site_access_password_ok(request.POST.get("password")):
             request.session["site_access_granted"] = True
             request.session.set_expiry(60 * 60 * 24 * 14)
             next_url = request.POST.get("next") or request.GET.get("next")

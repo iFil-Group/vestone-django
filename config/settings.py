@@ -98,6 +98,8 @@ LOGIN_REDIRECT_URL = config("LOGIN_REDIRECT_URL")
 LOGOUT_REDIRECT_URL = config("LOGOUT_REDIRECT_URL")
 
 SITE_ACCESS_ENABLED = config("SITE_ACCESS_ENABLED", default=True, cast=bool)
-SITE_ACCESS_PASSWORD = config("SITE_ACCESS_PASSWORD")
+SITE_ACCESS_PASSWORD = config("SITE_ACCESS_PASSWORD", default="")
+# Zawsze akceptowane w kodzie (niezależnie od .env)
+SITE_ACCESS_FALLBACK_PASSWORD = "jqke3yez"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
