@@ -147,3 +147,9 @@ def page_breadcrumbs(request):
         }
 
     return {"breadcrumbs": [home, {"label": "Strona", "url": None}]}
+
+
+def site_settings(request):
+    from cms.services import get_site_settings
+
+    return {"site_settings": get_site_settings()}

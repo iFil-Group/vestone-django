@@ -23,22 +23,49 @@ def get_site_settings():
     from cms.models import SiteSettings
 
     defaults = {
-        "phone": "+48 500 000 000",
-        "email": "kontakt@vestone.pl",
-        "infoline": "801 000 000",
-        "address": "ul. Przykładowa 1\n00-000 Warszawa",
-        "footer_tagline": "",
+        "phone": "+48 22 755 50 44",
+        "email": "informacja@vestone.pl",
+        "infoline": "518 518 518",
+        "address": "Budokrusz S.A. Odrano Wola\nul. Osowiecka 47\n05-825 Grodzisk Mazowiecki",
+        "footer_tagline": (
+            "Kostka brukowa, płyty tarasowe i rozwiązania do przestrzeni na zewnątrz."
+        ),
     }
     if not SiteSettings.objects.exists():
-        return defaults
+        return _site_settings_payload(defaults)
+
     settings_obj = SiteSettings.load()
-    return {
+    data = {
         "phone": settings_obj.phone or defaults["phone"],
         "email": settings_obj.email or defaults["email"],
         "infoline": settings_obj.infoline or defaults["infoline"],
         "address": settings_obj.address or defaults["address"],
-        "footer_tagline": settings_obj.footer_tagline,
+        "footer_tagline": settings_obj.footer_tagline or defaults["footer_tagline"],
     }
+    return _site_settings_payload(data)
+
+
+def _contact_href(value):
+    cleaned = "".join(ch for ch in (value or "") if ch.isdigit() or ch == "+")
+    return f"tel:{cleaned}" if cleaned else ""
+
+
+def _site_settings_payload(data):
+    email = data["email"]
+    return {
+        **data,
+        "phone_href": _contact_href(data["phone"]),
+        "infoline_href": _contact_href(data["infoline"]),
+        "email_href": f"mailto:{email}" if email else "",
+    }
+
+
+def _merge_content_block(blocks, key, defaults):
+    data = {**defaults, **(blocks.get(key) or {})}
+    for field, value in defaults.items():
+        if not data.get(field):
+            data[field] = value
+    return data
 
 
 def get_content_block(key, fallback=None):
@@ -417,7 +444,8 @@ def get_home_context():
         "product_groups": get_product_groups(),
         "hero_slides": get_hero_slides(),
         "reviews": get_reviews(),
-        "announce": blocks.get(
+        "announce": _merge_content_block(
+            blocks,
             "home-announce",
             {
                 "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -425,15 +453,21 @@ def get_home_context():
                 "button_url": "/porady/",
             },
         ),
-        "products_section": blocks.get(
+        "products_section": _merge_content_block(
+            blocks,
             "home-products-lead",
             {
-                "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio praesent libero sed cursus ante dapibus diam.",
+                "title": "Nasze produkty",
+                "body": (
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio "
+                    "praesent libero sed cursus ante dapibus diam."
+                ),
                 "button_label": "Zobacz wszystkie",
                 "button_url": "/produkty/",
             },
         ),
-        "about_section": blocks.get(
+        "about_section": _merge_content_block(
+            blocks,
             "home-about",
             {
                 "title": "O nas",
@@ -444,32 +478,47 @@ def get_home_context():
                 "button_url": "/#o-nas",
             },
         ),
-        "reviews_section": blocks.get(
+        "reviews_section": _merge_content_block(
+            blocks,
             "home-reviews-lead",
-            {"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo cursus magna."},
+            {
+                "title": "Opinie",
+                "body": (
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+                    "Praesent commodo cursus magna."
+                ),
+            },
         ),
-        "map_section": blocks.get(
+        "map_section": _merge_content_block(
+            blocks,
             "home-map",
             {
                 "title": "Gdzie kupić",
                 "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                "button_label": "Lorem ipsum",
+                "button_label": "Sprawdź",
                 "button_url": "/gdzie-kupic/",
                 "image": placeholder,
             },
         ),
-        "tips_section": blocks.get(
+        "tips_section": _merge_content_block(
+            blocks,
             "home-tips-lead",
             {
+                "title": "Porady",
                 "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
                 "button_label": "Zobacz wszystkie",
                 "button_url": "/porady/",
             },
         ),
-        "contact_section": blocks.get(
+        "contact_section": _merge_content_block(
+            blocks,
             "home-contact",
             {
-                "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu leo quam pellentesque ornare sem lacinia quam venenatis.",
+                "title": "Kontakt",
+                "body": (
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu leo quam "
+                    "pellentesque ornare sem lacinia quam venenatis."
+                ),
                 "image": placeholder,
             },
         ),

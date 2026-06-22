@@ -47,6 +47,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "website.context_processors.site_navigation",
                 "website.context_processors.page_breadcrumbs",
+                "website.context_processors.site_settings",
             ],
         },
     },

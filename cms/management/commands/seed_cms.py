@@ -29,13 +29,20 @@ class Command(BaseCommand):
     help = "Minimalny seed CMS: bloki strony (Lorem ipsum) + 1 produkt, 1 porada, 1 aktualność"
 
     def handle(self, *args, **options):
-        SiteSettings.objects.get_or_create(
+        SiteSettings.objects.update_or_create(
             pk=1,
             defaults={
-                "phone": "+48 500 000 000",
-                "email": "kontakt@vestone.pl",
-                "infoline": "801 000 000",
-                "address": "ul. Przykładowa 1\n00-000 Warszawa",
+                "phone": "+48 22 755 50 44",
+                "email": "informacja@vestone.pl",
+                "infoline": "518 518 518",
+                "address": (
+                    "Budokrusz S.A. Odrano Wola\n"
+                    "ul. Osowiecka 47\n"
+                    "05-825 Grodzisk Mazowiecki"
+                ),
+                "footer_tagline": (
+                    "Kostka brukowa, płyty tarasowe i rozwiązania do przestrzeni na zewnątrz."
+                ),
             },
         )
 
@@ -51,11 +58,11 @@ class Command(BaseCommand):
     def _seed_content_blocks(self):
         blocks = [
             ("home-announce", ContentBlock.GROUP_HOME, "Pasek ogłoszeń", "", "", LOREM, "", "Sprawdź", "/porady/"),
-            ("home-products-lead", ContentBlock.GROUP_HOME, "Nasze produkty — lead", "", "", LOREM, "", "Zobacz wszystkie", "/produkty/"),
+            ("home-products-lead", ContentBlock.GROUP_HOME, "Nasze produkty — lead", "Nasze produkty", "", LOREM, "", "Zobacz wszystkie", "/produkty/"),
             ("home-about", ContentBlock.GROUP_HOME, "O nas (sekcja)", "O nas", "", LOREM_LONG, LOREM, "Lorem ipsum", "/#o-nas"),
-            ("home-reviews-lead", ContentBlock.GROUP_HOME, "Opinie — lead", "", "", LOREM, "", "", ""),
+            ("home-reviews-lead", ContentBlock.GROUP_HOME, "Opinie — lead", "Opinie", "", LOREM, "", "", ""),
             ("home-map", ContentBlock.GROUP_HOME, "Gdzie kupić (sekcja)", "Gdzie kupić", "", LOREM, "", "Sprawdź", "/gdzie-kupic/"),
-            ("home-tips-lead", ContentBlock.GROUP_HOME, "Porady — lead", "", "", LOREM, "", "Zobacz wszystkie", "/porady/"),
+            ("home-tips-lead", ContentBlock.GROUP_HOME, "Porady — lead", "Porady", "", LOREM, "", "Zobacz wszystkie", "/porady/"),
             ("home-contact", ContentBlock.GROUP_HOME, "Kontakt — lead", "Kontakt", "", LOREM, "", "", ""),
             ("page-warranty", ContentBlock.GROUP_ABOUT, "Warunki gwarancji", "Warunki gwarancji", "", LOREM_LONG, "", "", ""),
             ("page-media", ContentBlock.GROUP_ABOUT, "Dla mediów", "Dla mediów", "", LOREM_LONG, "", "", ""),

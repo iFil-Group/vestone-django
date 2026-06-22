@@ -4,21 +4,21 @@
         <div class="site-topbar__inner">
             <ul class="site-topbar__list">
                 <li>
-                    <a href="tel:+48227555044" class="site-topbar__link">
+                    <a href="{{ site_settings.phone_href }}" class="site-topbar__link">
                         <span class="site-topbar__label">Tel.</span>
-                        +48 22 755 50 44
+                        {{ site_settings.phone }}
                     </a>
                 </li>
                 <li>
-                    <a href="mailto:informacja@vestone.pl" class="site-topbar__link">
+                    <a href="{{ site_settings.email_href }}" class="site-topbar__link">
                         <span class="site-topbar__label">E-mail</span>
-                        informacja@vestone.pl
+                        {{ site_settings.email }}
                     </a>
                 </li>
                 <li class="site-topbar__item--accent">
-                    <a href="tel:+48518518518" class="site-topbar__link">
+                    <a href="{{ site_settings.infoline_href }}" class="site-topbar__link">
                         <span class="site-topbar__label">Infolinia</span>
-                        518 518 518
+                        {{ site_settings.infoline }}
                     </a>
                 </li>
             </ul>

@@ -13,29 +13,27 @@
                     >
                 </a>
                 <p class="site-footer__tagline">
-                    Kostka brukowa, płyty tarasowe i rozwiązania do przestrzeni na zewnątrz.
+                    {{ site_settings.footer_tagline }}
                 </p>
             </div>
 
             <div class="site-footer__col">
                 <h2 class="site-footer__heading">Kontakt</h2>
                 <address class="site-footer__address">
-                    <span class="site-footer__company">Budokrusz S.A. Odrano Wola</span>
-                    ul. Osowiecka 47<br>
-                    05-825 Grodzisk Mazowiecki
+                    {{ site_settings.address|linebreaksbr }}
                 </address>
                 <ul class="site-footer__contacts">
                     <li>
                         <span class="site-footer__label">Telefon</span>
-                        <a href="tel:+48227555044">+48 22 755 50 44</a>
+                        <a href="{{ site_settings.phone_href }}">{{ site_settings.phone }}</a>
                     </li>
                     <li>
                         <span class="site-footer__label">E-mail</span>
-                        <a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a>
+                        <a href="{{ site_settings.email_href }}">{{ site_settings.email }}</a>
                     </li>
                     <li>
                         <span class="site-footer__label">Infolinia</span>
-                        <a href="tel:+48518518518">518 518 518</a>
+                        <a href="{{ site_settings.infoline_href }}">{{ site_settings.infoline }}</a>
                     </li>
                 </ul>
             </div>
