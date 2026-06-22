@@ -568,6 +568,20 @@ body {
     min-height: 12rem;
 }
 
+.error-page {
+    max-width: 36rem;
+}
+
+.error-page__text {
+    margin: 0 0 1.5rem;
+    font-size: 1.05rem;
+    color: var(--vestone-gray-muted);
+}
+
+.error-page__cta {
+    margin-top: 0;
+}
+
 /* —— Footer —— */
 
 .site-footer {

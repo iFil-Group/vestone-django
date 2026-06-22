@@ -1,7 +1,17 @@
+{% load cms_extras %}
 {% if messages %}
-<div class="cms-messages">
+<div class="cms-toast-stack" aria-live="polite" aria-atomic="true">
     {% for message in messages %}
-    <p class="cms-message cms-message--{{ message.tags|default:'info' }}">{{ message }}</p>
+    <div
+        class="cms-toast cms-toast--{{ message.tags|message_type }}"
+        data-cms-toast
+        data-duration="2500"
+        role="status"
+    >
+        <p class="cms-toast__text">{{ message }}</p>
+        <button type="button" class="cms-toast__close" data-cms-toast-close aria-label="Zamknij">×</button>
+        <div class="cms-toast__progress" aria-hidden="true"></div>
+    </div>
     {% endfor %}
 </div>
 {% endif %}

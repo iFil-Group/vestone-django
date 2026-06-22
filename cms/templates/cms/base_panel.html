@@ -22,14 +22,15 @@
             </div>
         </header>
         <main class="cms-content">
-            {% include "cms/partials/messages.html" %}
             {% block panel_content %}{% endblock %}
         </main>
     </div>
 </div>
+{% include "cms/partials/messages.html" %}
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="{% static 'theme/js/cms-file-inputs.js' %}" defer></script>
+<script src="{% static 'theme/js/cms-toasts.js' %}" defer></script>
 {% block panel_scripts %}{% endblock %}
 {% endblock %}

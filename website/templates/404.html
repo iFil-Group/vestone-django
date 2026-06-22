@@ -1,0 +1,18 @@
+{% extends "website/layout.html" %}
+
+{% block title %}404 — Vestone{% endblock %}
+
+{% block main %}
+{% include "website/partials/page_hero.html" %}
+
+<section class="page-body">
+    <div class="page-body__inner">
+        <div class="error-page">
+            <p class="error-page__text">
+                Przepraszamy, ale adres, którego szukasz, nie prowadzi do żadnej strony na naszej witrynie.
+            </p>
+            <a href="/" class="site-header__cta error-page__cta">Wróć na stronę główną</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

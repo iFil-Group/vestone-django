@@ -316,3 +316,20 @@ def document(request, slug):
 
         raise Http404
     return _page(request, title)
+
+
+def page_not_found(request, exception=None):
+    return render(
+        request,
+        "404.html",
+        {
+            "page_title": "404",
+            "page_heading": "404",
+            "page_lead": "Taka strona nie istnieje.",
+            "breadcrumbs": [
+                {"label": "Strona główna", "url": "/"},
+                {"label": "404", "url": None},
+            ],
+        },
+        status=404,
+    )

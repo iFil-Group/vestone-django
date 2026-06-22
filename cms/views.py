@@ -116,29 +116,33 @@ def product_group_edit(request, pk=None):
 @login_required
 def product_edit(request, pk=None):
     instance = get_object_or_404(Product, pk=pk) if pk else None
+    product = instance
 
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES, instance=instance)
         if form.is_valid():
             product = form.save()
-            spec_formset = ProductSpecFormSet(request.POST, instance=product, prefix="specs")
-            pin_formset = ProductPinFormSet(request.POST, instance=product, prefix="pins")
-            gallery_formset = ProductGalleryFormSet(
-                request.POST,
-                request.FILES,
-                instance=product,
-                prefix="gallery",
-            )
-            if (
-                spec_formset.is_valid()
-                and pin_formset.is_valid()
-                and gallery_formset.is_valid()
-            ):
-                spec_formset.save()
-                pin_formset.save()
-                gallery_formset.save()
-                messages.success(request, "Produkt został zapisany.")
-                return redirect("cms_products")
+
+        spec_formset = ProductSpecFormSet(request.POST, instance=product, prefix="specs")
+        pin_formset = ProductPinFormSet(request.POST, instance=product, prefix="pins")
+        gallery_formset = ProductGalleryFormSet(
+            request.POST,
+            request.FILES,
+            instance=product,
+            prefix="gallery",
+        )
+
+        if (
+            form.is_valid()
+            and spec_formset.is_valid()
+            and pin_formset.is_valid()
+            and gallery_formset.is_valid()
+        ):
+            spec_formset.save()
+            pin_formset.save()
+            gallery_formset.save()
+            messages.success(request, "Produkt został zapisany.")
+            return redirect("cms_products")
     else:
         form = ProductForm(instance=instance)
         spec_formset = ProductSpecFormSet(instance=instance, prefix="specs")
@@ -156,7 +160,7 @@ def product_edit(request, pk=None):
             pin_formset=pin_formset,
             gallery_formset=gallery_formset,
             back_url=reverse("cms_products"),
-            product_image_url=_product_image_url(instance),
+            product_image_url=_product_image_url(product),
         ),
     )
 
