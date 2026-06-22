@@ -14,9 +14,11 @@
     <div class="product-page__results product-page__results--category">
         <div class="product-page__results-inner">
             {% if surface_items %}
+            <p class="product-page__count" data-product-count>{{ surface_items|length }} produkt{% if surface_items|length != 1 %}ów{% endif %}</p>
+            <p class="product-page__empty" data-product-empty hidden>Brak produktów pasujących do filtrów.</p>
             <ul class="products-grid" data-product-results>
                 {% for item in surface_items %}
-                <li data-product-item>
+                <li data-product-item data-search="{{ item.search_text|default:item.title|lower }}">
                     <article class="product-card product-card--static">
                         <span class="product-card__media">
                             <img src="{{ item.image|default:placeholder_img }}" alt="{{ item.title }}" loading="lazy" width="400" height="300">

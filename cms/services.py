@@ -174,10 +174,15 @@ def _product_dict(product, placeholder):
     }
 
 
+def _product_list_search_text(product):
+    parts = [product.title, product.group.title if product.group_id else ""]
+    parts.extend(spec.value for spec in product.specs.all())
+    return " ".join(part for part in parts if part).lower()
+
+
 def category_products(category_slug):
     from cms.models import Product
 
-    placeholder = get_placeholder()
     products = Product.objects.filter(
         group__slug=category_slug,
         is_active=True,
@@ -189,12 +194,19 @@ def category_products(category_slug):
                 "slug": product.slug,
                 "title": product.title,
                 "category_slug": category_slug,
+                "search_text": _product_list_search_text(product),
             }
             for product in products
         ]
     from website.content_data import category_products as static_products
 
-    return static_products(category_slug)
+    return [
+        {
+            **item,
+            "search_text": item.get("search_text") or item.get("title", "").lower(),
+        }
+        for item in static_products(category_slug)
+    ]
 
 
 def get_product(category_slug, product_slug):
@@ -255,6 +267,17 @@ def get_surface_items():
                 "slug": item.slug,
                 "title": item.title,
                 "image": _image_url(item.image, placeholder),
+                "search_text": " ".join(
+                    part
+                    for part in (
+                        item.title,
+                        item.color,
+                        item.surface,
+                        item.format_size,
+                        item.thickness,
+                    )
+                    if part
+                ).lower(),
             }
             for item in items
         ]
