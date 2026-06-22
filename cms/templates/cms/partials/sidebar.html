@@ -1,0 +1,12 @@
+<aside class="cms-sidebar" aria-label="Nawigacja CMS">
+    <a href="{% url 'cms_dashboard' %}" class="cms-sidebar__brand">
+        <span class="cms-sidebar__logo">Vestone</span>
+        <span class="cms-sidebar__subtitle">Panel CMS</span>
+    </a>
+    <nav class="cms-sidebar__nav">
+        <a href="{% url 'cms_dashboard' %}" class="cms-sidebar__link{% if not active_section %} is-active{% endif %}">Pulpit</a>
+        {% for section in cms_sections %}
+        <a href="{% url section.url_name %}" class="cms-sidebar__link{% if active_section == section.slug %} is-active{% endif %}">{{ section.label }}</a>
+        {% endfor %}
+    </nav>
+</aside>

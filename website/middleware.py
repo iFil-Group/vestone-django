@@ -32,5 +32,6 @@ class SiteAccessMiddleware:
             settings.STATIC_URL,
             "/admin/",
             "/ifil-log/",
+            "/media/",
         )
         return any(path.startswith(prefix) for prefix in prefixes)

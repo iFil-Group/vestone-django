@@ -7,12 +7,18 @@
 body.cms-body {
     margin: 0;
     min-height: 100vh;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    color: #1a1a1a;
-    background: linear-gradient(145deg, #f0f2f5 0%, #e4e8ec 100%);
+    font-family: "Barlow", system-ui, sans-serif;
+    color: #2a343c;
+    background: linear-gradient(160deg, #374650 0%, #2a343c 100%);
 }
 
-.cms-main {
+body.cms-body--login {
+    background:
+        linear-gradient(115deg, transparent 52%, rgba(225, 25, 70, 0.18) 52%),
+        linear-gradient(160deg, #374650 0%, #2a343c 100%);
+}
+
+.cms-main--login {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -38,10 +44,12 @@ body.cms-body {
 
 .login-card__logo {
     display: block;
-    font-size: 1.5rem;
+    font-family: "Barlow Condensed", "Barlow", sans-serif;
+    font-size: 1.75rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    color: #2a343c;
 }
 
 .login-card__subtitle {
@@ -89,17 +97,20 @@ body.cms-body {
 
 .login-field input:focus {
     outline: none;
-    border-color: #1a1a1a;
-    box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
+    border-color: #e11946;
+    box-shadow: 0 0 0 3px rgba(225, 25, 70, 0.15);
 }
 
 .login-submit {
     margin-top: 0.5rem;
     padding: 0.75rem 1rem;
+    font-family: "Barlow Condensed", "Barlow", sans-serif;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: #fff;
-    background: #1a1a1a;
+    background: #e11946;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -107,7 +118,7 @@ body.cms-body {
 }
 
 .login-submit:hover {
-    background: #333;
+    background: #b81438;
 }
 
 .login-submit:focus-visible {

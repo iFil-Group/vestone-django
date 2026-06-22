@@ -207,8 +207,15 @@
     border-bottom: 2px solid rgba(255, 255, 255, 0.65);
 }
 
-.product-card.product-card--cta:hover .product-card__cta-link {
-    border-bottom-color: var(--vestone-white);
+.product-card--static {
+    pointer-events: none;
+    cursor: default;
+}
+
+.product-card--static:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--vestone-line);
 }
 
 /* —— Product filters (kategoria) —— */

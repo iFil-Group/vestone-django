@@ -1,0 +1,35 @@
+<div class="cms-file" data-cms-file>
+    {% if widget.is_initial %}
+    <div class="cms-file__current" data-cms-file-current>
+        <p class="cms-file__current-label">Aktualny plik</p>
+        <div class="cms-file__current-body">
+            {% if widget.value.url %}
+            <img src="{{ widget.value.url }}" alt="" class="cms-file__preview">
+            {% endif %}
+            <span class="cms-file__current-name">{{ widget.value.name }}</span>
+        </div>
+        {% if not widget.required %}
+        <div class="visually-hidden" data-cms-file-clear-field>
+            <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}">
+        </div>
+        <button type="button" class="cms-btn cms-btn--ghost cms-btn--danger" data-cms-file-clear>Usuń plik</button>
+        {% endif %}
+    </div>
+    {% endif %}
+    <div class="cms-file__control">
+        <label class="cms-file__button" for="{{ widget.attrs.id }}">
+            <span class="cms-file__button-icon" aria-hidden="true">↑</span>
+            {% if widget.is_initial %}Zmień plik{% else %}Wybierz plik{% endif %}
+        </label>
+        <span class="cms-file__name" data-cms-file-name>
+            {% if widget.is_initial %}Wybierz nowy plik{% else %}Nie wybrano pliku{% endif %}
+        </span>
+    </div>
+    <img class="cms-file__preview cms-file__preview--pending" data-cms-file-preview hidden alt="">
+    <input
+        type="{{ widget.type }}"
+        name="{{ widget.name }}"
+        {% include "django/forms/widgets/attrs.html" %}
+        class="cms-file__input"
+    >
+</div>

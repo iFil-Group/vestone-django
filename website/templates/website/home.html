@@ -8,54 +8,31 @@
 {% endblock %}
 
 {% block main %}
-{% with img="https://ifil-group-spaces.fra1.cdn.digitaloceanspaces.com/Customers/common/placeholder-ifil.png" %}
 <div class="home">
     <aside class="home-announce" aria-label="Komunikat">
         <div class="home-announce__inner">
-            <p class="home-announce__text">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            </p>
-            <a href="/porady/" class="home-announce__btn">Sprawdź</a>
+            <p class="home-announce__text">{{ announce.body }}</p>
+            {% if announce.button_label %}
+            <a href="{{ announce.button_url|default:'/porady/' }}" class="home-announce__btn">{{ announce.button_label }}</a>
+            {% endif %}
         </div>
     </aside>
 
     <section class="home-hero" aria-label="Slider główny" data-slider>
         <div class="home-hero__track">
-            <article class="home-hero__slide is-active" data-slide>
-                <img class="home-hero__media" src="{{ img }}" alt="" width="1920" height="800">
+            {% for slide in hero_slides %}
+            <article class="home-hero__slide{% if forloop.first %} is-active{% endif %}" data-slide>
+                <img class="home-hero__media" src="{{ slide.image|default:placeholder_img }}" alt="" width="1920" height="800">
                 <div class="home-hero__overlay">
                     <div class="home-hero__shell">
                         <div class="home-hero__content">
-                            <h1 class="home-hero__title">Lorem ipsum dolor sit amet</h1>
-                            <p class="home-hero__lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                            {% if forloop.first %}<h1 class="home-hero__title">{{ slide.title }}</h1>{% else %}<h2 class="home-hero__title">{{ slide.title }}</h2>{% endif %}
+                            <p class="home-hero__lead">{{ slide.lead }}</p>
                         </div>
                     </div>
                 </div>
             </article>
-
-            <article class="home-hero__slide" data-slide>
-                <img class="home-hero__media" src="{{ img }}" alt="" width="1920" height="800">
-                <div class="home-hero__overlay">
-                    <div class="home-hero__shell">
-                        <div class="home-hero__content">
-                            <h2 class="home-hero__title">Ut enim ad minim veniam</h2>
-                            <p class="home-hero__lead">Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor.</p>
-                        </div>
-                    </div>
-                </div>
-            </article>
-
-            <article class="home-hero__slide" data-slide>
-                <img class="home-hero__media" src="{{ img }}" alt="" width="1920" height="800">
-                <div class="home-hero__overlay">
-                    <div class="home-hero__shell">
-                        <div class="home-hero__content">
-                            <h2 class="home-hero__title">Duis aute irure dolor in reprehenderit</h2>
-                            <p class="home-hero__lead">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                        </div>
-                    </div>
-                </div>
-            </article>
+            {% endfor %}
         </div>
 
         <div class="home-hero__controls">
@@ -74,8 +51,8 @@
             <div class="home-products__header">
                 {% include "website/partials/section_heading.html" with title="Nasze produkty" id="home-products-heading" %}
                 <div class="home-products__header-side">
-                    <p class="home-products__lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio praesent libero sed cursus ante dapibus diam.</p>
-                    <a href="/produkty/" class="home-products__btn">Zobacz wszystkie</a>
+                    <p class="home-products__lead">{{ products_section.body }}</p>
+                    <a href="{{ products_section.button_url|default:'/produkty/' }}" class="home-products__btn">{{ products_section.button_label|default:'Zobacz wszystkie' }}</a>
                 </div>
             </div>
 
@@ -84,7 +61,7 @@
                 <li>
                     <a href="/produkty/{{ group.slug }}/" class="home-product-card">
                         <span class="home-product-card__media">
-                            <img src="{{ img }}" alt="" loading="lazy" width="400" height="300">
+                            <img src="{{ group.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="300">
                         </span>
                         <span class="home-product-card__title">{{ group.title }}</span>
                     </a>
@@ -97,13 +74,15 @@
     <section class="home-about" id="o-nas" aria-labelledby="home-about-heading">
         <div class="home-about__inner">
             <div class="home-about__visual">
-                <img src="{{ img }}" alt="" class="home-about__img" loading="lazy" width="720" height="540">
+                <img src="{{ about_section.image|default:placeholder_img }}" alt="" class="home-about__img" loading="lazy" width="720" height="540">
             </div>
             <div class="home-about__copy">
-                {% include "website/partials/section_heading.html" with title="O nas" id="home-about-heading" modifier="light" %}
-                <p class="home-about__text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
-                <p class="home-about__text">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</p>
-                <a href="/#o-nas" class="home-about__link">Lorem ipsum</a>
+                {% include "website/partials/section_heading.html" with title=about_section.title|default:"O nas" id="home-about-heading" modifier="light" %}
+                <p class="home-about__text">{{ about_section.body }}</p>
+                {% if about_section.body_extra %}<p class="home-about__text">{{ about_section.body_extra }}</p>{% endif %}
+                {% if about_section.button_label %}
+                <a href="{{ about_section.button_url|default:'/#o-nas' }}" class="home-about__link">{{ about_section.button_label }}</a>
+                {% endif %}
             </div>
         </div>
     </section>
@@ -112,32 +91,22 @@
         <div class="home-reviews__inner">
             <div class="home-reviews__intro">
                 {% include "website/partials/section_heading.html" with title="Opinie" id="home-reviews-heading" %}
-                <p class="home-reviews__lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo cursus magna, vel scelerisque nisl consectetur.</p>
+                <p class="home-reviews__lead">{{ reviews_section.body }}</p>
             </div>
 
             <div class="home-reviews__carousel">
                 <div class="home-reviews__viewport">
                     <div class="home-reviews__track">
-                        <div class="home-reviews__slide is-active" data-slide>
+                        {% for slide in review_slides %}
+                        <div class="home-reviews__slide{% if forloop.first %} is-active{% endif %}" data-slide>
+                            {% for review in slide %}
                             <blockquote class="home-review">
-                            <p class="home-review__quote">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor.</p>
-                            <footer class="home-review__author">Jan Kowalski</footer>
-                        </blockquote>
-                            <blockquote class="home-review">
-                            <p class="home-review__quote">Cras mattis consectetur purus sit amet fermentum. Donec sed odio dui. Maecenas faucibus mollis interdum lorem ipsum.</p>
-                            <footer class="home-review__author">Anna Nowak</footer>
+                                <p class="home-review__quote">{{ review.quote }}</p>
+                                <footer class="home-review__author">{{ review.author }}</footer>
                             </blockquote>
+                            {% endfor %}
                         </div>
-                        <div class="home-reviews__slide" data-slide>
-                            <blockquote class="home-review">
-                            <p class="home-review__quote">Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis dis parturient montes.</p>
-                            <footer class="home-review__author">Piotr Wiśniewski</footer>
-                        </blockquote>
-                            <blockquote class="home-review">
-                            <p class="home-review__quote">Aenean lacinia bibendum nulla sed consectetur. Integer posuere erat a ante venenatis dapibus posuere velit aliquet.</p>
-                            <footer class="home-review__author">Maria Kowalczyk</footer>
-                            </blockquote>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="home-reviews__nav">
@@ -155,13 +124,13 @@
 
     <section class="home-map" aria-labelledby="home-map-heading">
         <div class="home-map__media-wrap">
-            <img class="home-map__media" src="{{ img }}" alt="" width="1600" height="700">
+            <img class="home-map__media" src="{{ map_section.image|default:placeholder_img }}" alt="" width="1600" height="700">
         </div>
         <div class="home-map__panel">
             <div class="home-map__box">
-                <h2 class="home-map__title" id="home-map-heading">Gdzie kupić</h2>
-                <p class="home-map__text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                <a href="/gdzie-kupic/" class="home-map__cta">Lorem ipsum</a>
+                <h2 class="home-map__title" id="home-map-heading">{{ map_section.title|default:"Gdzie kupić" }}</h2>
+                <p class="home-map__text">{{ map_section.body }}</p>
+                <a href="{{ map_section.button_url|default:'/gdzie-kupic/' }}" class="home-map__cta">{{ map_section.button_label|default:"Sprawdź" }}</a>
             </div>
         </div>
     </section>
@@ -171,66 +140,40 @@
             <div class="home-tips__header">
                 {% include "website/partials/section_heading.html" with title="Porady" id="home-tips-heading" %}
                 <div class="home-tips__header-side">
-                    <p class="home-tips__lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
-                    <a href="/porady/" class="home-tips__btn">Zobacz wszystkie</a>
+                    <p class="home-tips__lead">{{ tips_section.body }}</p>
+                    <a href="{{ tips_section.button_url|default:'/porady/' }}" class="home-tips__btn">{{ tips_section.button_label|default:'Zobacz wszystkie' }}</a>
                 </div>
             </div>
 
             <ul class="home-tips__grid">
+                {% for tip in featured_tips %}
                 <li>
                     <article class="home-tip-card">
-                        <a href="/porady/" class="home-tip-card__link">
+                        <a href="/porady/{{ tip.slug }}/" class="home-tip-card__link">
                             <span class="home-tip-card__media">
-                                <img src="{{ img }}" alt="" loading="lazy" width="400" height="260">
+                                <img src="{{ tip.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="260">
                             </span>
                             <span class="home-tip-card__body">
-                                <time class="home-tip-card__date" datetime="2026-03-12">12.03.2026</time>
-                                <h3 class="home-tip-card__title">Lorem ipsum dolor sit amet</h3>
-                                <span class="home-tip-card__more">Lorem ipsum</span>
+                                <time class="home-tip-card__date" datetime="{{ tip.date }}">{{ tip.date_display }}</time>
+                                <h3 class="home-tip-card__title">{{ tip.title }}</h3>
+                                <span class="home-tip-card__more">Czytaj więcej</span>
                             </span>
                         </a>
                     </article>
                 </li>
-                <li>
-                    <article class="home-tip-card">
-                        <a href="/porady/" class="home-tip-card__link">
-                            <span class="home-tip-card__media">
-                                <img src="{{ img }}" alt="" loading="lazy" width="400" height="260">
-                            </span>
-                            <span class="home-tip-card__body">
-                                <time class="home-tip-card__date" datetime="2026-02-28">28.02.2026</time>
-                                <h3 class="home-tip-card__title">Consectetur adipiscing elit</h3>
-                                <span class="home-tip-card__more">Lorem ipsum</span>
-                            </span>
-                        </a>
-                    </article>
-                </li>
-                <li>
-                    <article class="home-tip-card">
-                        <a href="/porady/" class="home-tip-card__link">
-                            <span class="home-tip-card__media">
-                                <img src="{{ img }}" alt="" loading="lazy" width="400" height="260">
-                            </span>
-                            <span class="home-tip-card__body">
-                                <time class="home-tip-card__date" datetime="2026-01-15">15.01.2026</time>
-                                <h3 class="home-tip-card__title">Sed do eiusmod tempor incididunt</h3>
-                                <span class="home-tip-card__more">Lorem ipsum</span>
-                            </span>
-                        </a>
-                    </article>
-                </li>
+                {% endfor %}
             </ul>
         </div>
     </section>
 
     <section class="home-contact" id="kontakt" aria-labelledby="home-contact-heading">
         <div class="home-contact__bg" aria-hidden="true">
-            <img src="{{ img }}" alt="" width="1920" height="900">
+            <img src="{{ contact_section.image|default:placeholder_img }}" alt="" width="1920" height="900">
         </div>
         <div class="home-contact__inner">
             <div class="home-contact__intro">
                 {% include "website/partials/section_heading.html" with title="Kontakt" id="home-contact-heading" modifier="light" %}
-                <p class="home-contact__lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu leo quam pellentesque ornare sem lacinia quam venenatis.</p>
+                <p class="home-contact__lead">{{ contact_section.body }}</p>
             </div>
 
             <form class="home-contact__form" action="#" method="post" novalidate>
@@ -257,7 +200,6 @@
         </div>
     </section>
 </div>
-{% endwith %}
 {% endblock %}
 
 {% block extra_scripts %}

@@ -1,0 +1,105 @@
+{% extends "cms/base_panel.html" %}
+{% load static %}
+
+{% block panel_content %}
+<div class="cms-toolbar">
+    <a href="{{ back_url }}" class="cms-btn cms-btn--ghost">Wróć</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="cms-form" id="product-form">
+    {% csrf_token %}
+
+    <section class="cms-section">
+        <h2 class="cms-section__title">Podstawowe dane</h2>
+        {% for field in form %}
+        {% include "cms/partials/field.html" with field=field %}
+        {% endfor %}
+    </section>
+
+    <section class="cms-section cms-pin-editor" data-pin-editor data-pin-prefix="pins">
+        <div class="cms-pin-editor__head">
+            <h2 class="cms-section__title">Piny na zdjęciu</h2>
+            <p class="cms-pin-editor__help">
+                Kliknij zdjęcie, aby dodać pin. Przeciągnij pin, aby zmienić pozycję. Edytuj tekst tooltipa poniżej.
+            </p>
+        </div>
+
+        <div class="cms-pin-editor__stage" data-pin-stage>
+            <img
+                class="cms-pin-editor__image"
+                data-pin-image
+                src="{{ product_image_url }}"
+                alt="Podgląd zdjęcia produktu"
+            >
+            <div class="cms-pin-editor__overlay" data-pin-overlay aria-hidden="true"></div>
+        </div>
+
+        {{ pin_formset.management_form }}
+
+        <div class="cms-pin-editor__rows" data-pin-rows>
+            {% for pin_form in pin_formset %}
+            <div class="cms-pin-row{% if pin_form.errors %} cms-pin-row--error{% endif %}" data-pin-row data-pin-index="{{ forloop.counter0 }}">
+                {% if pin_form.non_field_errors %}
+                <p class="cms-field__error">{{ pin_form.non_field_errors }}</p>
+                {% endif %}
+                {% for hidden in pin_form.hidden_fields %}{{ hidden }}{% endfor %}
+                <div class="cms-pin-row__header">
+                    <span class="cms-pin-row__label">Pin <span data-pin-label-num>{{ forloop.counter }}</span></span>
+                    <button type="button" class="cms-btn cms-btn--small cms-btn--ghost" data-pin-remove>Usuń</button>
+                </div>
+                <div class="cms-field">
+                    <label for="{{ pin_form.text.id_for_label }}">Treść tooltipa</label>
+                    {{ pin_form.text }}
+                    {% for error in pin_form.text.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+                </div>
+                {% if pin_form.DELETE %}
+                <div class="visually-hidden">{{ pin_form.DELETE }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="cms-pin-editor__actions">
+            <button type="button" class="cms-btn cms-btn--ghost" data-pin-add>Dodaj pin</button>
+        </div>
+
+        <template data-pin-empty-template>
+            <div class="cms-pin-row" data-pin-row data-pin-index="__prefix__">
+                {% with f=pin_formset.empty_form %}
+                {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                <div class="cms-pin-row__header">
+                    <span class="cms-pin-row__label">Pin <span data-pin-label-num>__num__</span></span>
+                    <button type="button" class="cms-btn cms-btn--small cms-btn--ghost" data-pin-remove>Usuń</button>
+                </div>
+                <div class="cms-field">
+                    <label for="{{ f.text.id_for_label }}">Treść tooltipa</label>
+                    {{ f.text }}
+                </div>
+                {% endwith %}
+            </div>
+        </template>
+    </section>
+
+    <section class="cms-section">
+        <h2 class="cms-section__title">Parametry</h2>
+        {{ spec_formset.management_form }}
+        {% for form in spec_formset %}
+        {% include "cms/partials/formset_row.html" with form=form %}
+        {% endfor %}
+    </section>
+
+    <section class="cms-section">
+        <h2 class="cms-section__title">Galeria</h2>
+        {{ gallery_formset.management_form }}
+        {% for form in gallery_formset %}
+        {% include "cms/partials/formset_row.html" with form=form %}
+        {% endfor %}
+    </section>
+
+    <button type="submit" class="cms-btn cms-btn--primary">Zapisz produkt</button>
+</form>
+{% endblock %}
+
+{% block panel_scripts %}
+<script src="{% static 'theme/js/cms-product-pins.js' %}" defer></script>
+{% endblock %}

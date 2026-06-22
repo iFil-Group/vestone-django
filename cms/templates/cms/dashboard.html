@@ -1,0 +1,38 @@
+{% extends "cms/base_panel.html" %}
+
+{% block title %}Panel CMS — Vestone{% endblock %}
+
+{% block panel_content %}
+<div class="cms-cards">
+    <article class="cms-card">
+        <p class="cms-card__label">Produkty</p>
+        <p class="cms-card__value">{{ stats.products }}</p>
+        <a href="{% url 'cms_products' %}" class="cms-card__link">Zarządzaj</a>
+    </article>
+    <article class="cms-card">
+        <p class="cms-card__label">Barwy i powierzchnie</p>
+        <p class="cms-card__value">{{ stats.surfaces }}</p>
+        <a href="{% url 'cms_surfaces' %}" class="cms-card__link">Zarządzaj</a>
+    </article>
+    <article class="cms-card">
+        <p class="cms-card__label">Porady</p>
+        <p class="cms-card__value">{{ stats.tips }}</p>
+        <a href="{% url 'cms_tips' %}" class="cms-card__link">Zarządzaj</a>
+    </article>
+    <article class="cms-card">
+        <p class="cms-card__label">Aktualności</p>
+        <p class="cms-card__value">{{ stats.news }}</p>
+        <a href="{% url 'cms_news' %}" class="cms-card__link">Zarządzaj</a>
+    </article>
+    <article class="cms-card">
+        <p class="cms-card__label">Pliki</p>
+        <p class="cms-card__value">{{ stats.downloads }}</p>
+        <a href="{% url 'cms_downloads' %}" class="cms-card__link">Zarządzaj</a>
+    </article>
+    <article class="cms-card">
+        <p class="cms-card__label">Bloki strony</p>
+        <p class="cms-card__value">{{ stats.blocks }}</p>
+        <a href="{% url 'cms_pages' %}" class="cms-card__link">Zarządzaj</a>
+    </article>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% load cms_extras %}
+<div class="cms-formset-row{% if form.errors %} cms-formset-row--error{% endif %}" data-cms-formset-row>
+    {% for field in form %}
+        {% if field.is_hidden %}
+        {{ field }}
+        {% elif field|is_delete_field %}
+        <div class="visually-hidden" data-cms-delete-field>{{ field }}</div>
+        {% else %}
+        {% include "cms/partials/field.html" with field=field %}
+        {% endif %}
+    {% endfor %}
+    {% if form.DELETE %}
+    <div class="cms-formset-row__actions">
+        <button type="button" class="cms-btn cms-btn--ghost cms-btn--danger" data-cms-row-delete>Usuń</button>
+    </div>
+    {% endif %}
+</div>

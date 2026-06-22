@@ -1,0 +1,54 @@
+# Wdrożenie na serwerze (Ubuntu / DigitalOcean):
+#   git pull
+#   docker compose down
+#   docker compose up -d --build   # --build gdy zmienił się Pipfile
+#
+# Kod projektu, media CMS i staticfiles są montowane z dysku hosta.
+# Baza PostgreSQL trzymana jest w wolumenie Docker (postgres_data).
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-vestone}
+      POSTGRES_USER: ${DB_USER:-vestone}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Ustaw DB_PASSWORD w pliku .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-vestone} -d ${DB_NAME:-vestone}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_ENGINE: django.db.backends.postgresql
+      SERVE_MEDIA: "true"
+    volumes:
+      # Kod z repozytorium — git pull aktualizuje pliki bez przebudowy obrazu
+      - .:/app
+      # Uploady CMS — trwałe pliki na serwerze (poza kontenerem)
+      - ./media:/app/media
+      # collectstatic — trwałe pliki na serwerze
+      - ./staticfiles:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

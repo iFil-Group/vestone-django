@@ -13,7 +13,22 @@
 
     <div class="product-page__results product-page__results--category">
         <div class="product-page__results-inner">
+            {% if surface_items %}
+            <ul class="products-grid" data-product-results>
+                {% for item in surface_items %}
+                <li data-product-item>
+                    <article class="product-card product-card--static">
+                        <span class="product-card__media">
+                            <img src="{{ item.image|default:placeholder_img }}" alt="{{ item.title }}" loading="lazy" width="400" height="300">
+                        </span>
+                        <span class="product-card__title">{{ item.title }}</span>
+                    </article>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
             <p class="product-page__empty">Brak produktów</p>
+            {% endif %}
         </div>
     </div>
 </div>

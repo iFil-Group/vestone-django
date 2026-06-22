@@ -1,0 +1,175 @@
+from datetime import date
+
+from django.core.management.base import BaseCommand
+
+from cms.models import (
+    ContentBlock,
+    HeroSlide,
+    NewsPost,
+    Product,
+    ProductGroup,
+    ProductGalleryImage,
+    ProductPin,
+    ProductSpec,
+    Review,
+    SiteSettings,
+    Tip,
+)
+from website import content_data
+
+LOREM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+LOREM_LONG = (
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor "
+    "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud "
+    "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+)
+
+
+class Command(BaseCommand):
+    help = "Minimalny seed CMS: bloki strony (Lorem ipsum) + 1 produkt, 1 porada, 1 aktualność"
+
+    def handle(self, *args, **options):
+        SiteSettings.objects.get_or_create(
+            pk=1,
+            defaults={
+                "phone": "+48 500 000 000",
+                "email": "kontakt@vestone.pl",
+                "infoline": "801 000 000",
+                "address": "ul. Przykładowa 1\n00-000 Warszawa",
+            },
+        )
+
+        self._seed_content_blocks()
+        self._seed_hero_slides()
+        self._seed_reviews()
+        self._seed_product_groups()
+        self._seed_test_product()
+        self._seed_tips()
+        self._seed_news()
+        self.stdout.write(self.style.SUCCESS("CMS seed completed (minimal demo data)."))
+
+    def _seed_content_blocks(self):
+        blocks = [
+            ("home-announce", ContentBlock.GROUP_HOME, "Pasek ogłoszeń", "", "", LOREM, "", "Sprawdź", "/porady/"),
+            ("home-products-lead", ContentBlock.GROUP_HOME, "Nasze produkty — lead", "", "", LOREM, "", "Zobacz wszystkie", "/produkty/"),
+            ("home-about", ContentBlock.GROUP_HOME, "O nas (sekcja)", "O nas", "", LOREM_LONG, LOREM, "Lorem ipsum", "/#o-nas"),
+            ("home-reviews-lead", ContentBlock.GROUP_HOME, "Opinie — lead", "", "", LOREM, "", "", ""),
+            ("home-map", ContentBlock.GROUP_HOME, "Gdzie kupić (sekcja)", "Gdzie kupić", "", LOREM, "", "Sprawdź", "/gdzie-kupic/"),
+            ("home-tips-lead", ContentBlock.GROUP_HOME, "Porady — lead", "", "", LOREM, "", "Zobacz wszystkie", "/porady/"),
+            ("home-contact", ContentBlock.GROUP_HOME, "Kontakt — lead", "Kontakt", "", LOREM, "", "", ""),
+            ("page-warranty", ContentBlock.GROUP_ABOUT, "Warunki gwarancji", "Warunki gwarancji", "", LOREM_LONG, "", "", ""),
+            ("page-media", ContentBlock.GROUP_ABOUT, "Dla mediów", "Dla mediów", "", LOREM_LONG, "", "", ""),
+            ("page-careers-intro", ContentBlock.GROUP_ABOUT, "Praca i kariera — intro", "Praca i kariera", "", LOREM, "", "", ""),
+        ]
+        for key, group, label, title, subtitle, body, body_extra, button_label, button_url in blocks:
+            ContentBlock.objects.update_or_create(
+                key=key,
+                defaults={
+                    "group": group,
+                    "label": label,
+                    "title": title,
+                    "subtitle": subtitle,
+                    "body": body,
+                    "body_extra": body_extra,
+                    "button_label": button_label,
+                    "button_url": button_url,
+                    "is_active": True,
+                },
+            )
+
+    def _seed_hero_slides(self):
+        HeroSlide.objects.all().delete()
+        HeroSlide.objects.create(
+            title=LOREM.capitalize(),
+            lead=LOREM_LONG,
+            sort_order=0,
+            is_active=True,
+        )
+
+    def _seed_reviews(self):
+        Review.objects.all().delete()
+        Review.objects.bulk_create(
+            [
+                Review(quote=LOREM_LONG, author="Jan Kowalski", sort_order=0, is_active=True),
+                Review(quote=LOREM, author="Anna Nowak", sort_order=1, is_active=True),
+            ]
+        )
+
+    def _seed_product_groups(self):
+        for index, group in enumerate(content_data.PRODUCT_GROUPS):
+            ProductGroup.objects.update_or_create(
+                slug=group["slug"],
+                defaults={
+                    "title": group["title"],
+                    "sort_order": index,
+                    "is_active": True,
+                },
+            )
+
+    def _seed_test_product(self):
+        group = ProductGroup.objects.filter(slug="plyty-tarasowe").first()
+        if group is None:
+            return
+
+        Product.objects.exclude(group=group).delete()
+
+        product, _ = Product.objects.update_or_create(
+            group=group,
+            slug=content_data.TEST_PRODUCT_SLUG,
+            defaults={
+                "title": "Produkt testowy #1",
+                "subtitle": LOREM,
+                "description": LOREM_LONG,
+                "description_extra": LOREM,
+                "is_active": True,
+            },
+        )
+
+        ProductSpec.objects.filter(product=product).delete()
+        for index, spec in enumerate(content_data.TEST_PRODUCT["specs"]):
+            ProductSpec.objects.create(
+                product=product,
+                label=spec["label"],
+                value=spec["value"],
+                sort_order=index,
+            )
+
+        ProductPin.objects.filter(product=product).delete()
+        for index, pin in enumerate(content_data.TEST_PRODUCT["pins"]):
+            ProductPin.objects.create(
+                product=product,
+                x=pin["x"],
+                y=pin["y"],
+                text=pin["text"],
+                sort_order=index,
+            )
+
+        ProductGalleryImage.objects.filter(product=product).delete()
+        for index, image in enumerate(content_data.TEST_PRODUCT.get("gallery", [])):
+            ProductGalleryImage.objects.create(
+                product=product,
+                alt=image.get("alt", product.title),
+                sort_order=index,
+            )
+
+    def _seed_tips(self):
+        Tip.objects.all().delete()
+        Tip.objects.create(
+            slug="testowa-porada",
+            title="Testowa porada",
+            excerpt=LOREM,
+            body=LOREM_LONG,
+            published_at=date.today(),
+            is_published=True,
+        )
+
+    def _seed_news(self):
+        NewsPost.objects.all().delete()
+        NewsPost.objects.create(
+            slug="testowa-aktualnosc",
+            title="Testowa aktualność",
+            excerpt=LOREM,
+            body=LOREM_LONG,
+            published_at=date.today(),
+            is_published=True,
+        )

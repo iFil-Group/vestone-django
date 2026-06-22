@@ -1,0 +1,19 @@
+{% if field.is_hidden %}
+{{ field }}
+{% else %}
+<div class="cms-field{% if field.errors %} cms-field--error{% endif %}{% if field.field.widget.input_type == 'checkbox' %} cms-field--checkbox{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}">
+    {% if field.field.widget.input_type == 'checkbox' %}
+    <span class="cms-field__label">{{ field.label }}</span>
+    <label class="cms-toggle" for="{{ field.id_for_label }}">
+        {{ field }}
+        <span class="cms-toggle__track" aria-hidden="true"></span>
+        <span class="cms-toggle__text" data-cms-toggle-text>Tak</span>
+    </label>
+    {% else %}
+    <label class="cms-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% endif %}
+    {% if field.help_text %}<p class="cms-field__help">{{ field.help_text }}</p>{% endif %}
+    {% for error in field.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+</div>
+{% endif %}

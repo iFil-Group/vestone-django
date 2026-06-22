@@ -33,7 +33,7 @@
                     <div class="product-detail__image-wrap">
                         <img
                             class="product-detail__image"
-                            src="{{ placeholder_img }}"
+                            src="{{ product.image|default:placeholder_img }}"
                             alt="{{ product.title }}"
                             width="800"
                             height="600"
@@ -64,8 +64,7 @@
                     <div class="product-gallery__slide">
                         <img
                             class="product-gallery__img"
-                            src="{{ placeholder_img }}"
-                            alt="{{ image.alt }}"
+                            src="{{ image.image|default:placeholder_img }}"
                             width="640"
                             height="480"
                             loading="lazy"

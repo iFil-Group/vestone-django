@@ -1,0 +1,68 @@
+{% extends "cms/base_panel.html" %}
+
+{% block panel_content %}
+<div class="cms-toolbar">
+    <a href="{% url 'cms_product_add' %}" class="cms-btn cms-btn--primary">Dodaj produkt</a>
+    <a href="{% url 'cms_product_group_add' %}" class="cms-btn cms-btn--ghost">Dodaj grupę</a>
+</div>
+
+<section class="cms-section">
+    <h2 class="cms-section__title">Grupy produktów</h2>
+    <div class="cms-table-wrap">
+        <table class="cms-table">
+            <thead>
+                <tr>
+                    <th>Nazwa</th>
+                    <th>Slug</th>
+                    <th>Kolejność</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for group in groups %}
+                <tr>
+                    <td>{{ group.title }}</td>
+                    <td>{{ group.slug }}</td>
+                    <td>{{ group.sort_order }}</td>
+                    <td class="cms-table__actions">
+                        <a href="{% url 'cms_product_group_edit' group.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="cms-table__empty">Brak grup.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="cms-section">
+    <h2 class="cms-section__title">Produkty</h2>
+    <div class="cms-table-wrap">
+        <table class="cms-table">
+            <thead>
+                <tr>
+                    <th>Nazwa</th>
+                    <th>Grupa</th>
+                    <th>Slug</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.group.title }}</td>
+                    <td>{{ item.slug }}</td>
+                    <td class="cms-table__actions">
+                        <a href="{% url 'cms_product_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="cms-table__empty">Brak produktów.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

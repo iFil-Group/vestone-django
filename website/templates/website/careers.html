@@ -9,6 +9,9 @@
 
 {% block page_content %}
 <div class="careers">
+    {% if page_intro.body %}
+    <p class="careers__intro">{{ page_intro.body }}</p>
+    {% endif %}
     <div class="careers__jobs">
         <h2 class="careers__jobs-title">Aktualne oferty</h2>
         <ul class="careers__list">

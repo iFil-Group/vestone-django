@@ -39,7 +39,7 @@ def site_unlock(request):
     )
 
 
-def _page(request, page_title, heading=None, lead=None):
+def _page(request, page_title, heading=None, lead=None, body=None):
     return render(
         request,
         "website/page.html",
@@ -47,26 +47,26 @@ def _page(request, page_title, heading=None, lead=None):
             "page_title": page_title,
             "page_heading": heading or page_title,
             "page_lead": lead,
+            "page_body": body,
         },
     )
 
 
 def home(request):
-    from .content_data import PRODUCT_GROUPS
+    from cms.services import get_home_context
 
-    return render(
-        request,
-        "website/home.html",
+    context = get_home_context()
+    context.update(
         {
             "page_title": "Strona główna",
             "page_heading": "Strona główna",
-            "product_groups": PRODUCT_GROUPS,
-        },
+        }
     )
+    return render(request, "website/home.html", context)
 
 
 def products_list(request):
-    from .content_data import PLACEHOLDER_IMG, PRODUCT_GROUPS
+    from cms.services import get_placeholder, get_product_groups
 
     return render(
         request,
@@ -75,8 +75,8 @@ def products_list(request):
             "page_title": "Produkty",
             "page_heading": "Produkty",
             "page_body_class": "page-body--products-catalog",
-            "product_groups": PRODUCT_GROUPS,
-            "placeholder_img": PLACEHOLDER_IMG,
+            "product_groups": get_product_groups(),
+            "placeholder_img": get_placeholder(),
         },
     )
 
@@ -84,10 +84,10 @@ def products_list(request):
 def product_category(request, category_slug):
     from django.http import Http404
 
-    from .content_data import (
-        PLACEHOLDER_IMG,
-        PRODUCT_FILTERS,
+    from cms.services import (
         category_products,
+        get_placeholder,
+        get_product_filters,
         get_product_group,
     )
 
@@ -103,8 +103,8 @@ def product_category(request, category_slug):
             "page_heading": category["title"],
             "category": category,
             "products": category_products(category_slug),
-            "product_filters": PRODUCT_FILTERS,
-            "placeholder_img": PLACEHOLDER_IMG,
+            "product_filters": get_product_filters(),
+            "placeholder_img": get_placeholder(),
         },
     )
 
@@ -112,22 +112,15 @@ def product_category(request, category_slug):
 def product_detail(request, category_slug, product_slug):
     from django.http import Http404
 
-    from .content_data import (
-        PLACEHOLDER_IMG,
-        RELATED_PRODUCTS,
-        TEST_PRODUCT,
-        TEST_PRODUCT_SLUG,
-        get_product_group,
-    )
+    from cms.services import get_placeholder, get_product, get_product_group, get_related_products
 
     category = get_product_group(category_slug)
     if category is None:
         raise Http404
 
-    if product_slug != TEST_PRODUCT_SLUG:
+    product = get_product(category_slug, product_slug)
+    if product is None:
         raise Http404
-
-    product = {**TEST_PRODUCT, "category_slug": category_slug}
 
     return render(
         request,
@@ -137,29 +130,31 @@ def product_detail(request, category_slug, product_slug):
             "page_heading": product["title"],
             "category": category,
             "product": product,
-            "related_products": RELATED_PRODUCTS,
-            "placeholder_img": PLACEHOLDER_IMG,
+            "related_products": get_related_products(exclude_slug=product_slug),
+            "placeholder_img": get_placeholder(),
         },
     )
 
 
 def surfaces(request):
-    from .content_data import PLACEHOLDER_IMG, PRODUCT_FILTERS
+    from cms.services import get_placeholder, get_product_filters, get_surface_items
 
+    surface_items = get_surface_items()
     return render(
         request,
         "website/surfaces.html",
         {
             "page_title": "Barwy i powierzchnie",
             "page_heading": "Barwy i powierzchnie",
-            "product_filters": PRODUCT_FILTERS,
-            "placeholder_img": PLACEHOLDER_IMG,
+            "product_filters": get_product_filters(),
+            "placeholder_img": get_placeholder(),
+            "surface_items": surface_items,
         },
     )
 
 
 def where_to_buy(request):
-    from .content_data import PLACEHOLDER_IMG
+    from cms.services import get_placeholder
 
     return render(
         request,
@@ -167,13 +162,13 @@ def where_to_buy(request):
         {
             "page_title": "Gdzie kupić",
             "page_heading": "Gdzie kupić",
-            "placeholder_img": PLACEHOLDER_IMG,
+            "placeholder_img": get_placeholder(),
         },
     )
 
 
 def tips(request):
-    from .content_data import PLACEHOLDER_IMG, TIPS_POSTS
+    from cms.services import get_placeholder, get_tips
 
     return render(
         request,
@@ -181,8 +176,8 @@ def tips(request):
         {
             "page_title": "Porady",
             "page_heading": "Porady",
-            "tips": TIPS_POSTS,
-            "placeholder_img": PLACEHOLDER_IMG,
+            "tips": get_tips(),
+            "placeholder_img": get_placeholder(),
         },
     )
 
@@ -190,9 +185,9 @@ def tips(request):
 def tip_detail(request, slug):
     from django.http import Http404
 
-    from .content_data import TIPS_POSTS
+    from cms.services import get_tip
 
-    tip = next((item for item in TIPS_POSTS if item["slug"] == slug), None)
+    tip = get_tip(slug)
     if tip is None:
         raise Http404
 
@@ -201,11 +196,12 @@ def tip_detail(request, slug):
         tip["title"],
         heading=tip["title"],
         lead=tip["excerpt"],
+        body=tip.get("body"),
     )
 
 
 def downloads(request):
-    from .content_data import DOWNLOAD_CATEGORIES, DOWNLOAD_GROUPS, DOWNLOAD_ITEMS
+    from cms.services import get_download_categories, get_download_groups, get_download_items
 
     return render(
         request,
@@ -213,9 +209,9 @@ def downloads(request):
         {
             "page_title": "Do pobrania",
             "page_heading": "Do pobrania",
-            "download_categories": DOWNLOAD_CATEGORIES,
-            "download_groups": DOWNLOAD_GROUPS,
-            "download_items": DOWNLOAD_ITEMS,
+            "download_categories": get_download_categories(),
+            "download_groups": get_download_groups(),
+            "download_items": get_download_items(),
         },
     )
 
@@ -225,7 +221,7 @@ def about_company(request):
 
 
 def news(request):
-    from .content_data import NEWS_POSTS, PLACEHOLDER_IMG
+    from cms.services import get_news, get_placeholder
 
     return render(
         request,
@@ -233,8 +229,8 @@ def news(request):
         {
             "page_title": "Aktualności",
             "page_heading": "Aktualności",
-            "news_posts": NEWS_POSTS,
-            "placeholder_img": PLACEHOLDER_IMG,
+            "news_posts": get_news(),
+            "placeholder_img": get_placeholder(),
         },
     )
 
@@ -242,9 +238,9 @@ def news(request):
 def news_detail(request, slug):
     from django.http import Http404
 
-    from .content_data import NEWS_POSTS
+    from cms.services import get_news_post
 
-    post = next((item for item in NEWS_POSTS if item["slug"] == slug), None)
+    post = get_news_post(slug)
     if post is None:
         raise Http404
 
@@ -253,41 +249,55 @@ def news_detail(request, slug):
         post["title"],
         heading=post["title"],
         lead=post["excerpt"],
+        body=post.get("body"),
     )
 
 
 def careers(request):
-    from .content_data import JOB_OPENINGS
+    from cms.services import get_content_block, get_job_openings
 
+    intro = get_content_block(
+        "page-careers-intro",
+        {"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."},
+    )
     return render(
         request,
         "website/careers.html",
         {
             "page_title": "Praca i kariera",
             "page_heading": "Praca i kariera",
-            "jobs": JOB_OPENINGS,
+            "jobs": get_job_openings(),
+            "page_intro": intro,
         },
     )
 
 
 def warranty(request):
+    from cms.services import get_content_block
+
+    content = get_content_block("page-warranty")
     return render(
         request,
         "website/warranty.html",
         {
             "page_title": "Warunki gwarancji",
             "page_heading": "Warunki gwarancji",
+            "page_content": content,
         },
     )
 
 
 def media(request):
+    from cms.services import get_content_block
+
+    content = get_content_block("page-media")
     return render(
         request,
         "website/media.html",
         {
             "page_title": "Dla mediów",
             "page_heading": "Dla mediów",
+            "page_content": content,
         },
     )
 

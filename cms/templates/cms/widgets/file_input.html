@@ -1,0 +1,16 @@
+<div class="cms-file" data-cms-file>
+    <div class="cms-file__control">
+        <label class="cms-file__button" for="{{ widget.attrs.id }}">
+            <span class="cms-file__button-icon" aria-hidden="true">↑</span>
+            Wybierz plik
+        </label>
+        <span class="cms-file__name" data-cms-file-name>Nie wybrano pliku</span>
+    </div>
+    <input
+        type="{{ widget.type }}"
+        name="{{ widget.name }}"
+        {% if widget.value != None %}value="{{ widget.value }}"{% endif %}
+        {% include "django/forms/widgets/attrs.html" %}
+        class="cms-file__input"
+    >
+</div>

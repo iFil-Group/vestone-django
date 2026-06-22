@@ -10,6 +10,9 @@
 
 <section class="page-body{% if page_body_class %} {{ page_body_class }}{% endif %}">
     <div class="page-body__inner">
+        {% if page_body %}
+        <div class="prose">{{ page_body|linebreaks }}</div>
+        {% endif %}
         {% block page_content %}{% endblock %}
     </div>
 </section>

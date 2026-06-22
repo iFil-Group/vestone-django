@@ -1,0 +1,35 @@
+{% extends "theme/base_cms.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/cms-panel.css' %}">
+{% endblock %}
+
+{% block body_class %}cms-body--panel{% endblock %}
+
+{% block body %}
+<div class="cms-shell">
+    {% include "cms/partials/sidebar.html" %}
+    <div class="cms-shell__main">
+        <header class="cms-topbar">
+            <div>
+                <p class="cms-topbar__eyebrow">Vestone CMS</p>
+                <h1 class="cms-topbar__title">{{ page_title }}</h1>
+            </div>
+            <div class="cms-topbar__actions">
+                <a href="/" class="cms-btn cms-btn--ghost" target="_blank" rel="noopener">Zobacz stronę</a>
+                <a href="{% url 'logout' %}" class="cms-btn cms-btn--ghost">Wyloguj</a>
+            </div>
+        </header>
+        <main class="cms-content">
+            {% include "cms/partials/messages.html" %}
+            {% block panel_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'theme/js/cms-file-inputs.js' %}" defer></script>
+{% block panel_scripts %}{% endblock %}
+{% endblock %}

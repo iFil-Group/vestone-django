@@ -87,15 +87,20 @@ USE_TZ = config("USE_TZ", cast=bool)
 STATIC_URL = config("STATIC_URL")
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_URL = config("MEDIA_URL", default="/media/")
+MEDIA_ROOT = BASE_DIR / config("MEDIA_ROOT", default="media")
+
+SERVE_MEDIA = config("SERVE_MEDIA", default=False, cast=bool)
+
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
     default="",
     cast=Csv(),
 )
 
-LOGIN_URL = config("LOGIN_URL")
-LOGIN_REDIRECT_URL = config("LOGIN_REDIRECT_URL")
-LOGOUT_REDIRECT_URL = config("LOGOUT_REDIRECT_URL")
+LOGIN_URL = config("LOGIN_URL", default="/ifil-log/")
+LOGIN_REDIRECT_URL = config("LOGIN_REDIRECT_URL", default="/ifil-log/panel/")
+LOGOUT_REDIRECT_URL = config("LOGOUT_REDIRECT_URL", default="/ifil-log/")
 
 SITE_ACCESS_ENABLED = config("SITE_ACCESS_ENABLED", default=True, cast=bool)
 SITE_ACCESS_PASSWORD = config("SITE_ACCESS_PASSWORD", default="")

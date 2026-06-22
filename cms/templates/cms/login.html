@@ -1,4 +1,4 @@
-{% extends "theme/base_cms.html" %}
+{% extends "cms/login_wrapper.html" %}
 
 {% block title %}Logowanie — Vestone CMS{% endblock %}
 
@@ -11,19 +11,19 @@
 
     {% if form.errors %}
     <div class="login-alert" role="alert">
-        Nieprawidłowy login lub hasło. Spróbuj ponownie.
+        Nieprawidłowy e-mail lub hasło. Spróbuj ponownie.
     </div>
     {% endif %}
 
     <form method="post" class="login-form" novalidate>
         {% csrf_token %}
         <div class="login-field">
-            <label for="id_username">Login</label>
+            <label for="id_username">E-mail</label>
             <input
-                type="text"
+                type="email"
                 name="username"
                 id="id_username"
-                autocomplete="username"
+                autocomplete="email"
                 required
                 autofocus
                 {% if form.username.value %}value="{{ form.username.value }}"{% endif %}

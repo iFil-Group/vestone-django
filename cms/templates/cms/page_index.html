@@ -1,0 +1,106 @@
+{% extends "cms/base_panel.html" %}
+
+{% block panel_content %}
+<section class="cms-section">
+    <h2 class="cms-section__title">Ustawienia globalne</h2>
+    <form method="post" class="cms-form">
+        {% csrf_token %}
+        {% for field in settings_form %}
+        {% include "cms/partials/field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="cms-btn cms-btn--primary">Zapisz ustawienia</button>
+    </form>
+</section>
+
+<section class="cms-section">
+    <div class="cms-toolbar">
+        <h2 class="cms-section__title">Strona główna — slajdy hero</h2>
+        <a href="{% url 'cms_hero_add' %}" class="cms-btn cms-btn--ghost">Dodaj slajd</a>
+    </div>
+    <div class="cms-table-wrap">
+        <table class="cms-table">
+            <thead><tr><th>Tytuł</th><th>Kolejność</th><th></th></tr></thead>
+            <tbody>
+                {% for slide in hero_slides %}
+                <tr>
+                    <td>{{ slide.title }}</td>
+                    <td>{{ slide.sort_order }}</td>
+                    <td class="cms-table__actions"><a href="{% url 'cms_hero_edit' slide.pk %}" class="cms-btn cms-btn--small">Edytuj</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="cms-table__empty">Brak slajdów.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="cms-section">
+    <div class="cms-toolbar">
+        <h2 class="cms-section__title">Strona główna — bloki treści</h2>
+        <a href="{% url 'cms_page_block_add' %}" class="cms-btn cms-btn--ghost">Dodaj blok</a>
+    </div>
+    <div class="cms-table-wrap">
+        <table class="cms-table">
+            <thead><tr><th>Etykieta</th><th>Klucz</th><th></th></tr></thead>
+            <tbody>
+                {% for block in home_blocks %}
+                <tr>
+                    <td>{{ block.label }}</td>
+                    <td><code>{{ block.key }}</code></td>
+                    <td class="cms-table__actions"><a href="{% url 'cms_page_block_edit' block.pk %}" class="cms-btn cms-btn--small">Edytuj</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="cms-table__empty">Brak bloków. Uruchom seed_cms.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="cms-section">
+    <div class="cms-toolbar">
+        <h2 class="cms-section__title">Opinie (strona główna)</h2>
+        <a href="{% url 'cms_review_add' %}" class="cms-btn cms-btn--ghost">Dodaj opinię</a>
+    </div>
+    <div class="cms-table-wrap">
+        <table class="cms-table">
+            <thead><tr><th>Autor</th><th></th></tr></thead>
+            <tbody>
+                {% for review in reviews %}
+                <tr>
+                    <td>{{ review.author }}</td>
+                    <td class="cms-table__actions"><a href="{% url 'cms_review_edit' review.pk %}" class="cms-btn cms-btn--small">Edytuj</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2" class="cms-table__empty">Brak opinii.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="cms-section">
+    <div class="cms-toolbar">
+        <h2 class="cms-section__title">O nas — podstrony</h2>
+        <a href="{% url 'cms_jobs' %}" class="cms-btn cms-btn--ghost">Oferty pracy</a>
+        <a href="{% url 'cms_page_block_add' %}" class="cms-btn cms-btn--ghost">Dodaj blok</a>
+    </div>
+    <div class="cms-table-wrap">
+        <table class="cms-table">
+            <thead><tr><th>Etykieta</th><th>Klucz</th><th></th></tr></thead>
+            <tbody>
+                {% for block in about_blocks %}
+                <tr>
+                    <td>{{ block.label }}</td>
+                    <td><code>{{ block.key }}</code></td>
+                    <td class="cms-table__actions"><a href="{% url 'cms_page_block_edit' block.pk %}" class="cms-btn cms-btn--small">Edytuj</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="cms-table__empty">Brak bloków O nas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

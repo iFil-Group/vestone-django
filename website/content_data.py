@@ -434,7 +434,7 @@ TEST_PRODUCT_SLUG = "testowy-produkt"
 
 TEST_PRODUCT = {
     "slug": TEST_PRODUCT_SLUG,
-    "title": "Testowy produkt",
+    "title": "Produkt testowy #1",
     "subtitle": "Lorem ipsum dolor sit amet",
     "description": (
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor "
