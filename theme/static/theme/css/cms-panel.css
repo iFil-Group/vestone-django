@@ -116,6 +116,11 @@ body.cms-body--panel {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+.cms-logout-form {
+    margin: 0;
 }
 
 .cms-content {

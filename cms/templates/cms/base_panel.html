@@ -18,7 +18,10 @@
             </div>
             <div class="cms-topbar__actions">
                 <a href="/" class="cms-btn cms-btn--ghost" target="_blank" rel="noopener">Zobacz stronę</a>
-                <a href="{% url 'logout' %}" class="cms-btn cms-btn--ghost">Wyloguj</a>
+                <form method="post" action="{% url 'logout' %}" class="cms-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="cms-btn cms-btn--ghost">Wyloguj</button>
+                </form>
             </div>
         </header>
         <main class="cms-content">
