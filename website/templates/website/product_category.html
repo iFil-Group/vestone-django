@@ -17,7 +17,11 @@
             <p class="product-page__empty" data-product-empty hidden>Brak produktów pasujących do filtrów.</p>
             <ul class="products-grid" data-product-results>
                 {% for product in products %}
-                <li data-product-item data-search="{{ product.search_text|default:product.title|lower }}">
+                <li
+                    data-product-item
+                    data-search="{{ product.search_text|default:product.title|lower }}"
+                    {% for slug, value in product.filter_values.items %}data-filter-{{ slug }}="{{ value }}" {% endfor %}
+                >
                     {% include "website/partials/product_card.html" with product=product placeholder_img=placeholder_img %}
                 </li>
                 {% endfor %}

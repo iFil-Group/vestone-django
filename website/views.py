@@ -103,7 +103,7 @@ def product_category(request, category_slug):
             "page_heading": category["title"],
             "category": category,
             "products": category_products(category_slug),
-            "product_filters": get_product_filters(),
+            "product_filters": get_product_filters(category_slug),
             "placeholder_img": get_placeholder(),
         },
     )
@@ -137,7 +137,7 @@ def product_detail(request, category_slug, product_slug):
 
 
 def surfaces(request):
-    from cms.services import get_placeholder, get_product_filters, get_surface_items
+    from cms.services import get_placeholder, get_surface_items
 
     surface_items = get_surface_items()
     return render(
@@ -146,7 +146,7 @@ def surfaces(request):
         {
             "page_title": "Barwy i powierzchnie",
             "page_heading": "Barwy i powierzchnie",
-            "product_filters": get_product_filters(),
+            "product_filters": [],
             "placeholder_img": get_placeholder(),
             "surface_items": surface_items,
         },

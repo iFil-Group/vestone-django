@@ -16,7 +16,7 @@ from .forms import (
     ProductGalleryFormSet,
     ProductGroupForm,
     ProductPinFormSet,
-    ProductSpecFormSet,
+    ProductAttributeAssignmentFormSet,
     ReviewForm,
     SiteSettingsForm,
     SurfaceItemForm,
@@ -123,7 +123,9 @@ def product_edit(request, pk=None):
         if form.is_valid():
             product = form.save()
 
-        spec_formset = ProductSpecFormSet(request.POST, instance=product, prefix="specs")
+        attribute_formset = ProductAttributeAssignmentFormSet(
+            request.POST, instance=product, prefix="attributes"
+        )
         pin_formset = ProductPinFormSet(request.POST, instance=product, prefix="pins")
         gallery_formset = ProductGalleryFormSet(
             request.POST,
@@ -134,18 +136,20 @@ def product_edit(request, pk=None):
 
         if (
             form.is_valid()
-            and spec_formset.is_valid()
+            and attribute_formset.is_valid()
             and pin_formset.is_valid()
             and gallery_formset.is_valid()
         ):
-            spec_formset.save()
+            attribute_formset.save()
             pin_formset.save()
             gallery_formset.save()
             messages.success(request, "Produkt został zapisany.")
             return redirect("cms_products")
     else:
         form = ProductForm(instance=instance)
-        spec_formset = ProductSpecFormSet(instance=instance, prefix="specs")
+        attribute_formset = ProductAttributeAssignmentFormSet(
+            instance=instance, prefix="attributes"
+        )
         pin_formset = ProductPinFormSet(instance=instance, prefix="pins")
         gallery_formset = ProductGalleryFormSet(instance=instance, prefix="gallery")
 
@@ -156,13 +160,35 @@ def product_edit(request, pk=None):
             "products",
             "Edycja produktu" if instance else "Nowy produkt",
             form=form,
-            spec_formset=spec_formset,
+            attribute_formset=attribute_formset,
+            attribute_options_json=_attribute_options_json(),
             pin_formset=pin_formset,
             gallery_formset=gallery_formset,
             back_url=reverse("cms_products"),
             product_image_url=_product_image_url(product),
         ),
     )
+
+
+def _attribute_options_json():
+    import json
+
+    from .models import ProductAttribute
+
+    payload = {}
+    attributes = ProductAttribute.objects.prefetch_related("options").order_by(
+        "sort_order", "name"
+    )
+    for attribute in attributes:
+        payload[str(attribute.pk)] = {
+            "name": attribute.name,
+            "show_in_filters": attribute.show_in_filters,
+            "options": [
+                {"id": option.pk, "value": option.value}
+                for option in attribute.options.all()
+            ],
+        }
+    return json.dumps(payload)
 
 
 def _product_image_url(product):

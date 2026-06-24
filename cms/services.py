@@ -168,6 +168,16 @@ def get_product_group(slug):
 
 
 def _product_dict(product, placeholder):
+    attributes = [
+        {
+            "label": assignment.option.attribute.name,
+            "value": assignment.option.value,
+            "slug": assignment.option.attribute.slug,
+        }
+        for assignment in product.attribute_assignments.select_related(
+            "option__attribute"
+        ).all()
+    ]
     return {
         "slug": product.slug,
         "title": product.title,
@@ -176,10 +186,8 @@ def _product_dict(product, placeholder):
         "description": product.description,
         "description_extra": product.description_extra,
         "image": _image_url(product.image, placeholder),
-        "specs": [
-            {"label": spec.label, "value": spec.value}
-            for spec in product.specs.all()
-        ],
+        "attributes": attributes,
+        "specs": attributes,
         "pins": [
             {"x": float(pin.x), "y": float(pin.y), "text": pin.text}
             for pin in product.pins.all()
@@ -201,9 +209,19 @@ def _product_dict(product, placeholder):
     }
 
 
+def _product_filter_values(product):
+    values = {}
+    for assignment in product.attribute_assignments.select_related("option__attribute").all():
+        attribute = assignment.option.attribute
+        if attribute.show_in_filters:
+            values[attribute.slug] = assignment.option.value
+    return values
+
+
 def _product_list_search_text(product):
     parts = [product.title, product.group.title if product.group_id else ""]
-    parts.extend(spec.value for spec in product.specs.all())
+    for assignment in product.attribute_assignments.select_related("option").all():
+        parts.append(assignment.option.value)
     return " ".join(part for part in parts if part).lower()
 
 
@@ -214,7 +232,11 @@ def category_products(category_slug):
         group__slug=category_slug,
         is_active=True,
         group__is_active=True,
-    ).select_related("group").prefetch_related("specs", "pins", "gallery")
+    ).select_related("group").prefetch_related(
+        "attribute_assignments__option__attribute",
+        "pins",
+        "gallery",
+    )
     if products.exists():
         return [
             {
@@ -222,6 +244,7 @@ def category_products(category_slug):
                 "title": product.title,
                 "category_slug": category_slug,
                 "search_text": _product_list_search_text(product),
+                "filter_values": _product_filter_values(product),
             }
             for product in products
         ]
@@ -231,6 +254,7 @@ def category_products(category_slug):
         {
             **item,
             "search_text": item.get("search_text") or item.get("title", "").lower(),
+            "filter_values": item.get("filter_values") or {},
         }
         for item in static_products(category_slug)
     ]
@@ -247,7 +271,11 @@ def get_product(category_slug, product_slug):
             is_active=True,
         )
         .select_related("group")
-        .prefetch_related("specs", "pins", "gallery")
+        .prefetch_related(
+            "attribute_assignments__option__attribute",
+            "pins",
+            "gallery",
+        )
         .first()
     )
     if product:
@@ -429,10 +457,47 @@ def get_download_items():
     return DOWNLOAD_ITEMS
 
 
-def get_product_filters():
-    from website.content_data import PRODUCT_FILTERS
+def get_product_filters(category_slug=None):
+    from cms.models import Product, ProductAttribute
 
-    return PRODUCT_FILTERS
+    attributes = ProductAttribute.objects.filter(show_in_filters=True).order_by(
+        "sort_order", "name"
+    )
+    if category_slug:
+        product_ids = Product.objects.filter(
+            group__slug=category_slug,
+            is_active=True,
+            group__is_active=True,
+        ).values_list("pk", flat=True)
+        attributes = attributes.filter(
+            options__assignments__product_id__in=product_ids
+        ).distinct()
+
+    filters = []
+    for attribute in attributes:
+        values_qs = attribute.options.filter(
+            assignments__product__is_active=True,
+        )
+        if category_slug:
+            values_qs = values_qs.filter(
+                assignments__product__group__slug=category_slug,
+                assignments__product__group__is_active=True,
+            )
+        values = list(
+            values_qs.order_by("sort_order", "value")
+            .values_list("value", flat=True)
+            .distinct()
+        )
+        if not values:
+            continue
+        filters.append(
+            {
+                "name": attribute.slug,
+                "label": attribute.name,
+                "options": [attribute.name, *values],
+            }
+        )
+    return filters
 
 
 def get_home_context():

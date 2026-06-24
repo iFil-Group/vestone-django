@@ -224,8 +224,8 @@ class Command(BaseCommand):
                 "data-pin-editor" in html and "cms-file" in html,
             )
             report.add(
-                "Formularz produktu ma formset parametrów",
-                'name="specs-TOTAL_FORMS"' in html,
+                "Formularz produktu ma formset atrybutów",
+                'name="attributes-TOTAL_FORMS"' in html and "data-product-attributes" in html,
             )
 
     def _test_form_posts(self, client, user, report):
@@ -345,7 +345,11 @@ class Command(BaseCommand):
                 f"status={response.status_code}",
             )
 
-        product = Product.objects.prefetch_related("specs", "pins", "gallery").first()
+        product = Product.objects.prefetch_related(
+            "attribute_assignments__option__attribute",
+            "pins",
+            "gallery",
+        ).first()
         if product:
             get_response = client.get(reverse("cms_product_edit", args=[product.pk]))
             html = get_response.content.decode()
@@ -427,7 +431,7 @@ class Command(BaseCommand):
         if product.is_active:
             data["is_active"] = "on"
 
-        for prefix in ("specs", "pins", "gallery"):
+        for prefix in ("attributes", "pins", "gallery"):
             total = self._input_value(html, f"{prefix}-TOTAL_FORMS")
             initial = self._input_value(html, f"{prefix}-INITIAL_FORMS")
             min_num = self._input_value(html, f"{prefix}-MIN_NUM_FORMS")
@@ -441,17 +445,26 @@ class Command(BaseCommand):
             if max_num is not None:
                 data[f"{prefix}-MAX_NUM_FORMS"] = max_num
 
-        for index, spec in enumerate(product.specs.order_by("sort_order", "id")):
-            data[f"specs-{index}-id"] = str(spec.pk)
-            data[f"specs-{index}-label"] = spec.label
-            data[f"specs-{index}-value"] = spec.value
-            data[f"specs-{index}-sort_order"] = str(spec.sort_order)
+        for index, assignment in enumerate(
+            product.attribute_assignments.select_related("option__attribute").order_by(
+                "sort_order", "id"
+            )
+        ):
+            attribute = assignment.option.attribute
+            data[f"attributes-{index}-id"] = str(assignment.pk)
+            data[f"attributes-{index}-attribute"] = str(attribute.pk)
+            data[f"attributes-{index}-option"] = str(assignment.option.pk)
+            data[f"attributes-{index}-sort_order"] = str(assignment.sort_order)
+            if attribute.show_in_filters:
+                data[f"attributes-{index}-show_in_filters"] = "on"
 
-        spec_total = int(data.get("specs-TOTAL_FORMS", product.specs.count()))
-        for index in range(product.specs.count(), spec_total):
-            data[f"specs-{index}-label"] = ""
-            data[f"specs-{index}-value"] = ""
-            data[f"specs-{index}-sort_order"] = "0"
+        attr_total = int(data.get("attributes-TOTAL_FORMS", product.attribute_assignments.count()))
+        for index in range(product.attribute_assignments.count(), attr_total):
+            data[f"attributes-{index}-attribute"] = ""
+            data[f"attributes-{index}-option"] = ""
+            data[f"attributes-{index}-new_attribute_name"] = ""
+            data[f"attributes-{index}-new_option_value"] = ""
+            data[f"attributes-{index}-sort_order"] = "0"
 
         for index, pin in enumerate(product.pins.order_by("sort_order", "id")):
             data[f"pins-{index}-id"] = str(pin.pk)

@@ -305,6 +305,36 @@ body.cms-body--panel {
     margin-top: 0.25rem;
 }
 
+.cms-section__help {
+    margin: 0.35rem 0 0;
+    color: rgba(55, 70, 80, 0.72);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.cms-attribute-row__grid {
+    display: grid;
+    gap: 0.25rem 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cms-attribute-row__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+}
+
+.cms-attribute-rows__actions {
+    margin-top: 0.75rem;
+}
+
+@media (max-width: 720px) {
+    .cms-attribute-row__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .cms-field {
     margin-bottom: 1rem;
 }

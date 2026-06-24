@@ -80,12 +80,33 @@
         </template>
     </section>
 
-    <section class="cms-section">
-        <h2 class="cms-section__title">Parametry</h2>
-        {{ spec_formset.management_form }}
-        {% for form in spec_formset %}
-        {% include "cms/partials/formset_row.html" with form=form %}
-        {% endfor %}
+    <section class="cms-section cms-product-attributes" data-product-attributes>
+        <div class="cms-section__head">
+            <h2 class="cms-section__title">Atrybuty</h2>
+            <p class="cms-section__help">
+                Wybierz istniejący atrybut i wartość albo dodaj nowe. Atrybuty oznaczone „W filtrach”
+                pojawią się na liście produktów w danej kategorii.
+            </p>
+        </div>
+
+        {{ attribute_formset.management_form }}
+        <script type="application/json" data-attribute-catalog>{{ attribute_options_json|safe }}</script>
+
+        <div class="cms-attribute-rows" data-attribute-rows>
+            {% for form in attribute_formset %}
+            {% include "cms/partials/attribute_formset_row.html" with form=form %}
+            {% endfor %}
+        </div>
+
+        <div class="cms-attribute-rows__actions">
+            <button type="button" class="cms-btn cms-btn--ghost" data-attribute-add>Dodaj atrybut</button>
+        </div>
+
+        <template data-attribute-empty-template>
+            {% with form=attribute_formset.empty_form %}
+            {% include "cms/partials/attribute_formset_row.html" %}
+            {% endwith %}
+        </template>
     </section>
 
     <section class="cms-section">
@@ -102,4 +123,5 @@
 
 {% block panel_scripts %}
 <script src="{% static 'theme/js/cms-product-pins.js' %}" defer></script>
+<script src="{% static 'theme/js/cms-product-attributes.js' %}" defer></script>
 {% endblock %}

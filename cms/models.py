@@ -156,6 +156,69 @@ class ProductSpec(models.Model):
         return f"{self.label}: {self.value}"
 
 
+class ProductAttribute(models.Model):
+    name = models.CharField("Nazwa", max_length=120)
+    slug = models.SlugField("Slug", max_length=120, unique=True)
+    show_in_filters = models.BooleanField("W filtrach na stronie", default=False)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "Atrybut produktu"
+        verbose_name_plural = "Atrybuty produktów"
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+class ProductAttributeOption(models.Model):
+    attribute = models.ForeignKey(
+        ProductAttribute,
+        on_delete=models.CASCADE,
+        related_name="options",
+        verbose_name="Atrybut",
+    )
+    value = models.CharField("Wartość", max_length=200)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "value"]
+        unique_together = [("attribute", "value")]
+        verbose_name = "Wartość atrybutu"
+        verbose_name_plural = "Wartości atrybutów"
+
+    def __str__(self):
+        return f"{self.attribute.name}: {self.value}"
+
+
+class ProductAttributeAssignment(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="attribute_assignments",
+        verbose_name="Produkt",
+    )
+    option = models.ForeignKey(
+        ProductAttributeOption,
+        on_delete=models.CASCADE,
+        related_name="assignments",
+        verbose_name="Wartość",
+    )
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Atrybut produktu"
+        verbose_name_plural = "Atrybuty produktu"
+
+    def __str__(self):
+        return str(self.option)
+
 class ProductPin(models.Model):
     product = models.ForeignKey(
         Product,

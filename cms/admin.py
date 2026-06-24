@@ -11,6 +11,9 @@ from .models import (
     ProductGalleryImage,
     ProductGroup,
     ProductPin,
+    ProductAttribute,
+    ProductAttributeAssignment,
+    ProductAttributeOption,
     ProductSpec,
     Review,
     SiteSettings,
@@ -30,6 +33,9 @@ admin.site.register(HeroSlide)
 admin.site.register(Review)
 admin.site.register(ProductGroup)
 admin.site.register(Product)
+admin.site.register(ProductAttribute)
+admin.site.register(ProductAttributeOption)
+admin.site.register(ProductAttributeAssignment)
 admin.site.register(ProductSpec)
 admin.site.register(ProductPin)
 admin.site.register(ProductGalleryImage)

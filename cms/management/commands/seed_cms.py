@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.core.management.base import BaseCommand
+from django.utils.text import slugify
 
 from cms.models import (
     ContentBlock,
@@ -10,7 +11,9 @@ from cms.models import (
     ProductGroup,
     ProductGalleryImage,
     ProductPin,
-    ProductSpec,
+    ProductAttribute,
+    ProductAttributeAssignment,
+    ProductAttributeOption,
     Review,
     SiteSettings,
     Tip,
@@ -132,12 +135,26 @@ class Command(BaseCommand):
             },
         )
 
-        ProductSpec.objects.filter(product=product).delete()
+        ProductAttributeAssignment.objects.filter(product=product).delete()
+        filter_slugs = {"format", "grubosc", "kolor", "powierzchnia"}
         for index, spec in enumerate(content_data.TEST_PRODUCT["specs"]):
-            ProductSpec.objects.create(
-                product=product,
-                label=spec["label"],
+            slug = slugify(spec["label"])
+            attribute, _ = ProductAttribute.objects.get_or_create(
+                slug=slug,
+                defaults={
+                    "name": spec["label"],
+                    "show_in_filters": slug in filter_slugs,
+                    "sort_order": index,
+                },
+            )
+            option, _ = ProductAttributeOption.objects.get_or_create(
+                attribute=attribute,
                 value=spec["value"],
+                defaults={"sort_order": 0},
+            )
+            ProductAttributeAssignment.objects.create(
+                product=product,
+                option=option,
                 sort_order=index,
             )
 

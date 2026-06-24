@@ -11,10 +11,12 @@ from .models import (
     JobOpening,
     NewsPost,
     Product,
+    ProductAttribute,
+    ProductAttributeAssignment,
+    ProductAttributeOption,
     ProductGalleryImage,
     ProductGroup,
     ProductPin,
-    ProductSpec,
     Review,
     SiteSettings,
     SurfaceItem,
@@ -139,11 +141,180 @@ class ProductForm(StyledModelForm):
         )
 
 
-ProductSpecFormSet = inlineformset_factory(
+
+class ProductAttributeAssignmentForm(StyledModelForm):
+    attribute = forms.ModelChoiceField(
+        queryset=ProductAttribute.objects.order_by("sort_order", "name"),
+        required=False,
+        label="Atrybut",
+        empty_label="— wybierz atrybut —",
+    )
+    new_attribute_name = forms.CharField(
+        required=False,
+        label="Nowy atrybut",
+        widget=forms.TextInput(attrs={"placeholder": "np. Format"}),
+    )
+    show_in_filters = forms.BooleanField(
+        required=False,
+        label="W filtrach na stronie",
+    )
+    new_option_value = forms.CharField(
+        required=False,
+        label="Nowa wartość",
+        widget=forms.TextInput(attrs={"placeholder": "np. 60 × 60 cm"}),
+    )
+
+    class Meta:
+        model = ProductAttributeAssignment
+        fields = ("option", "sort_order")
+        labels = {"option": "Wartość"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["option"].required = False
+        self.fields["option"].queryset = ProductAttributeOption.objects.select_related(
+            "attribute"
+        ).order_by("attribute__sort_order", "attribute__name", "sort_order", "value")
+        self.fields["option"].empty_label = "— wybierz wartość —"
+
+        if self.instance.pk and self.instance.option_id:
+            attribute = self.instance.option.attribute
+            self.fields["attribute"].initial = attribute.pk
+            self.fields["show_in_filters"].initial = attribute.show_in_filters
+            self.fields["option"].queryset = ProductAttributeOption.objects.filter(
+                attribute=attribute
+            ).order_by("sort_order", "value")
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("DELETE"):
+            return cleaned
+
+        attribute = cleaned.get("attribute")
+        new_attribute_name = (cleaned.get("new_attribute_name") or "").strip()
+        option = cleaned.get("option")
+        new_option_value = (cleaned.get("new_option_value") or "").strip()
+
+        if (
+            not self.instance.pk
+            and not attribute
+            and not new_attribute_name
+            and not option
+            and not new_option_value
+        ):
+            return cleaned
+
+        if not attribute and not new_attribute_name:
+            raise forms.ValidationError("Wybierz atrybut lub podaj nazwę nowego atrybutu.")
+        if attribute and new_attribute_name:
+            raise forms.ValidationError("Wybierz istniejący atrybut albo podaj nazwę nowego — nie oba naraz.")
+        if not option and not new_option_value:
+            raise forms.ValidationError("Wybierz wartość lub podaj nową wartość atrybutu.")
+        if option and new_option_value:
+            raise forms.ValidationError("Wybierz istniejącą wartość albo podaj nową — nie oba naraz.")
+
+        if option and attribute and option.attribute_id != attribute.pk:
+            raise forms.ValidationError("Wybrana wartość nie należy do wskazanego atrybutu.")
+
+        return cleaned
+
+    def save(self, commit=True):
+        if self.cleaned_data.get("DELETE"):
+            if self.instance.pk:
+                self.instance.delete()
+            return self.instance
+
+        attribute = self.cleaned_data.get("attribute")
+        new_attribute_name = (self.cleaned_data.get("new_attribute_name") or "").strip()
+        show_in_filters = self.cleaned_data.get("show_in_filters") or False
+        option = self.cleaned_data.get("option")
+        new_option_value = (self.cleaned_data.get("new_option_value") or "").strip()
+
+        if new_attribute_name:
+            from django.utils.text import slugify
+
+            slug = slugify(new_attribute_name)
+            attribute, _ = ProductAttribute.objects.get_or_create(
+                slug=slug,
+                defaults={
+                    "name": new_attribute_name,
+                    "show_in_filters": show_in_filters,
+                },
+            )
+            if attribute.name != new_attribute_name:
+                attribute.name = new_attribute_name
+            attribute.show_in_filters = show_in_filters
+            attribute.save()
+        elif attribute:
+            attribute.show_in_filters = show_in_filters
+            attribute.save(update_fields=["show_in_filters"])
+
+        if new_option_value:
+            option, _ = ProductAttributeOption.objects.get_or_create(
+                attribute=attribute,
+                value=new_option_value,
+                defaults={"sort_order": 0},
+            )
+        elif option and option.attribute_id != attribute.pk:
+            option = ProductAttributeOption.objects.get(pk=option.pk)
+
+        assignment = super().save(commit=False)
+        assignment.option = option
+        if commit:
+            assignment.save()
+        return assignment
+
+
+class BaseProductAttributeAssignmentFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        has_assignment = False
+        for form in self.forms:
+            if not form.cleaned_data or form.cleaned_data.get("DELETE"):
+                continue
+            attribute = form.cleaned_data.get("attribute")
+            new_attribute_name = (form.cleaned_data.get("new_attribute_name") or "").strip()
+            option = form.cleaned_data.get("option")
+            new_option_value = (form.cleaned_data.get("new_option_value") or "").strip()
+            if attribute or new_attribute_name or option or new_option_value or form.instance.pk:
+                has_assignment = True
+        if not has_assignment and not self.instance:
+            return
+
+    def save(self, commit=True):
+        assignments = []
+        for form in self.forms:
+            if not form.cleaned_data or form.cleaned_data.get("DELETE"):
+                if form.instance.pk:
+                    form.instance.delete()
+                continue
+            attribute = form.cleaned_data.get("attribute")
+            new_attribute_name = (form.cleaned_data.get("new_attribute_name") or "").strip()
+            option = form.cleaned_data.get("option")
+            new_option_value = (form.cleaned_data.get("new_option_value") or "").strip()
+            if (
+                not form.instance.pk
+                and not attribute
+                and not new_attribute_name
+                and not option
+                and not new_option_value
+            ):
+                continue
+            if not form.has_changed() and form.instance.pk:
+                assignments.append(form.instance)
+                continue
+            assignments.append(form.save(commit=commit))
+        return assignments
+
+
+ProductAttributeAssignmentFormSet = inlineformset_factory(
     Product,
-    ProductSpec,
-    form=StyledModelForm,
-    fields=("label", "value", "sort_order"),
+    ProductAttributeAssignment,
+    form=ProductAttributeAssignmentForm,
+    formset=BaseProductAttributeAssignmentFormSet,
+    fields=("option", "sort_order"),
     extra=1,
     can_delete=True,
 )

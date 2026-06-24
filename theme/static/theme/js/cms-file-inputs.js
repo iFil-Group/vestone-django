@@ -83,4 +83,5 @@
     document.querySelectorAll("[data-cms-file]").forEach(bindFileField);
     document.querySelectorAll("[data-cms-formset-row]").forEach(bindFormsetRow);
     document.querySelectorAll(".cms-toggle").forEach(bindToggle);
+    window.cmsBindFormsetRow = bindFormsetRow;
 })();

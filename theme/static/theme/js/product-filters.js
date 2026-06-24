@@ -40,9 +40,16 @@
 
         var matchSelects = Array.prototype.every.call(selects, function (select) {
             var selected = normalize(selectedOptionText(select));
-            if (!selected || selected.indexOf("nazwa produktu") === 0) {
+            if (!selected) {
                 return true;
             }
+
+            var filterName = select.getAttribute("name") || "";
+            var itemValue = normalize(item.getAttribute("data-filter-" + filterName) || "");
+            if (itemValue) {
+                return itemValue === selected;
+            }
+
             return searchText.indexOf(selected) !== -1;
         });
 
