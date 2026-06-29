@@ -175,6 +175,75 @@ body.cms-body--panel {
     margin-bottom: 1.75rem;
 }
 
+.cms-card {
+    padding: 1.35rem 1.5rem;
+    background: #fff;
+    border: 1px solid rgba(55, 70, 80, 0.12);
+    border-radius: 8px;
+}
+
+.cms-card__head {
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(55, 70, 80, 0.08);
+}
+
+.cms-card__title {
+    margin: 0;
+    font-family: "Barlow Condensed", "Barlow", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.cms-card__subtitle {
+    margin: 0 0 0.75rem;
+    font-family: "Barlow Condensed", "Barlow", sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #374650;
+}
+
+.cms-card__intro {
+    margin: 0.35rem 0 0;
+    color: rgba(55, 70, 80, 0.72);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.cms-card__body > .cms-field:last-child,
+.cms-card__body > .cms-formset-row:last-child {
+    margin-bottom: 0;
+}
+
+.cms-card__subsection {
+    padding-top: 1.25rem;
+    margin-top: 1.25rem;
+    border-top: 1px solid rgba(55, 70, 80, 0.08);
+}
+
+.cms-card__subsection:first-child {
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+}
+
+.cms-product-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 52rem;
+}
+
+.cms-product-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
 .cms-section__title {
     margin: 0 0 0.85rem;
     font-family: "Barlow Condensed", "Barlow", sans-serif;
@@ -728,6 +797,10 @@ body.cms-body--panel {
 
 .cms-pin-editor__head {
     margin-bottom: 1rem;
+}
+
+.cms-card .cms-pin-editor__head {
+    margin-bottom: 0.85rem;
 }
 
 .cms-pin-editor__help {

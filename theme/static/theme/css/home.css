@@ -91,7 +91,7 @@
 
 .home-hero__track {
     position: relative;
-    min-height: clamp(20rem, 48vh, 32rem);
+    min-height: clamp(26rem, 72svh, 38rem);
 }
 
 .home-hero__slide {
@@ -212,6 +212,49 @@
 .home-hero__dot.is-active {
     width: 2.75rem;
     background: var(--vestone-red);
+}
+
+@media (max-width: 767px) {
+    .home-hero__track {
+        min-height: clamp(28rem, 78svh, 42rem);
+    }
+
+    .home-hero__overlay {
+        background: linear-gradient(
+            180deg,
+            rgba(26, 45, 61, 0.72) 0%,
+            rgba(26, 45, 61, 0.88) 55%,
+            rgba(26, 45, 61, 0.94) 100%
+        );
+    }
+
+    .home-hero__shell {
+        align-items: center;
+        padding: 5rem 0 6rem;
+    }
+
+    .home-hero__content {
+        max-width: none;
+    }
+
+    .home-hero__title {
+        font-size: clamp(1.75rem, 8vw, 2.35rem);
+        line-height: 1.1;
+    }
+
+    .home-hero__lead {
+        font-size: 0.98rem;
+    }
+
+    .home-hero__controls {
+        bottom: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .home-hero__track {
+        min-height: clamp(20rem, 48vh, 32rem);
+    }
 }
 
 /* —— Products —— */
