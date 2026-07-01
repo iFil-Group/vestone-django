@@ -6,7 +6,7 @@
         return;
     }
 
-    var catalogEl = root.querySelector("[data-attribute-catalog]");
+    var catalogEl = document.getElementById("attribute-catalog");
     var rowsRoot = root.querySelector("[data-attribute-rows]");
     var addButton = root.querySelector("[data-attribute-add]");
     var emptyTemplate = root.querySelector("[data-attribute-empty-template]");
@@ -176,11 +176,23 @@
         if (window.cmsBindFormsetRow) {
             window.cmsBindFormsetRow(row);
         }
+        if (window.cmsBindFileField) {
+            row.querySelectorAll("[data-cms-file]").forEach(window.cmsBindFileField);
+        }
     }
 
     rowsRoot.querySelectorAll("[data-attribute-row]").forEach(bindRow);
 
     if (addButton) {
         addButton.addEventListener("click", addRow);
+    }
+
+    var productForm = document.getElementById("product-form");
+    if (productForm) {
+        productForm.addEventListener("submit", function () {
+            root.querySelectorAll("select:disabled, input:disabled, textarea:disabled").forEach(function (field) {
+                field.disabled = false;
+            });
+        });
     }
 })();

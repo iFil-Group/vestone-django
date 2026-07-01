@@ -15,6 +15,19 @@
     var template = editor.querySelector("[data-pin-empty-template]");
     var imageInput = document.getElementById("id_image");
     var addButton = editor.querySelector("[data-pin-add]");
+    var pinObjectUrl = null;
+
+    function setPinPreviewFromFile(file) {
+        if (!file || !image || file.type.indexOf("image/") !== 0) {
+            return;
+        }
+        if (pinObjectUrl) {
+            URL.revokeObjectURL(pinObjectUrl);
+            pinObjectUrl = null;
+        }
+        pinObjectUrl = URL.createObjectURL(file);
+        image.src = pinObjectUrl;
+    }
 
     var activeRow = null;
     var dragState = null;
@@ -257,20 +270,6 @@
         });
     }
 
-    if (imageInput) {
-        imageInput.addEventListener("change", function () {
-            var file = imageInput.files && imageInput.files[0];
-            if (!file || !image) {
-                return;
-            }
-            var reader = new FileReader();
-            reader.onload = function () {
-                image.src = reader.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
     rowsContainer.querySelectorAll("[data-pin-row]").forEach(bindRow);
 
     visibleRows().forEach(function (row, index) {
@@ -284,6 +283,13 @@
     });
 
     if (productForm) {
+        productForm.addEventListener("cms:file-selected", function (event) {
+            var detail = event.detail || {};
+            if (detail.input && detail.input.id === "id_image") {
+                setPinPreviewFromFile(detail.file);
+            }
+        });
+
         productForm.addEventListener("submit", function () {
             reindexRows();
         });

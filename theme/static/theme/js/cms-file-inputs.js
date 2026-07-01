@@ -1,6 +1,14 @@
 (function () {
     "use strict";
 
+    function revokeObjectUrl(input) {
+        var previous = input && input._cmsObjectUrl;
+        if (previous) {
+            URL.revokeObjectURL(previous);
+            input._cmsObjectUrl = null;
+        }
+    }
+
     function bindFileField(wrapper) {
         var input = wrapper.querySelector(".cms-file__input");
         var nameEl = wrapper.querySelector("[data-cms-file-name]");
@@ -19,13 +27,19 @@
                 nameEl.textContent = file.name;
 
                 if (preview && file.type.indexOf("image/") === 0) {
-                    var reader = new FileReader();
-                    reader.onload = function (event) {
-                        preview.src = event.target.result;
-                        preview.hidden = false;
-                    };
-                    reader.readAsDataURL(file);
+                    revokeObjectUrl(input);
+                    var objectUrl = URL.createObjectURL(file);
+                    input._cmsObjectUrl = objectUrl;
+                    preview.src = objectUrl;
+                    preview.hidden = false;
                 }
+
+                input.dispatchEvent(
+                    new CustomEvent("cms:file-selected", {
+                        bubbles: true,
+                        detail: { file: file, input: input },
+                    })
+                );
             });
         }
 
@@ -83,5 +97,6 @@
     document.querySelectorAll("[data-cms-file]").forEach(bindFileField);
     document.querySelectorAll("[data-cms-formset-row]").forEach(bindFormsetRow);
     document.querySelectorAll(".cms-toggle").forEach(bindToggle);
+    window.cmsBindFileField = bindFileField;
     window.cmsBindFormsetRow = bindFormsetRow;
 })();

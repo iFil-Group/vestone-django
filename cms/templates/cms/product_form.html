@@ -118,7 +118,7 @@
         </header>
         <div class="cms-card__body">
             {{ attribute_formset.management_form }}
-            <script type="application/json" data-attribute-catalog>{{ attribute_options_json|safe }}</script>
+            {{ attribute_options|json_script:"attribute-catalog" }}
 
             <div class="cms-attribute-rows" data-attribute-rows>
                 {% for form in attribute_formset %}

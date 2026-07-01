@@ -161,7 +161,7 @@ def product_edit(request, pk=None):
             "Edycja produktu" if instance else "Nowy produkt",
             form=form,
             attribute_formset=attribute_formset,
-            attribute_options_json=_attribute_options_json(),
+            attribute_options=_attribute_options_data(),
             pin_formset=pin_formset,
             gallery_formset=gallery_formset,
             back_url=reverse("cms_products"),
@@ -170,9 +170,7 @@ def product_edit(request, pk=None):
     )
 
 
-def _attribute_options_json():
-    import json
-
+def _attribute_options_data():
     from .models import ProductAttribute
 
     payload = {}
@@ -188,7 +186,7 @@ def _attribute_options_json():
                 for option in attribute.options.all()
             ],
         }
-    return json.dumps(payload)
+    return payload
 
 
 def _product_image_url(product):

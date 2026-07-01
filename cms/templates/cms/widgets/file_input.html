@@ -6,10 +6,10 @@
         </label>
         <span class="cms-file__name" data-cms-file-name>Nie wybrano pliku</span>
     </div>
+    <img class="cms-file__preview cms-file__preview--pending" data-cms-file-preview hidden alt="">
     <input
         type="{{ widget.type }}"
         name="{{ widget.name }}"
-        {% if widget.value != None %}value="{{ widget.value }}"{% endif %}
         {% include "django/forms/widgets/attrs.html" %}
         class="cms-file__input"
     >
