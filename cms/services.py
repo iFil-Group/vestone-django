@@ -167,6 +167,10 @@ def get_product_group(slug):
     return None
 
 
+def _pin_coord(value):
+    return format(float(value), ".2f")
+
+
 def _product_dict(product, placeholder):
     attributes = [
         {
@@ -189,7 +193,7 @@ def _product_dict(product, placeholder):
         "attributes": attributes,
         "specs": attributes,
         "pins": [
-            {"x": float(pin.x), "y": float(pin.y), "text": pin.text}
+            {"x": _pin_coord(pin.x), "y": _pin_coord(pin.y), "text": pin.text}
             for pin in product.pins.all()
         ],
         "gallery": [

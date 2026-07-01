@@ -171,6 +171,14 @@ class Command(BaseCommand):
                 "Piny produktu na stronie szczegółów",
                 "product-pin" in html or "data-product-pins" in html,
             )
+            if product.pins.exists():
+                first_pin = product.pins.order_by("sort_order", "id").first()
+                expected = format(float(first_pin.x), ".2f")
+                report.add(
+                    "Piny produktu używają kropki dziesiętnej w CSS",
+                    f"--pin-x: {expected}%" in html,
+                    f"oczekiwano --pin-x: {expected}%",
+                )
 
         tip = Tip.objects.filter(is_published=True).first()
         if tip:
