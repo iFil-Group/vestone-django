@@ -140,6 +140,10 @@ class ProductForm(StyledModelForm):
             "is_active",
         )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+
 
 
 class ProductAttributeAssignmentForm(StyledModelForm):
@@ -339,10 +343,21 @@ ProductPinFormSet = inlineformset_factory(
     can_delete=True,
 )
 
+
+class ProductGalleryInlineForm(StyledModelForm):
+    class Meta:
+        model = ProductGalleryImage
+        fields = ("image", "alt", "sort_order")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+
+
 ProductGalleryFormSet = inlineformset_factory(
     Product,
     ProductGalleryImage,
-    form=StyledModelForm,
+    form=ProductGalleryInlineForm,
     fields=("image", "alt", "sort_order"),
     extra=1,
     can_delete=True,

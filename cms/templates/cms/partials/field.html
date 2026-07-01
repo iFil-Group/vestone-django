@@ -9,6 +9,9 @@
         <span class="cms-toggle__track" aria-hidden="true"></span>
         <span class="cms-toggle__text" data-cms-toggle-text>Tak</span>
     </label>
+    {% elif field.field.widget.input_type == 'file' %}
+    <span class="cms-field__label">{{ field.label }}</span>
+    {{ field }}
     {% else %}
     <label class="cms-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
     {{ field }}

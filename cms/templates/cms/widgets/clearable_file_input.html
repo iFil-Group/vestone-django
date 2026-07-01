@@ -4,7 +4,7 @@
         <p class="cms-file__current-label">Aktualny plik</p>
         <div class="cms-file__current-body">
             {% if widget.value.url %}
-            <img src="{{ widget.value.url }}" alt="" class="cms-file__preview">
+            <img src="{{ widget.value.url }}" alt="" class="cms-file__preview" loading="lazy">
             {% endif %}
             <span class="cms-file__current-name">{{ widget.value.name }}</span>
         </div>
@@ -17,10 +17,10 @@
     </div>
     {% endif %}
     <div class="cms-file__control">
-        <label class="cms-file__button" for="{{ widget.attrs.id }}">
+        <button type="button" class="cms-file__button" data-cms-file-trigger>
             <span class="cms-file__button-icon" aria-hidden="true">↑</span>
             {% if widget.is_initial %}Zmień plik{% else %}Wybierz plik{% endif %}
-        </label>
+        </button>
         <span class="cms-file__name" data-cms-file-name>
             {% if widget.is_initial %}Wybierz nowy plik{% else %}Nie wybrano pliku{% endif %}
         </span>
@@ -31,5 +31,7 @@
         name="{{ widget.name }}"
         {% include "django/forms/widgets/attrs.html" %}
         class="cms-file__input"
+        tabindex="-1"
+        aria-hidden="true"
     >
 </div>

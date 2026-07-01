@@ -1,9 +1,9 @@
 <div class="cms-file" data-cms-file>
     <div class="cms-file__control">
-        <label class="cms-file__button" for="{{ widget.attrs.id }}">
+        <button type="button" class="cms-file__button" data-cms-file-trigger>
             <span class="cms-file__button-icon" aria-hidden="true">↑</span>
             Wybierz plik
-        </label>
+        </button>
         <span class="cms-file__name" data-cms-file-name>Nie wybrano pliku</span>
     </div>
     <img class="cms-file__preview cms-file__preview--pending" data-cms-file-preview hidden alt="">
@@ -12,5 +12,7 @@
         name="{{ widget.name }}"
         {% include "django/forms/widgets/attrs.html" %}
         class="cms-file__input"
+        tabindex="-1"
+        aria-hidden="true"
     >
 </div>

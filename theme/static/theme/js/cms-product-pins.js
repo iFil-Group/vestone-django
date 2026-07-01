@@ -16,17 +16,56 @@
     var imageInput = document.getElementById("id_image");
     var addButton = editor.querySelector("[data-pin-add]");
     var pinObjectUrl = null;
+    var PIN_PREVIEW_MAX_WIDTH = 1200;
 
     function setPinPreviewFromFile(file) {
         if (!file || !image || file.type.indexOf("image/") !== 0) {
             return;
         }
-        if (pinObjectUrl) {
-            URL.revokeObjectURL(pinObjectUrl);
-            pinObjectUrl = null;
-        }
-        pinObjectUrl = URL.createObjectURL(file);
-        image.src = pinObjectUrl;
+
+        window.setTimeout(function () {
+            if (typeof createImageBitmap === "function") {
+                createImageBitmap(file, {
+                    resizeWidth: PIN_PREVIEW_MAX_WIDTH,
+                    resizeQuality: "medium",
+                })
+                    .then(function (bitmap) {
+                        var canvas = document.createElement("canvas");
+                        canvas.width = bitmap.width;
+                        canvas.height = bitmap.height;
+                        canvas.getContext("2d").drawImage(bitmap, 0, 0);
+                        bitmap.close();
+                        canvas.toBlob(
+                            function (blob) {
+                                if (!blob) {
+                                    return;
+                                }
+                                if (pinObjectUrl) {
+                                    URL.revokeObjectURL(pinObjectUrl);
+                                }
+                                pinObjectUrl = URL.createObjectURL(blob);
+                                image.src = pinObjectUrl;
+                            },
+                            "image/jpeg",
+                            0.85
+                        );
+                    })
+                    .catch(function () {
+                        /* Pin preview is optional — skip on error to keep UI responsive. */
+                    });
+                return;
+            }
+
+            if (file.size > 8 * 1024 * 1024) {
+                return;
+            }
+
+            if (pinObjectUrl) {
+                URL.revokeObjectURL(pinObjectUrl);
+            }
+            pinObjectUrl = URL.createObjectURL(file);
+            image.src = pinObjectUrl;
+        }, 0);
     }
 
     var activeRow = null;
