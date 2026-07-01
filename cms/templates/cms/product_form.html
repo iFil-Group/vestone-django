@@ -9,6 +9,18 @@
 <form method="post" enctype="multipart/form-data" class="cms-product-form" id="product-form">
     {% csrf_token %}
 
+    {% if form.errors or attribute_formset.non_form_errors or pin_formset.non_form_errors or gallery_formset.non_form_errors %}
+    <div class="cms-form-errors" role="alert">
+        <p class="cms-form-errors__title">Formularz zawiera błędy — popraw zaznaczone pola i zapisz ponownie.</p>
+        {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% endif %}
+        {% for error in attribute_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% for error in pin_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% for error in gallery_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
     <section class="cms-card">
         <header class="cms-card__head">
             <h2 class="cms-card__title">Podstawowe informacje</h2>

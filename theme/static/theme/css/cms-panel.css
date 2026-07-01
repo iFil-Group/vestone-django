@@ -244,6 +244,20 @@ body.cms-body--panel {
     gap: 0.65rem;
 }
 
+.cms-form-errors {
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.25rem;
+    border: 1px solid rgba(184, 20, 56, 0.25);
+    border-radius: 8px;
+    background: #fef2f2;
+}
+
+.cms-form-errors__title {
+    margin: 0 0 0.35rem;
+    font-weight: 600;
+    color: #b81438;
+}
+
 .cms-section__title {
     margin: 0 0 0.85rem;
     font-family: "Barlow Condensed", "Barlow", sans-serif;

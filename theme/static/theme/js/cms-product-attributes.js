@@ -190,9 +190,25 @@
     var productForm = document.getElementById("product-form");
     if (productForm) {
         productForm.addEventListener("submit", function () {
-            root.querySelectorAll("select:disabled, input:disabled, textarea:disabled").forEach(function (field) {
-                field.disabled = false;
+            root.querySelectorAll("[data-attribute-row]").forEach(function (row) {
+                var newValueField = field(row, "new_option_value");
+                var optionSelect = field(row, "option");
+                var newAttrField = field(row, "new_attribute_name");
+                var attrSelect = field(row, "attribute");
+
+                if (newValueField && newValueField.value.trim() && optionSelect) {
+                    optionSelect.value = "";
+                    optionSelect.disabled = false;
+                }
+                if (newAttrField && newAttrField.value.trim() && attrSelect) {
+                    attrSelect.value = "";
+                    attrSelect.disabled = false;
+                }
+
+                row.querySelectorAll("select:disabled, input:disabled, textarea:disabled").forEach(function (el) {
+                    el.disabled = false;
+                });
             });
-        });
+        }, true);
     }
 })();

@@ -220,6 +220,12 @@ class ProductAttributeAssignmentForm(StyledModelForm):
         if option and attribute and option.attribute_id != attribute.pk:
             raise forms.ValidationError("Wybrana wartość nie należy do wskazanego atrybutu.")
 
+        if new_option_value:
+            cleaned["option"] = None
+
+        if new_attribute_name:
+            cleaned["attribute"] = None
+
         return cleaned
 
     def save(self, commit=True):
@@ -306,7 +312,12 @@ class BaseProductAttributeAssignmentFormSet(forms.BaseInlineFormSet):
                 and not new_option_value
             ):
                 continue
-            if not form.has_changed() and form.instance.pk:
+            if (
+                form.instance.pk
+                and not form.has_changed()
+                and not new_option_value
+                and not new_attribute_name
+            ):
                 assignments.append(form.instance)
                 continue
             assignments.append(form.save(commit=commit))
@@ -334,10 +345,28 @@ class ProductPinInlineForm(StyledModelForm):
         }
 
 
+class BaseProductPinFormSet(forms.BaseInlineFormSet):
+    def save(self, commit=True):
+        saved = []
+        for form in self.forms:
+            if not form.cleaned_data:
+                continue
+            if form.cleaned_data.get("DELETE"):
+                if form.instance.pk:
+                    form.instance.delete()
+                continue
+            text = (form.cleaned_data.get("text") or "").strip()
+            if not text:
+                continue
+            saved.append(form.save(commit=commit))
+        return saved
+
+
 ProductPinFormSet = inlineformset_factory(
     Product,
     ProductPin,
     form=ProductPinInlineForm,
+    formset=BaseProductPinFormSet,
     fields=("x", "y", "text", "sort_order"),
     extra=0,
     can_delete=True,

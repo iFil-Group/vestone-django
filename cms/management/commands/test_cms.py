@@ -14,6 +14,8 @@ from cms.models import (
     JobOpening,
     NewsPost,
     Product,
+    ProductAttribute,
+    ProductAttributeOption,
     ProductGroup,
     Review,
     SiteSettings,
@@ -354,15 +356,50 @@ class Command(BaseCommand):
             get_response = client.get(reverse("cms_product_edit", args=[product.pk]))
             html = get_response.content.decode()
             post_data = self._build_product_post_data(product, html)
+            if "pins-0-x" in post_data:
+                post_data["pins-0-x"] = "12.34"
+                post_data["pins-0-y"] = "56.78"
+            pin_total = int(post_data.get("pins-TOTAL_FORMS", product.pins.count()))
+            post_data["pins-TOTAL_FORMS"] = str(pin_total + 1)
+            post_data[f"pins-{pin_total}-x"] = "33.33"
+            post_data[f"pins-{pin_total}-y"] = "44.44"
+            post_data[f"pins-{pin_total}-text"] = "Pin testowy CMS"
+            post_data[f"pins-{pin_total}-sort_order"] = str(pin_total)
+
+            kolor = ProductAttribute.objects.filter(slug="kolor").first()
+            if kolor:
+                attr_total = int(post_data.get("attributes-TOTAL_FORMS", 0))
+                post_data["attributes-TOTAL_FORMS"] = str(attr_total + 1)
+                post_data[f"attributes-{attr_total}-attribute"] = str(kolor.pk)
+                post_data[f"attributes-{attr_total}-new_option_value"] = "Opal"
+                post_data[f"attributes-{attr_total}-sort_order"] = str(attr_total)
+                if kolor.show_in_filters:
+                    post_data[f"attributes-{attr_total}-show_in_filters"] = "on"
+
             response = client.post(
                 reverse("cms_product_edit", args=[product.pk]),
                 post_data,
                 follow=False,
             )
+            product.refresh_from_db()
+            first_pin = product.pins.order_by("sort_order", "id").first()
+            has_opal = ProductAttributeOption.objects.filter(
+                attribute__slug="kolor", value="Opal"
+            ).exists()
             report.add(
                 "POST edycja produktu (form + formsety)",
-                response.status_code == 302 and "/ifil-log/panel/produkty/" in response.url,
+                response.status_code == 302
+                and response.url.endswith(f"/ifil-log/panel/produkty/{product.pk}/"),
                 f"status={response.status_code}, url={getattr(response, 'url', '')}",
+            )
+            report.add(
+                "POST produktu zapisuje pozycję pinów",
+                first_pin is not None and str(first_pin.x) == "12.34" and str(first_pin.y) == "56.78",
+            )
+            report.add(
+                "POST produktu dodaje nową wartość atrybutu",
+                has_opal
+                and product.attribute_assignments.filter(option__value="Opal").exists(),
             )
 
         response = client.post(

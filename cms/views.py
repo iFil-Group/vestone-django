@@ -144,7 +144,7 @@ def product_edit(request, pk=None):
             pin_formset.save()
             gallery_formset.save()
             messages.success(request, "Produkt został zapisany.")
-            return redirect("cms_products")
+            return redirect("cms_product_edit", pk=product.pk)
     else:
         form = ProductForm(instance=instance)
         attribute_formset = ProductAttributeAssignmentFormSet(

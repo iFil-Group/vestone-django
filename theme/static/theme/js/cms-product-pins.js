@@ -141,6 +141,7 @@
     function setFieldValue(field, value) {
         if (field) {
             field.value = value;
+            field.dispatchEvent(new Event("change", { bubbles: true }));
         }
     }
 
@@ -331,7 +332,7 @@
 
         productForm.addEventListener("submit", function () {
             reindexRows();
-        });
+        }, true);
     }
 
     reindexRows();
