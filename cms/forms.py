@@ -330,7 +330,7 @@ ProductAttributeAssignmentFormSet = inlineformset_factory(
     form=ProductAttributeAssignmentForm,
     formset=BaseProductAttributeAssignmentFormSet,
     fields=("option", "sort_order"),
-    extra=1,
+    extra=0,
     can_delete=True,
 )
 

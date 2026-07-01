@@ -1,0 +1,114 @@
+<div class="cms-attr-editor" data-product-attributes>
+    {{ attribute_formset.management_form }}
+    {{ attribute_options|json_script:"attribute-catalog" }}
+
+    <div class="cms-attr-cards" data-attr-cards>
+        {% for card in attribute_cards %}
+        <article class="cms-attr-card" data-attr-card data-card-key="{{ card.key }}">
+            <header class="cms-attr-card__head">
+                <div class="cms-attr-card__head-main">
+                    <label class="cms-attr-card__label">Atrybut</label>
+                    <div class="cms-attr-card__head-controls">
+                        <select class="cms-select cms-attr-card__attr-select" data-attr-select>
+                            <option value="">— wybierz atrybut —</option>
+                            {% for attr in all_attributes %}
+                            <option value="{{ attr.id }}"{% if card.attribute_id == attr.id|stringformat:"s" %} selected{% endif %}>{{ attr.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input
+                            type="text"
+                            class="cms-input cms-attr-card__attr-new"
+                            data-attr-new
+                            placeholder="Nazwa nowego atrybutu"
+                            value="{{ card.new_attribute_name }}"
+                            {% if card.attribute_id %}hidden{% endif %}
+                        >
+                    </div>
+                </div>
+                <label class="cms-attr-card__filter">
+                    <input type="checkbox" data-attr-filter{% if card.show_in_filters %} checked{% endif %}>
+                    <span>W filtrach</span>
+                </label>
+                <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-remove-card>
+                    Usuń atrybut
+                </button>
+            </header>
+
+            <div class="cms-attr-card__body">
+                <p class="cms-attr-card__values-label">Wartości tego produktu</p>
+                <div class="cms-attr-card__values" data-attr-values>
+                    {% for value in card.values %}
+                    <span class="cms-attr-chip" data-attr-chip data-form-index="{{ value.form_index }}">
+                        <span class="cms-attr-chip__label">{{ value.label }}</span>
+                        <button type="button" class="cms-attr-chip__remove" data-attr-chip-remove aria-label="Usuń wartość">&times;</button>
+                    </span>
+                    {% endfor %}
+                </div>
+
+                <div class="cms-attr-card__add">
+                    <select class="cms-select cms-attr-card__value-select" data-attr-value-select>
+                        <option value="">— wybierz istniejącą wartość —</option>
+                    </select>
+                    <span class="cms-attr-card__add-sep">lub</span>
+                    <input type="text" class="cms-input cms-attr-card__value-new" data-attr-value-new placeholder="Nowa wartość, np. Opal">
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small" data-attr-value-add>Dodaj wartość</button>
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <p class="cms-attr-empty" data-attr-empty-msg>Brak atrybutów — dodaj pierwszy poniżej.</p>
+        {% endfor %}
+    </div>
+
+    <div class="cms-attr-editor__actions">
+        <button type="button" class="cms-btn cms-btn--ghost" data-attr-add-card>Dodaj atrybut</button>
+    </div>
+
+    <div class="cms-attr-formset" data-attribute-formset-root hidden>
+        {% for form in attribute_formset %}
+        {% include "cms/partials/attribute_form_hidden_row.html" with form=form form_index=forloop.counter0 %}
+        {% endfor %}
+    </div>
+
+    <template data-attr-card-template>
+        <article class="cms-attr-card" data-attr-card data-card-key="__key__">
+            <header class="cms-attr-card__head">
+                <div class="cms-attr-card__head-main">
+                    <label class="cms-attr-card__label">Atrybut</label>
+                    <div class="cms-attr-card__head-controls">
+                        <select class="cms-select cms-attr-card__attr-select" data-attr-select>
+                            <option value="">— wybierz atrybut —</option>
+                            {% for attr in all_attributes %}
+                            <option value="{{ attr.id }}">{{ attr.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" class="cms-input cms-attr-card__attr-new" data-attr-new placeholder="Nazwa nowego atrybutu" hidden>
+                    </div>
+                </div>
+                <label class="cms-attr-card__filter">
+                    <input type="checkbox" data-attr-filter>
+                    <span>W filtrach</span>
+                </label>
+                <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-remove-card>Usuń atrybut</button>
+            </header>
+            <div class="cms-attr-card__body">
+                <p class="cms-attr-card__values-label">Wartości tego produktu</p>
+                <div class="cms-attr-card__values" data-attr-values></div>
+                <div class="cms-attr-card__add">
+                    <select class="cms-select cms-attr-card__value-select" data-attr-value-select>
+                        <option value="">— wybierz istniejącą wartość —</option>
+                    </select>
+                    <span class="cms-attr-card__add-sep">lub</span>
+                    <input type="text" class="cms-input cms-attr-card__value-new" data-attr-value-new placeholder="Nowa wartość, np. Opal">
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small" data-attr-value-add>Dodaj wartość</button>
+                </div>
+            </div>
+        </article>
+    </template>
+
+    <template data-attr-form-row-template>
+        {% with form=attribute_formset.empty_form %}
+        {% include "cms/partials/attribute_form_hidden_row.html" with form=form form_index="__prefix__" %}
+        {% endwith %}
+    </template>
+</div>

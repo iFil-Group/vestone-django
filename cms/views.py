@@ -162,6 +162,8 @@ def product_edit(request, pk=None):
             form=form,
             attribute_formset=attribute_formset,
             attribute_options=_attribute_options_data(),
+            attribute_cards=_attribute_editor_cards(attribute_formset),
+            all_attributes=_all_attributes(),
             pin_formset=pin_formset,
             gallery_formset=gallery_formset,
             back_url=reverse("cms_products"),
@@ -187,6 +189,100 @@ def _attribute_options_data():
             ],
         }
     return payload
+
+
+def _all_attributes():
+    from .models import ProductAttribute
+
+    return list(
+        ProductAttribute.objects.order_by("sort_order", "name").values("id", "name", "show_in_filters")
+    )
+
+
+def _attribute_form_is_empty(form):
+    if form.instance.pk:
+        return False
+    if form.data:
+        prefix = form.prefix
+        keys = (f"{prefix}-attribute", f"{prefix}-new_attribute_name", f"{prefix}-option", f"{prefix}-new_option_value")
+        return not any((form.data.get(key) or "").strip() for key in keys)
+    return not any(
+        [
+            form["attribute"].value(),
+            (form["new_attribute_name"].value() or "").strip(),
+            form["option"].value(),
+            (form["new_option_value"].value() or "").strip(),
+        ]
+    )
+
+
+def _attribute_form_attribute_id(form):
+    value = form["attribute"].value()
+    if value:
+        return str(value)
+    if form.instance.pk and form.instance.option_id:
+        return str(form.instance.option.attribute_id)
+    return None
+
+
+def _attribute_form_value_label(form):
+    new_value = (form["new_option_value"].value() or "").strip()
+    if new_value:
+        return new_value
+    option_id = form["option"].value()
+    if option_id:
+        from .models import ProductAttributeOption
+
+        option = ProductAttributeOption.objects.filter(pk=option_id).first()
+        if option:
+            return option.value
+    if form.instance.pk and form.instance.option_id:
+        return form.instance.option.value
+    return ""
+
+
+def _attribute_editor_cards(formset):
+    cards = []
+    lookup = {}
+
+    for index, form in enumerate(formset.forms):
+        if _attribute_form_is_empty(form):
+            continue
+
+        attribute_id = _attribute_form_attribute_id(form)
+        new_attribute_name = (form["new_attribute_name"].value() or "").strip()
+        key = attribute_id or f"new:{index}"
+
+        if key not in lookup:
+            show_in_filters = bool(form["show_in_filters"].value())
+            if not show_in_filters and attribute_id:
+                from .models import ProductAttribute
+
+                attr = ProductAttribute.objects.filter(pk=attribute_id).first()
+                show_in_filters = bool(attr and attr.show_in_filters)
+
+            card = {
+                "key": key,
+                "attribute_id": attribute_id,
+                "new_attribute_name": new_attribute_name if not attribute_id else "",
+                "show_in_filters": show_in_filters,
+                "values": [],
+            }
+            lookup[key] = card
+            cards.append(card)
+
+        label = _attribute_form_value_label(form)
+        if not label:
+            continue
+
+        lookup[key]["values"].append(
+            {
+                "form_index": index,
+                "label": label,
+            }
+        )
+
+    return cards
 
 
 def _product_image_url(product):

@@ -1,0 +1,20 @@
+<div class="cms-attr-form-row" data-attribute-form-row data-form-index="{{ form_index }}">
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+    {% if form.DELETE %}
+    <div class="visually-hidden" data-cms-delete-field>{{ form.DELETE }}</div>
+    {% endif %}
+    <div class="visually-hidden" aria-hidden="true">
+        {{ form.attribute }}
+        {{ form.new_attribute_name }}
+        {{ form.show_in_filters }}
+        {{ form.option }}
+        {{ form.new_option_value }}
+        {{ form.sort_order }}
+    </div>
+    {% if form.non_field_errors %}
+    <p class="cms-field__error">{{ form.non_field_errors }}</p>
+    {% endif %}
+    {% for field in form.visible_fields %}
+        {% for error in field.errors %}<p class="cms-field__error" data-field-error="{{ field.name }}">{{ error }}</p>{% endfor %}
+    {% endfor %}
+</div>

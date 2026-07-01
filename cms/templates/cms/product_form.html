@@ -124,29 +124,12 @@
         <header class="cms-card__head">
             <h2 class="cms-card__title">Atrybuty</h2>
             <p class="cms-card__intro">
-                Wybierz istniejący atrybut i wartość albo dodaj nowe. Atrybuty oznaczone „W filtrach”
-                pojawią się na liście produktów w danej kategorii.
+                Każdy atrybut to osobna karta. Wewnątrz karty dodajesz wiele wartości produktu
+                (np. Kolor → Opal, Czarny). Zaznacz „W filtrach”, aby atrybut był widoczny w filtrach kategorii.
             </p>
         </header>
         <div class="cms-card__body">
-            {{ attribute_formset.management_form }}
-            {{ attribute_options|json_script:"attribute-catalog" }}
-
-            <div class="cms-attribute-rows" data-attribute-rows>
-                {% for form in attribute_formset %}
-                {% include "cms/partials/attribute_formset_row.html" with form=form %}
-                {% endfor %}
-            </div>
-
-            <div class="cms-attribute-rows__actions">
-                <button type="button" class="cms-btn cms-btn--ghost" data-attribute-add>Dodaj atrybut</button>
-            </div>
-
-            <template data-attribute-empty-template>
-                {% with form=attribute_formset.empty_form %}
-                {% include "cms/partials/attribute_formset_row.html" %}
-                {% endwith %}
-            </template>
+            {% include "cms/partials/attribute_editor.html" %}
         </div>
     </section>
 

@@ -226,8 +226,8 @@ class Command(BaseCommand):
                 "data-pin-editor" in html and "cms-file" in html,
             )
             report.add(
-                "Formularz produktu ma formset atrybutów",
-                'name="attributes-TOTAL_FORMS"' in html and "data-product-attributes" in html,
+                "Formularz produktu ma edytor atrybutów",
+                "data-product-attributes" in html and "data-attr-card" in html,
             )
 
     def _test_form_posts(self, client, user, report):
