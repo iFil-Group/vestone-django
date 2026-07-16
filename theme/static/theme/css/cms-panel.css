@@ -244,6 +244,42 @@ body.cms-body--panel {
     gap: 0.65rem;
 }
 
+.cms-related-results {
+    display: grid;
+    gap: .35rem;
+    margin-top: .5rem;
+}
+.cms-related-results button {
+    padding: .6rem .75rem;
+    border: 1px solid rgba(55,70,80,.15);
+    border-radius: 6px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+.cms-related-results button:hover { border-color: #e11946; }
+.cms-related-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: 1rem;
+}
+.cms-related-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .55rem .4rem .75rem;
+    border-radius: 999px;
+    background: #eef1f3;
+}
+.cms-related-chip button {
+    border: 0;
+    background: transparent;
+    color: #b81438;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
 .cms-form-errors {
     padding: 1rem 1.15rem;
     margin-bottom: 0.25rem;

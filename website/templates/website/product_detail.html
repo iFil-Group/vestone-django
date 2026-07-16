@@ -14,21 +14,24 @@
 
     <article class="product-detail" id="karta-produktu">
         <div class="product-detail__shell">
-            <div class="product-detail__main">
+            <div class="product-detail__main{% if not product.show_main_image %} product-detail__main--copy-only{% endif %}">
                 <div class="product-detail__copy">
-                    <p class="product-detail__text">{{ product.description }}</p>
-                    <p class="product-detail__text">{{ product.description_extra }}</p>
+                    <div class="product-detail__text rich-text">{{ product.description|safe }}</div>
+                    <div class="product-detail__text rich-text">{{ product.description_extra|safe }}</div>
 
+                    {% if product.specs %}
                     <dl class="product-detail__specs">
                         {% for spec in product.specs %}
                         <div class="product-detail__spec">
                             <dt>{{ spec.label }}</dt>
-                            <dd>{{ spec.value }}</dd>
+                            <dd>{% for value in spec.values %}<span>{{ value }}</span>{% endfor %}</dd>
                         </div>
                         {% endfor %}
                     </dl>
+                    {% endif %}
                 </div>
 
+                {% if product.show_main_image %}
                 <div class="product-detail__visual" data-product-pins>
                     <div class="product-detail__image-wrap">
                         <img
@@ -54,14 +57,23 @@
                         {% endfor %}
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
 
+        {% if product.show_packshot and product.packshot_image %}
+        <section class="product-packshot" aria-label="Packshot">
+            <img src="{{ product.packshot_image }}" alt="{{ product.title }} — packshot" loading="lazy">
+        </section>
+        {% endif %}
+
+        {% if product.gallery %}
         <section class="product-gallery" aria-label="Galeria zdjęć produktu" data-product-gallery>
             <div class="product-gallery__viewport">
                 <div class="product-gallery__track" data-product-gallery-track>
                     {% for image in product.gallery %}
                     <div class="product-gallery__slide">
+                        <div class="product-gallery__image-wrap" data-product-pins>
                         <img
                             class="product-gallery__img"
                             src="{{ image.image|default:placeholder_img }}"
@@ -69,11 +81,21 @@
                             height="480"
                             loading="lazy"
                         >
+                        {% for pin in image.pins %}
+                        <button type="button" class="product-pin" style="--pin-x: {{ pin.x }}%; --pin-y: {{ pin.y }}%;" data-product-pin>
+                            <span class="product-pin__dot" aria-hidden="true"></span>
+                            <span class="product-pin__tooltip" role="tooltip">{{ pin.text }}</span>
+                        </button>
+                        {% endfor %}
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
+            <button type="button" class="product-gallery__arrow product-gallery__arrow--prev" data-product-gallery-prev aria-label="Poprzednie zdjęcie">‹</button>
+            <button type="button" class="product-gallery__arrow product-gallery__arrow--next" data-product-gallery-next aria-label="Następne zdjęcie">›</button>
         </section>
+        {% endif %}
     </article>
 
     <section class="product-related" aria-labelledby="product-related-heading">

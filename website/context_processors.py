@@ -5,7 +5,7 @@ def _normalize_path(path):
 
 
 ABOUT_LINKS = [
-    {"label": "O firmie", "url": "/#o-nas"},
+    {"label": "O firmie", "url": "/o-nas/"},
     {"label": "Aktualności", "url": "/o-nas/aktualnosci/"},
     {"label": "Praca i kariera", "url": "/o-nas/praca-i-kariera/"},
     {"label": "Warunki gwarancji", "url": "/o-nas/warunki-gwarancji/"},
@@ -36,7 +36,7 @@ def site_navigation(request):
             {"label": "Do pobrania", "url": "/do-pobrania/", "active": active("/do-pobrania")},
             {
                 "label": "O nas",
-                "url": "/#o-nas",
+                "url": "/o-nas/",
                 "active": active("/o-nas"),
                 "children": ABOUT_LINKS,
             },
@@ -53,7 +53,7 @@ def page_breadcrumbs(request):
     if path == "/":
         return {"breadcrumbs": [{"label": "Strona główna", "url": None}]}
 
-    about_parent = {"label": "O nas", "url": "/#o-nas"}
+    about_parent = {"label": "O nas", "url": "/o-nas/"}
 
     static_trails = {
         "/produkty": [home, {"label": "Produkty", "url": None}],
@@ -153,3 +153,9 @@ def site_settings(request):
     from cms.services import get_site_settings
 
     return {"site_settings": get_site_settings()}
+
+
+def site_promotions(request):
+    from cms.services import get_floating_promotions
+
+    return {"floating_promotions": get_floating_promotions()}

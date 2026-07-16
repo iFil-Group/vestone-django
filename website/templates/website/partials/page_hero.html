@@ -3,7 +3,7 @@
         {% include "website/partials/breadcrumbs.html" %}
         <h1 class="page-hero__title">{{ page_heading }}</h1>
         {% if page_lead %}
-        <p class="page-hero__lead">{{ page_lead }}</p>
+        <div class="page-hero__lead rich-text">{{ page_lead|safe }}</div>
         {% endif %}
     </div>
 </header>

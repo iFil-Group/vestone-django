@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -9,31 +10,48 @@ from .forms import (
     DownloadCategoryForm,
     DownloadItemForm,
     EmailAuthenticationForm,
+    FloatingPromotionForm,
+    FormWidgetForm,
     HeroSlideForm,
     JobOpeningForm,
+    LegalDocumentForm,
     NewsPostForm,
+    NewsGalleryFormSet,
     ProductForm,
     ProductGalleryFormSet,
     ProductGroupForm,
     ProductPinFormSet,
     ProductAttributeAssignmentFormSet,
+    PromotionSlideForm,
     ReviewForm,
     SiteSettingsForm,
+    SalesPointForm,
+    SurfaceCategoryForm,
     SurfaceItemForm,
+    SurfaceTypeForm,
     TipForm,
+    TipGalleryFormSet,
 )
 from .models import (
     ContentBlock,
     DownloadCategory,
     DownloadItem,
+    FloatingPromotion,
+    FormSubmission,
+    FormWidget,
     HeroSlide,
     JobOpening,
+    LegalDocument,
     NewsPost,
     Product,
     ProductGroup,
+    PromotionSlide,
     Review,
     SiteSettings,
+    SalesPoint,
+    SurfaceCategory,
     SurfaceItem,
+    SurfaceType,
     Tip,
 )
 
@@ -43,6 +61,9 @@ CMS_SECTIONS = [
     {"slug": "tips", "label": "Porady", "url_name": "cms_tips"},
     {"slug": "news", "label": "Aktualności", "url_name": "cms_news"},
     {"slug": "downloads", "label": "Pliki do pobrania", "url_name": "cms_downloads"},
+    {"slug": "documents", "label": "Dokumenty", "url_name": "cms_documents"},
+    {"slug": "sales-points", "label": "Punkty sprzedaży", "url_name": "cms_sales_points"},
+    {"slug": "promotions", "label": "Promocje i formularze", "url_name": "cms_promotions"},
     {"slug": "pages", "label": "Strona", "url_name": "cms_pages"},
 ]
 
@@ -120,8 +141,8 @@ def product_edit(request, pk=None):
 
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES, instance=instance)
-        if form.is_valid():
-            product = form.save()
+        form_valid = form.is_valid()
+        product = form.save(commit=False) if form_valid else (instance or Product())
 
         attribute_formset = ProductAttributeAssignmentFormSet(
             request.POST, instance=product, prefix="attributes"
@@ -135,14 +156,21 @@ def product_edit(request, pk=None):
         )
 
         if (
-            form.is_valid()
+            form_valid
             and attribute_formset.is_valid()
             and pin_formset.is_valid()
             and gallery_formset.is_valid()
         ):
-            attribute_formset.save()
-            pin_formset.save()
-            gallery_formset.save()
+            from django.db import transaction
+
+            with transaction.atomic():
+                product = form.save()
+                attribute_formset.instance = product
+                pin_formset.instance = product
+                gallery_formset.instance = product
+                attribute_formset.save()
+                gallery_formset.save()
+                pin_formset.save()
             messages.success(request, "Produkt został zapisany.")
             return redirect("cms_product_edit", pk=product.pk)
     else:
@@ -168,8 +196,50 @@ def product_edit(request, pk=None):
             gallery_formset=gallery_formset,
             back_url=reverse("cms_products"),
             product_image_url=_product_image_url(product),
+            gallery_pin_targets=_gallery_pin_targets(product),
+            selected_related_products=_selected_related_products(request, instance),
         ),
     )
+
+
+def _gallery_pin_targets(product):
+    targets = [{"id": "", "label": "Zdjęcie główne", "image": _product_image_url(product)}]
+    if product and product.pk:
+        targets.extend(
+            {
+                "id": str(image.pk),
+                "label": image.alt or f"Zdjęcie galerii #{index}",
+                "image": image.image.url,
+            }
+            for index, image in enumerate(product.gallery.all(), start=1)
+            if image.image
+        )
+    return targets
+
+
+def _selected_related_products(request, instance):
+    if request.method == "POST":
+        ids = [value for value in request.POST.getlist("related_products") if value.isdigit()]
+        return list(Product.objects.filter(pk__in=ids).select_related("group"))
+    return list(instance.related_products.select_related("group").all()) if instance else []
+
+
+@login_required
+def product_search(request):
+    from django.db.models import Q
+
+    query = (request.GET.get("q") or "").strip()
+    products = Product.objects.select_related("group")
+    exclude_id = request.GET.get("exclude")
+    if exclude_id and exclude_id.isdigit():
+        products = products.exclude(pk=int(exclude_id))
+    if query:
+        products = products.filter(Q(title__icontains=query) | Q(group__title__icontains=query))
+    results = [
+        {"id": item.pk, "text": f"{item.title} — {item.group.title}"}
+        for item in products.order_by("title")[:20]
+    ]
+    return JsonResponse({"results": results})
 
 
 def _attribute_options_data():
@@ -298,14 +368,13 @@ def surface_list(request):
     items = SurfaceItem.objects.order_by("sort_order", "title")
     return render(
         request,
-        "cms/list.html",
+        "cms/surface_list.html",
         _panel_context(
             "surfaces",
             "Barwy i powierzchnie",
             items=items,
-            add_url=reverse("cms_surface_add"),
-            edit_url_name="cms_surface_edit",
-            columns=[("title", "Nazwa"), ("color", "Kolor"), ("surface", "Powierzchnia")],
+            categories=SurfaceCategory.objects.all(),
+            surface_types=SurfaceType.objects.all(),
         ),
     )
 
@@ -331,6 +400,40 @@ def surface_edit(request, pk=None):
 
 
 @login_required
+def surface_category_edit(request, pk=None):
+    instance = get_object_or_404(SurfaceCategory, pk=pk) if pk else None
+    form = SurfaceCategoryForm(request.POST or None, instance=instance)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Kategoria została zapisana.")
+        return redirect("cms_surfaces")
+    return render(
+        request, "cms/form.html",
+        _panel_context(
+            "surfaces", "Edycja kategorii" if instance else "Nowa kategoria",
+            form=form, back_url=reverse("cms_surfaces"),
+        ),
+    )
+
+
+@login_required
+def surface_type_edit(request, pk=None):
+    instance = get_object_or_404(SurfaceType, pk=pk) if pk else None
+    form = SurfaceTypeForm(request.POST or None, request.FILES or None, instance=instance)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Rodzaj powierzchni został zapisany.")
+        return redirect("cms_surfaces")
+    return render(
+        request, "cms/form.html",
+        _panel_context(
+            "surfaces", "Edycja rodzaju powierzchni" if instance else "Nowy rodzaj powierzchni",
+            form=form, back_url=reverse("cms_surfaces"),
+        ),
+    )
+
+
+@login_required
 def tip_list(request):
     items = Tip.objects.order_by("-published_at")
     return render(
@@ -342,6 +445,7 @@ def tip_list(request):
             items=items,
             add_url=reverse("cms_tip_add"),
             edit_url_name="cms_tip_edit",
+            delete_model="tip",
             columns=[("title", "Tytuł"), ("published_at", "Data")],
         ),
     )
@@ -351,17 +455,29 @@ def tip_list(request):
 def tip_edit(request, pk=None):
     instance = get_object_or_404(Tip, pk=pk) if pk else None
     form = TipForm(request.POST or None, request.FILES or None, instance=instance)
-    if request.method == "POST" and form.is_valid():
-        form.save()
+    gallery_bound = request.method == "POST" and "gallery-TOTAL_FORMS" in request.POST
+    gallery_formset = TipGalleryFormSet(
+        request.POST if gallery_bound else None,
+        request.FILES if gallery_bound else None,
+        instance=instance, prefix="gallery",
+    )
+    if request.method == "POST" and form.is_valid() and (
+        not gallery_bound or gallery_formset.is_valid()
+    ):
+        article = form.save()
+        if gallery_bound:
+            gallery_formset.instance = article
+            gallery_formset.save()
         messages.success(request, "Porada została zapisana.")
         return redirect("cms_tips")
     return render(
         request,
-        "cms/form.html",
+        "cms/article_form.html",
         _panel_context(
             "tips",
             "Edycja porady" if instance else "Nowa porada",
             form=form,
+            gallery_formset=gallery_formset,
             back_url=reverse("cms_tips"),
         ),
     )
@@ -379,6 +495,7 @@ def news_list(request):
             items=items,
             add_url=reverse("cms_news_add"),
             edit_url_name="cms_news_edit",
+            delete_model="news",
             columns=[("title", "Tytuł"), ("published_at", "Data")],
         ),
     )
@@ -388,17 +505,29 @@ def news_list(request):
 def news_edit(request, pk=None):
     instance = get_object_or_404(NewsPost, pk=pk) if pk else None
     form = NewsPostForm(request.POST or None, request.FILES or None, instance=instance)
-    if request.method == "POST" and form.is_valid():
-        form.save()
+    gallery_bound = request.method == "POST" and "gallery-TOTAL_FORMS" in request.POST
+    gallery_formset = NewsGalleryFormSet(
+        request.POST if gallery_bound else None,
+        request.FILES if gallery_bound else None,
+        instance=instance, prefix="gallery",
+    )
+    if request.method == "POST" and form.is_valid() and (
+        not gallery_bound or gallery_formset.is_valid()
+    ):
+        article = form.save()
+        if gallery_bound:
+            gallery_formset.instance = article
+            gallery_formset.save()
         messages.success(request, "Aktualność została zapisana.")
         return redirect("cms_news")
     return render(
         request,
-        "cms/form.html",
+        "cms/article_form.html",
         _panel_context(
             "news",
             "Edycja aktualności" if instance else "Nowa aktualność",
             form=form,
+            gallery_formset=gallery_formset,
             back_url=reverse("cms_news"),
         ),
     )
@@ -461,11 +590,62 @@ def download_item_edit(request, pk=None):
 
 
 @login_required
+def download_move(request, pk, direction):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    item = get_object_or_404(DownloadItem, pk=pk)
+    siblings = list(
+        DownloadItem.objects.filter(category=item.category).order_by("sort_order", "title", "pk")
+    )
+    index = siblings.index(item)
+    target_index = index - 1 if direction == "up" else index + 1
+    if 0 <= target_index < len(siblings):
+        siblings[index], siblings[target_index] = siblings[target_index], siblings[index]
+        for order, sibling in enumerate(siblings):
+            if sibling.sort_order != order:
+                sibling.sort_order = order
+                sibling.save(update_fields=["sort_order"])
+    return redirect("cms_downloads")
+
+
+@login_required
+def document_list(request):
+    return render(
+        request, "cms/list.html",
+        _panel_context(
+            "documents", "Dokumenty",
+            items=LegalDocument.objects.all(),
+            add_url=reverse("cms_document_add"),
+            edit_url_name="cms_document_edit",
+            delete_model="document",
+            columns=[("title", "Tytuł"), ("slug", "Slug")],
+        ),
+    )
+
+
+@login_required
+def document_edit(request, pk=None):
+    instance = get_object_or_404(LegalDocument, pk=pk) if pk else None
+    form = LegalDocumentForm(request.POST or None, instance=instance)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Dokument został zapisany.")
+        return redirect("cms_documents")
+    return render(
+        request, "cms/form.html",
+        _panel_context(
+            "documents", "Edycja dokumentu" if instance else "Nowy dokument",
+            form=form, back_url=reverse("cms_documents"),
+        ),
+    )
+
+
+@login_required
 def page_index(request):
     home_blocks = ContentBlock.objects.filter(group=ContentBlock.GROUP_HOME)
     about_blocks = ContentBlock.objects.filter(group=ContentBlock.GROUP_ABOUT)
     hero_slides = HeroSlide.objects.order_by("sort_order")
-    reviews = Review.objects.order_by("sort_order")
+    sales_points = SalesPoint.objects.order_by("sort_order", "name")
     settings_form = SiteSettingsForm(request.POST or None, instance=SiteSettings.load())
     if request.method == "POST" and settings_form.is_valid():
         settings_form.save()
@@ -481,7 +661,7 @@ def page_index(request):
             home_blocks=home_blocks,
             about_blocks=about_blocks,
             hero_slides=hero_slides,
-            reviews=reviews,
+            sales_points=sales_points,
             settings_form=settings_form,
         ),
     )
@@ -559,6 +739,7 @@ def job_list(request):
             items=items,
             add_url=reverse("cms_job_add"),
             edit_url_name="cms_job_edit",
+            delete_model="job",
             columns=[("title", "Stanowisko"), ("location", "Lokalizacja")],
             back_url=reverse("cms_pages"),
         ),
@@ -568,7 +749,7 @@ def job_list(request):
 @login_required
 def job_edit(request, pk=None):
     instance = get_object_or_404(JobOpening, pk=pk) if pk else None
-    form = JobOpeningForm(request.POST or None, instance=instance)
+    form = JobOpeningForm(request.POST or None, request.FILES or None, instance=instance)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Oferta pracy została zapisana.")
@@ -583,3 +764,145 @@ def job_edit(request, pk=None):
             back_url=reverse("cms_jobs"),
         ),
     )
+
+
+@login_required
+def promotions(request):
+    return render(
+        request,
+        "cms/promotions.html",
+        _panel_context(
+            "promotions",
+            "Promocje i formularze",
+            promotion_slides=PromotionSlide.objects.all(),
+            form_widgets=FormWidget.objects.all(),
+            floating_promotions=FloatingPromotion.objects.all(),
+        ),
+    )
+
+
+def _edit_model(request, model, form_class, pk, title, back_url, success):
+    instance = get_object_or_404(model, pk=pk) if pk else None
+    form = form_class(request.POST or None, request.FILES or None, instance=instance)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, success)
+        return redirect(back_url)
+    return render(
+        request,
+        "cms/form.html",
+        _panel_context(
+            "promotions" if back_url == "cms_promotions" else "sales-points",
+            title,
+            form=form,
+            back_url=reverse(back_url),
+        ),
+    )
+
+
+@login_required
+def promotion_slide_edit(request, pk=None):
+    return _edit_model(
+        request, PromotionSlide, PromotionSlideForm, pk,
+        "Edycja komunikatu" if pk else "Nowy komunikat",
+        "cms_promotions", "Komunikat został zapisany.",
+    )
+
+
+@login_required
+def form_widget_edit(request, pk=None):
+    return _edit_model(
+        request, FormWidget, FormWidgetForm, pk,
+        "Edycja widgetu formularza" if pk else "Nowy widget formularza",
+        "cms_promotions", "Widget formularza został zapisany.",
+    )
+
+
+@login_required
+def floating_promotion_edit(request, pk=None):
+    return _edit_model(
+        request, FloatingPromotion, FloatingPromotionForm, pk,
+        "Edycja widgetu promocyjnego" if pk else "Nowy widget promocyjny",
+        "cms_promotions", "Widget promocyjny został zapisany.",
+    )
+
+
+@login_required
+def sales_point_list(request):
+    return render(
+        request,
+        "cms/list.html",
+        _panel_context(
+            "sales-points", "Punkty sprzedaży",
+            items=SalesPoint.objects.all(),
+            add_url=reverse("cms_sales_point_add"),
+            edit_url_name="cms_sales_point_edit",
+            delete_model="sales-point",
+            columns=[("name", "Nazwa"), ("address", "Adres"), ("offer_type", "Oferta")],
+        ),
+    )
+
+
+@login_required
+def sales_point_edit(request, pk=None):
+    return _edit_model(
+        request, SalesPoint, SalesPointForm, pk,
+        "Edycja punktu sprzedaży" if pk else "Nowy punkt sprzedaży",
+        "cms_sales_points", "Punkt sprzedaży został zapisany.",
+    )
+
+
+@login_required
+def submissions_export(request, pk):
+    import csv
+
+    widget = get_object_or_404(FormWidget, pk=pk)
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="zgloszenia-{widget.slug}.csv"'
+    response.write("\ufeff")
+    writer = csv.writer(response, delimiter=";")
+    writer.writerow([
+        "Data", "Imię", "Nazwisko", "Ulica", "Nr domu/mieszkania",
+        "Kod pocztowy", "Miejscowość", "Firma", "Zgoda",
+    ])
+    for item in widget.submissions.all():
+        writer.writerow([
+            item.created_at.strftime("%Y-%m-%d %H:%M"), item.first_name,
+            item.last_name, item.street, item.house_number, item.postal_code,
+            item.city, item.company, "Tak" if item.consent else "Nie",
+        ])
+    return response
+
+
+DELETE_MODELS = {
+    "product": (Product, "cms_products"),
+    "product-group": (ProductGroup, "cms_products"),
+    "surface": (SurfaceItem, "cms_surfaces"),
+    "surface-category": (SurfaceCategory, "cms_surfaces"),
+    "surface-type": (SurfaceType, "cms_surfaces"),
+    "tip": (Tip, "cms_tips"),
+    "news": (NewsPost, "cms_news"),
+    "download": (DownloadItem, "cms_downloads"),
+    "download-category": (DownloadCategory, "cms_downloads"),
+    "document": (LegalDocument, "cms_documents"),
+    "content-block": (ContentBlock, "cms_pages"),
+    "hero": (HeroSlide, "cms_pages"),
+    "job": (JobOpening, "cms_jobs"),
+    "promotion-slide": (PromotionSlide, "cms_promotions"),
+    "form-widget": (FormWidget, "cms_promotions"),
+    "floating-promotion": (FloatingPromotion, "cms_promotions"),
+    "sales-point": (SalesPoint, "cms_sales_points"),
+}
+
+
+@login_required
+def delete_object(request, model_name, pk):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    model_config = DELETE_MODELS.get(model_name)
+    if model_config is None:
+        return HttpResponse(status=404)
+    model, redirect_name = model_config
+    get_object_or_404(model, pk=pk).delete()
+    messages.success(request, "Pozycja została usunięta.")
+    return redirect(redirect_name)

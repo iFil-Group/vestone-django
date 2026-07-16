@@ -66,9 +66,10 @@
                     </div>
                     <div class="downloads__item-body">
                         <span class="downloads__item-title">{{ item.title }}</span>
+                        {% if item.file_number %}<span class="downloads__item-file">Numer: {{ item.file_number }}</span>{% endif %}
                         <span class="downloads__item-file">{{ item.file }}</span>
                     </div>
-                    <a href="#" class="downloads__item-btn" download aria-label="Pobierz {{ item.title }}">
+                    <a href="{{ item.file }}" class="downloads__item-btn" download aria-label="Pobierz {{ item.title }}">
                         Pobierz
                         <svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true">
                             <path d="M10 3v10M6 9l4 4 4-4M4 17h12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>

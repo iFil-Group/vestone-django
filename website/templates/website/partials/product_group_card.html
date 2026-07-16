@@ -1,6 +1,6 @@
 <a href="/produkty/{{ group.slug }}/" class="product-card">
     <span class="product-card__media">
-        <img src="{{ placeholder_img }}" alt="" loading="lazy" width="400" height="300">
+        <img src="{{ group.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="300">
     </span>
     <span class="product-card__title">{{ group.title }}</span>
 </a>

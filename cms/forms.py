@@ -7,9 +7,13 @@ from .models import (
     ContentBlock,
     DownloadCategory,
     DownloadItem,
+    FloatingPromotion,
+    FormWidget,
     HeroSlide,
     JobOpening,
+    LegalDocument,
     NewsPost,
+    NewsGalleryImage,
     Product,
     ProductAttribute,
     ProductAttributeAssignment,
@@ -17,12 +21,17 @@ from .models import (
     ProductGalleryImage,
     ProductGroup,
     ProductPin,
+    PromotionSlide,
     Review,
+    SalesPoint,
     SiteSettings,
+    SurfaceCategory,
     SurfaceItem,
+    SurfaceType,
     Tip,
+    TipGalleryImage,
 )
-from .widgets import CMSClearableFileInput, CMSFileInput
+from .widgets import CMSClearableFileInput, CMSFileInput, RichTextWidget
 
 
 class EmailAuthenticationForm(AuthenticationForm):
@@ -76,7 +85,7 @@ class StyledModelForm(forms.ModelForm):
             elif isinstance(widget, forms.CheckboxInput):
                 field.widget.attrs.setdefault("class", "cms-checkbox")
             elif isinstance(widget, forms.Textarea):
-                field.widget.attrs.setdefault("class", "cms-textarea")
+                field.widget = RichTextWidget(attrs=widget.attrs)
             elif isinstance(widget, forms.Select):
                 field.widget.attrs.setdefault("class", "cms-select")
             else:
@@ -110,7 +119,72 @@ class ContentBlockForm(StyledModelForm):
 class HeroSlideForm(StyledModelForm):
     class Meta:
         model = HeroSlide
-        fields = ("title", "lead", "image", "sort_order", "is_active")
+        fields = (
+            "title", "lead", "media_type", "image", "mobile_image", "video",
+            "video_url", "button_label", "button_url", "sort_order", "is_active",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["mobile_image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["video"].widget.attrs.setdefault("accept", "video/*")
+
+    def clean(self):
+        cleaned = super().clean()
+        media_type = cleaned.get("media_type")
+        if media_type == HeroSlide.MEDIA_IMAGE and not (cleaned.get("image") or self.instance.image):
+            self.add_error("image", "Dodaj zdjęcie desktop.")
+        if media_type == HeroSlide.MEDIA_VIDEO and not (
+            cleaned.get("video") or cleaned.get("video_url") or self.instance.video
+        ):
+            self.add_error("video", "Dodaj plik filmu lub link do filmu.")
+        return cleaned
+
+
+class PromotionSlideForm(StyledModelForm):
+    class Meta:
+        model = PromotionSlide
+        fields = (
+            "text", "link_label", "link_url", "active_from", "active_until",
+            "sort_order", "is_active",
+        )
+        widgets = {
+            "active_from": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "active_until": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("active_from") and cleaned.get("active_until"):
+            if cleaned["active_from"] >= cleaned["active_until"]:
+                self.add_error("active_until", "Data końcowa musi być późniejsza od początkowej.")
+        return cleaned
+
+
+class FormWidgetForm(StyledModelForm):
+    class Meta:
+        model = FormWidget
+        fields = (
+            "title", "slug", "description", "image", "recipient_email",
+            "required_fields_text", "consent_text", "thanks_image", "thanks_text",
+            "is_active",
+        )
+
+
+class SalesPointForm(StyledModelForm):
+    class Meta:
+        model = SalesPoint
+        fields = (
+            "name", "address", "phone", "email", "website_url", "offer_type",
+            "sort_order", "is_active",
+        )
+
+
+class FloatingPromotionForm(StyledModelForm):
+    class Meta:
+        model = FloatingPromotion
+        fields = ("placement", "image", "link_url", "is_active")
 
 
 class ReviewForm(StyledModelForm):
@@ -136,13 +210,23 @@ class ProductForm(StyledModelForm):
             "description",
             "description_extra",
             "image",
+            "show_main_image",
+            "show_packshot",
+            "packshot_image",
+            "related_products",
             "sort_order",
             "is_active",
         )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["group"].queryset = ProductGroup.objects.all().order_by("sort_order", "title")
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["packshot_image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["related_products"].queryset = Product.objects.exclude(
+            pk=self.instance.pk
+        ).select_related("group").order_by("title")
+        self.fields["related_products"].widget = forms.MultipleHiddenInput()
 
 
 
@@ -337,12 +421,29 @@ ProductAttributeAssignmentFormSet = inlineformset_factory(
 class ProductPinInlineForm(StyledModelForm):
     class Meta:
         model = ProductPin
-        fields = ("x", "y", "text", "sort_order")
+        fields = ("gallery_image", "x", "y", "text", "sort_order")
         widgets = {
+            "gallery_image": forms.HiddenInput(),
             "x": forms.HiddenInput(),
             "y": forms.HiddenInput(),
             "sort_order": forms.HiddenInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["text"].widget = forms.Textarea(attrs={"class": "cms-textarea", "rows": 3})
+        product_id = getattr(self.instance, "product_id", None)
+        self.fields["gallery_image"].queryset = ProductGalleryImage.objects.filter(
+            product_id=product_id
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        gallery_image = cleaned.get("gallery_image")
+        product_id = getattr(self.instance, "product_id", None)
+        if gallery_image and gallery_image.product_id != product_id:
+            self.add_error("gallery_image", "Wybrane zdjęcie nie należy do tego produktu.")
+        return cleaned
 
 
 class BaseProductPinFormSet(forms.BaseInlineFormSet):
@@ -358,6 +459,9 @@ class BaseProductPinFormSet(forms.BaseInlineFormSet):
             text = (form.cleaned_data.get("text") or "").strip()
             if not text:
                 continue
+            gallery_image = form.cleaned_data.get("gallery_image")
+            if gallery_image and not ProductGalleryImage.objects.filter(pk=gallery_image.pk).exists():
+                continue
             saved.append(form.save(commit=commit))
         return saved
 
@@ -367,7 +471,7 @@ ProductPinFormSet = inlineformset_factory(
     ProductPin,
     form=ProductPinInlineForm,
     formset=BaseProductPinFormSet,
-    fields=("x", "y", "text", "sort_order"),
+    fields=("gallery_image", "x", "y", "text", "sort_order"),
     extra=0,
     can_delete=True,
 )
@@ -399,14 +503,40 @@ class SurfaceItemForm(StyledModelForm):
         fields = (
             "title",
             "slug",
+            "category",
+            "surface_type",
             "image",
             "color",
             "surface",
+            "product_kind",
             "format_size",
             "thickness",
+            "application",
+            "load_capacity",
             "sort_order",
             "is_active",
         )
+
+    def clean(self):
+        cleaned = super().clean()
+        if (
+            cleaned.get("product_kind") in (SurfaceItem.KIND_PAVING, SurfaceItem.KIND_SLAB)
+            and not cleaned.get("surface_type")
+        ):
+            self.add_error("surface_type", "Wybierz rodzaj powierzchni dla kostki lub płyty.")
+        return cleaned
+
+
+class SurfaceCategoryForm(StyledModelForm):
+    class Meta:
+        model = SurfaceCategory
+        fields = ("name", "slug", "parent", "description", "sort_order", "is_active")
+
+
+class SurfaceTypeForm(StyledModelForm):
+    class Meta:
+        model = SurfaceType
+        fields = ("name", "slug", "icon", "description", "sort_order", "is_active")
 
 
 class TipForm(StyledModelForm):
@@ -424,6 +554,18 @@ class TipForm(StyledModelForm):
         widgets = {"published_at": forms.DateInput(attrs={"type": "date", "class": "cms-input"})}
 
 
+class TipGalleryImageForm(StyledModelForm):
+    class Meta:
+        model = TipGalleryImage
+        fields = ("image", "alt", "layout", "sort_order")
+
+
+TipGalleryFormSet = inlineformset_factory(
+    Tip, TipGalleryImage, form=TipGalleryImageForm,
+    fields=("image", "alt", "layout", "sort_order"), extra=1, can_delete=True,
+)
+
+
 class NewsPostForm(StyledModelForm):
     class Meta:
         model = NewsPost
@@ -439,6 +581,18 @@ class NewsPostForm(StyledModelForm):
         widgets = {"published_at": forms.DateInput(attrs={"type": "date", "class": "cms-input"})}
 
 
+class NewsGalleryImageForm(StyledModelForm):
+    class Meta:
+        model = NewsGalleryImage
+        fields = ("image", "alt", "layout", "sort_order")
+
+
+NewsGalleryFormSet = inlineformset_factory(
+    NewsPost, NewsGalleryImage, form=NewsGalleryImageForm,
+    fields=("image", "alt", "layout", "sort_order"), extra=1, can_delete=True,
+)
+
+
 class DownloadCategoryForm(StyledModelForm):
     class Meta:
         model = DownloadCategory
@@ -448,7 +602,7 @@ class DownloadCategoryForm(StyledModelForm):
 class DownloadItemForm(StyledModelForm):
     class Meta:
         model = DownloadItem
-        fields = ("category", "title", "file", "kind", "sort_order", "is_published")
+        fields = ("category", "title", "file_number", "file", "kind", "sort_order", "is_published")
 
 
 class JobOpeningForm(StyledModelForm):
@@ -461,5 +615,12 @@ class JobOpeningForm(StyledModelForm):
             "employment_type",
             "excerpt",
             "body",
+            "image",
             "is_active",
         )
+
+
+class LegalDocumentForm(StyledModelForm):
+    class Meta:
+        model = LegalDocument
+        fields = ("title", "slug", "body", "is_active")

@@ -110,7 +110,7 @@ class Command(BaseCommand):
         home = get_home_context()
         report.add(
             "Serwis: kontekst strony głównej",
-            "hero_slides" in home and "reviews" in home and len(home["product_groups"]) >= 1,
+            "hero_slides" in home and "featured_news" in home and len(home["product_groups"]) >= 1,
         )
 
     def _test_public_pages(self, client, report):

@@ -26,6 +26,7 @@
                     <td>{{ group.sort_order }}</td>
                     <td class="cms-table__actions">
                         <a href="{% url 'cms_product_group_edit' group.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                        <form method="post" action="{% url 'cms_delete' 'product-group' group.pk %}" onsubmit="return confirm('Usunąć grupę i jej produkty?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
                     </td>
                 </tr>
                 {% empty %}
@@ -56,6 +57,7 @@
                     <td>{{ item.slug }}</td>
                     <td class="cms-table__actions">
                         <a href="{% url 'cms_product_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                        <form method="post" action="{% url 'cms_delete' 'product' item.pk %}" onsubmit="return confirm('Usunąć produkt?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
                     </td>
                 </tr>
                 {% empty %}

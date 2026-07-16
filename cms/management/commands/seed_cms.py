@@ -62,14 +62,33 @@ class Command(BaseCommand):
         blocks = [
             ("home-announce", ContentBlock.GROUP_HOME, "Pasek ogłoszeń", "", "", LOREM, "", "Sprawdź", "/porady/"),
             ("home-products-lead", ContentBlock.GROUP_HOME, "Nasze produkty — lead", "Nasze produkty", "", LOREM, "", "Zobacz wszystkie", "/produkty/"),
-            ("home-about", ContentBlock.GROUP_HOME, "O nas (sekcja)", "O nas", "", LOREM_LONG, LOREM, "Lorem ipsum", "/#o-nas"),
-            ("home-reviews-lead", ContentBlock.GROUP_HOME, "Opinie — lead", "Opinie", "", LOREM, "", "", ""),
+            ("home-about", ContentBlock.GROUP_HOME, "O nas (sekcja)", "O nas", "", LOREM, "", "VESTONE - TWOJA PRZESTRZEŃ", "/o-nas/"),
+            ("home-news-lead", ContentBlock.GROUP_HOME, "Aktualności — lead", "Aktualności", "", LOREM, "", "Zobacz wszystkie", "/o-nas/aktualnosci/"),
             ("home-map", ContentBlock.GROUP_HOME, "Gdzie kupić (sekcja)", "Gdzie kupić", "", LOREM, "", "Sprawdź", "/gdzie-kupic/"),
             ("home-tips-lead", ContentBlock.GROUP_HOME, "Porady — lead", "Porady", "", LOREM, "", "Zobacz wszystkie", "/porady/"),
-            ("home-contact", ContentBlock.GROUP_HOME, "Kontakt — lead", "Kontakt", "", LOREM, "", "", ""),
+            (
+                "home-contact",
+                ContentBlock.GROUP_HOME,
+                "Kontakt — treść",
+                "Kontakt",
+                "",
+                '<p><strong>DZIAŁ HANDLOWY i DZIAŁ KSIĘGOWY</strong><br>'
+                '<a href="tel:+48227555440">48 755 54 40</a><br>'
+                '<a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a></p>',
+                "",
+                "",
+                "",
+            ),
+            (
+                "products-cta", ContentBlock.GROUP_HOME, "Produkty — kafel kontaktowy",
+                "Nie wiesz co wybrać?", "",
+                "Skontaktuj się z nami, a pomożemy dobrać rozwiązanie.", "",
+                "Skontaktuj się", "/#kontakt",
+            ),
             ("page-warranty", ContentBlock.GROUP_ABOUT, "Warunki gwarancji", "Warunki gwarancji", "", LOREM_LONG, "", "", ""),
             ("page-media", ContentBlock.GROUP_ABOUT, "Dla mediów", "Dla mediów", "", LOREM_LONG, "", "", ""),
             ("page-careers-intro", ContentBlock.GROUP_ABOUT, "Praca i kariera — intro", "Praca i kariera", "", LOREM, "", "", ""),
+            ("page-about-company", ContentBlock.GROUP_ABOUT, "O nas — pełna treść", "O nas", "VESTONE - TWOJA PRZESTRZEŃ", LOREM_LONG, LOREM, "", ""),
         ]
         for key, group, label, title, subtitle, body, body_extra, button_label, button_url in blocks:
             ContentBlock.objects.update_or_create(

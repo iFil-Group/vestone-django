@@ -1,35 +1,29 @@
 (function () {
     "use strict";
 
-    var form = document.querySelector("[data-careers-form]");
-    if (!form) {
-        return;
+    function openDialog(dialog) {
+        if (!dialog) return;
+        if (typeof dialog.showModal === "function") dialog.showModal();
+        else dialog.setAttribute("open", "");
     }
 
-    var positionSelect = form.querySelector("[data-careers-position]");
-    var fileDrop = form.querySelector("[data-file-drop]");
-    var fileInput = form.querySelector("[data-file-input]");
-    var fileLabel = form.querySelector("[data-file-label]");
-    var applyLinks = document.querySelectorAll("[data-job-apply]");
-
-    applyLinks.forEach(function (link) {
-        link.addEventListener("click", function () {
-            var jobId = link.getAttribute("data-job-apply");
-            if (positionSelect && jobId) {
-                positionSelect.value = jobId;
-            }
-
-            document.querySelectorAll(".job-card").forEach(function (card) {
-                card.classList.remove("is-highlighted");
-            });
-            var card = document.getElementById("oferta-" + jobId);
-            if (card) {
-                card.classList.add("is-highlighted");
-            }
+    document.querySelectorAll("[data-job-open]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            openDialog(document.querySelector('[data-job-modal="' + button.dataset.jobOpen + '"]'));
+        });
+    });
+    document.querySelectorAll("[data-job-close]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            var dialog = button.closest("dialog");
+            if (dialog && typeof dialog.close === "function") dialog.close();
+            else if (dialog) dialog.removeAttribute("open");
         });
     });
 
-    function updateFileLabel() {
+    function bindFileDrop(fileDrop) {
+        var fileInput = fileDrop.querySelector("[data-file-input]");
+        var fileLabel = fileDrop.querySelector("[data-file-label]");
+        function updateFileLabel() {
         if (!fileInput || !fileLabel || !fileDrop) {
             return;
         }
@@ -42,13 +36,8 @@
             fileDrop.classList.remove("has-file");
             fileLabel.textContent = "Przeciągnij plik lub kliknij, aby wybrać";
         }
-    }
-
-    if (fileInput) {
-        fileInput.addEventListener("change", updateFileLabel);
-    }
-
-    if (fileDrop) {
+        }
+        if (fileInput) fileInput.addEventListener("change", updateFileLabel);
         ["dragenter", "dragover"].forEach(function (eventName) {
             fileDrop.addEventListener(eventName, function (event) {
                 event.preventDefault();
@@ -70,4 +59,10 @@
             }
         });
     }
+    document.querySelectorAll("[data-file-drop]").forEach(bindFileDrop);
+
+    var errorList = document.querySelector(".career-modal .errorlist");
+    if (errorList) openDialog(errorList.closest("[data-job-modal]"));
+    var thanks = document.querySelector("[data-career-thanks]");
+    if (thanks) openDialog(thanks);
 })();

@@ -1,0 +1,10 @@
+{% for promo in floating_promotions %}
+    {% if promo.placement == "side" %}
+    <a href="{{ promo.link_url }}" class="floating-promo floating-promo--side"><img src="{{ promo.image }}" alt=""></a>
+    {% else %}
+    <dialog class="floating-promo-modal" data-promo-modal>
+        <button type="button" data-promo-close aria-label="Zamknij">×</button>
+        <a href="{{ promo.link_url }}"><img src="{{ promo.image }}" alt=""></a>
+    </dialog>
+    {% endif %}
+{% endfor %}

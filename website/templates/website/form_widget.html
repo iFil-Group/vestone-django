@@ -1,0 +1,60 @@
+{% extends "website/layout.html" %}
+{% load static %}
+
+{% block title %}{{ widget.title }} — Vestone{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'theme/css/form-widget.css' %}">{% endblock %}
+
+{% block main %}
+<main class="widget-page">
+    <div class="widget-page__media">
+        {% if submitted and widget.thanks_image %}
+        <img src="{{ widget.thanks_image.url }}" alt="">
+        {% elif widget.image %}
+        <img src="{{ widget.image.url }}" alt="">
+        {% endif %}
+    </div>
+    <div class="widget-page__content">
+        {% if submitted %}
+        <div class="widget-page__thanks">
+            <h1>Dziękujemy</h1>
+            <div class="rich-text">{{ widget.thanks_text|safe }}</div>
+        </div>
+        {% else %}
+        <h1>{{ widget.title }}</h1>
+        <div class="rich-text">{{ widget.description|safe }}</div>
+        <form method="post" class="widget-form" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                {% if field.name != "consent" %}
+                <div class="widget-form__field{% if field.errors %} has-error{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+                </div>
+                {% endif %}
+            {% endfor %}
+            <div class="widget-form__required rich-text">{{ widget.required_fields_text|safe }}</div>
+            <div class="widget-form__consent{% if form.consent.errors %} has-error{% endif %}">
+                {{ form.consent }}
+                <label for="{{ form.consent.id_for_label }}">{{ widget.consent_text|safe }}</label>
+                {% for error in form.consent.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <button type="submit" data-order-button disabled>ZAMÓW</button>
+        </form>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var consent = document.getElementById("id_consent");
+    var button = document.querySelector("[data-order-button]");
+    if (!consent || !button) return;
+    function update() { button.disabled = !consent.checked; }
+    consent.addEventListener("change", update);
+    update();
+});
+</script>
+{% endblock %}

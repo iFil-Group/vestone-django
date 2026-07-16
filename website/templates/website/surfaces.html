@@ -14,16 +14,44 @@
     <div class="product-page__results product-page__results--category">
         <div class="product-page__results-inner">
             {% if surface_items %}
-            <p class="product-page__count" data-product-count>{{ surface_items|length }} produkt{% if surface_items|length != 1 %}ów{% endif %}</p>
+            <div class="surface-results__toolbar">
+                <p class="product-page__count" data-product-count>{{ surface_items|length }} produkt{% if surface_items|length != 1 %}ów{% endif %}</p>
+                <label>Sortuj według
+                    <select class="product-filters__select" data-surface-sort>
+                        <option value="">Kolejności CMS</option>
+                        <option value="grubosc">Grubości</option>
+                        <option value="powierzchnia">Rodzaju powierzchni</option>
+                        <option value="rodzaj-produktu">Rodzaju produktu</option>
+                        <option value="zastosowanie">Zastosowania</option>
+                        <option value="nosnosc">Nośności</option>
+                    </select>
+                </label>
+            </div>
             <p class="product-page__empty" data-product-empty hidden>Brak produktów pasujących do filtrów.</p>
             <ul class="products-grid" data-product-results>
                 {% for item in surface_items %}
-                <li data-product-item data-search="{{ item.search_text|default:item.title|lower }}">
+                <li data-product-item data-search="{{ item.search_text|default:item.title|lower }}"
+                    {% for slug, value in item.filter_values.items %}data-filter-{{ slug }}="{{ value }}" {% endfor %}>
                     <article class="product-card product-card--static">
                         <span class="product-card__media">
                             <img src="{{ item.image|default:placeholder_img }}" alt="{{ item.title }}" loading="lazy" width="400" height="300">
                         </span>
-                        <span class="product-card__title">{{ item.title }}</span>
+                        <span class="surface-card__body">
+                            {% if item.category_section %}<span class="surface-card__category">{{ item.category_section }}{% if item.category and item.category != item.category_section %} — {{ item.category }}{% endif %}</span>{% endif %}
+                            <span class="product-card__title">{{ item.title }}</span>
+                            {% if item.surface_type %}
+                            <span class="surface-card__type">
+                                {% if item.surface_icon %}<img src="{{ item.surface_icon }}" alt="">{% endif %}
+                                <strong>{{ item.surface_type }}</strong>
+                            </span>
+                            <span class="surface-card__description rich-text">{{ item.surface_description|safe }}</span>
+                            {% endif %}
+                            <span class="surface-card__meta">
+                                {% if item.thickness %}<span>Grubość: {{ item.thickness }}</span>{% endif %}
+                                {% if item.application %}<span>Zastosowanie: {{ item.application }}</span>{% endif %}
+                                {% if item.load_capacity %}<span>Nośność: {{ item.load_capacity }}</span>{% endif %}
+                            </span>
+                        </span>
                     </article>
                 </li>
                 {% endfor %}
@@ -38,4 +66,5 @@
 
 {% block extra_scripts %}
 <script src="{% static 'theme/js/product-filters.js' %}" defer></script>
+<script src="{% static 'theme/js/surface-sort.js' %}" defer></script>
 {% endblock %}

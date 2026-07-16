@@ -54,9 +54,19 @@ class ContentBlock(models.Model):
 
 
 class HeroSlide(models.Model):
+    MEDIA_IMAGE = "image"
+    MEDIA_VIDEO = "video"
+    MEDIA_CHOICES = [(MEDIA_IMAGE, "Zdjęcie"), (MEDIA_VIDEO, "Film")]
+
     title = models.CharField("Tytuł", max_length=255)
     lead = models.TextField("Lead", blank=True)
-    image = models.ImageField("Obraz", upload_to="cms/hero/", blank=True)
+    media_type = models.CharField("Typ medium", max_length=10, choices=MEDIA_CHOICES, default=MEDIA_IMAGE)
+    image = models.ImageField("Obraz desktop", upload_to="cms/hero/", blank=True)
+    mobile_image = models.ImageField("Obraz mobile", upload_to="cms/hero/mobile/", blank=True)
+    video = models.FileField("Film", upload_to="cms/hero/video/", blank=True)
+    video_url = models.URLField("Link do filmu", blank=True)
+    button_label = models.CharField("Etykieta przycisku", max_length=120, blank=True)
+    button_url = models.CharField("Link przycisku", max_length=500, blank=True)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywny", default=True)
 
@@ -67,6 +77,119 @@ class HeroSlide(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class PromotionSlide(models.Model):
+    text = models.TextField("Treść")
+    link_label = models.CharField("Etykieta linku", max_length=120, blank=True)
+    link_url = models.CharField("Link", max_length=500, blank=True)
+    active_from = models.DateTimeField("Aktywny od", blank=True, null=True)
+    active_until = models.DateTimeField("Aktywny do", blank=True, null=True)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+    is_active = models.BooleanField("Aktywny", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Slajd paska promocyjnego"
+        verbose_name_plural = "Slajdy paska promocyjnego"
+
+    def __str__(self):
+        return self.link_label or f"Komunikat #{self.pk}"
+
+
+class FormWidget(models.Model):
+    slug = models.SlugField("Nazwa widgetu", max_length=120, unique=True)
+    title = models.CharField("Tytuł", max_length=255)
+    description = models.TextField("Opis", blank=True)
+    image = models.ImageField("Zdjęcie", upload_to="cms/forms/", blank=True)
+    recipient_email = models.EmailField("Adres e-mail odbiorcy")
+    required_fields_text = models.TextField("Opis pól obowiązkowych", blank=True)
+    consent_text = models.TextField("Zgoda na przetwarzanie danych")
+    thanks_image = models.ImageField("Grafika podziękowania", upload_to="cms/forms/thanks/", blank=True)
+    thanks_text = models.TextField("Tekst podziękowania", blank=True)
+    is_active = models.BooleanField("Aktywny", default=True)
+
+    class Meta:
+        ordering = ["title"]
+        verbose_name = "Widget formularza"
+        verbose_name_plural = "Widgety formularzy"
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+
+class FormSubmission(models.Model):
+    widget = models.ForeignKey(FormWidget, on_delete=models.CASCADE, related_name="submissions")
+    first_name = models.CharField("Imię", max_length=120)
+    last_name = models.CharField("Nazwisko", max_length=120)
+    street = models.CharField("Ulica", max_length=200)
+    house_number = models.CharField("Nr domu/mieszkania", max_length=40)
+    postal_code = models.CharField("Kod pocztowy", max_length=20)
+    city = models.CharField("Miejscowość", max_length=150)
+    company = models.CharField("Firma", max_length=200, blank=True)
+    consent = models.BooleanField("Zgoda", default=False)
+    created_at = models.DateTimeField("Data zgłoszenia", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Zgłoszenie formularza"
+        verbose_name_plural = "Zgłoszenia formularzy"
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} — {self.widget}"
+
+
+class SalesPoint(models.Model):
+    OFFER_FULL = "full"
+    OFFER_MUSSO = "musso"
+    OFFER_CHOICES = [
+        (OFFER_FULL, "Pełna oferta"),
+        (OFFER_MUSSO, "Płyty dekoracyjne MUSSO"),
+    ]
+
+    name = models.CharField("Nazwa", max_length=200)
+    address = models.CharField("Adres", max_length=300)
+    phone = models.CharField("Telefon", max_length=80, blank=True)
+    email = models.EmailField("E-mail", blank=True)
+    website_url = models.URLField("Link do strony", blank=True)
+    offer_type = models.CharField("Oferta", max_length=10, choices=OFFER_CHOICES, default=OFFER_FULL)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+    is_active = models.BooleanField("Aktywny", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "Punkt sprzedaży"
+        verbose_name_plural = "Punkty sprzedaży"
+
+    def __str__(self):
+        return self.name
+
+
+class FloatingPromotion(models.Model):
+    PLACEMENT_MODAL = "modal"
+    PLACEMENT_SIDE = "side"
+    PLACEMENT_CHOICES = [
+        (PLACEMENT_MODAL, "Okno dialogowe"),
+        (PLACEMENT_SIDE, "Widget boczny"),
+    ]
+
+    placement = models.CharField("Położenie", max_length=10, choices=PLACEMENT_CHOICES)
+    image = models.ImageField("Zdjęcie", upload_to="cms/promotions/")
+    link_url = models.CharField("Link", max_length=500)
+    is_active = models.BooleanField("Aktywny", default=True)
+
+    class Meta:
+        ordering = ["placement", "id"]
+        verbose_name = "Widget promocyjny"
+        verbose_name_plural = "Widgety promocyjne"
+
+    def __str__(self):
+        return self.get_placement_display()
 
 
 class Review(models.Model):
@@ -118,6 +241,16 @@ class Product(models.Model):
     description = models.TextField("Opis", blank=True)
     description_extra = models.TextField("Opis dodatkowy", blank=True)
     image = models.ImageField("Obraz główny", upload_to="cms/products/", blank=True)
+    show_main_image = models.BooleanField("Pokaż zdjęcie główne z pinami", default=True)
+    show_packshot = models.BooleanField("Pokaż sekcję Packshot", default=False)
+    packshot_image = models.ImageField("Zdjęcie Packshot", upload_to="cms/products/packshots/", blank=True)
+    related_products = models.ManyToManyField(
+        "self",
+        symmetrical=False,
+        blank=True,
+        related_name="related_to_products",
+        verbose_name="Polecane produkty",
+    )
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywny", default=True)
 
@@ -226,6 +359,14 @@ class ProductPin(models.Model):
         related_name="pins",
         verbose_name="Produkt",
     )
+    gallery_image = models.ForeignKey(
+        "ProductGalleryImage",
+        on_delete=models.CASCADE,
+        related_name="pins",
+        verbose_name="Zdjęcie galerii",
+        blank=True,
+        null=True,
+    )
     x = models.DecimalField("Pozycja X (%)", max_digits=5, decimal_places=2, default=50)
     y = models.DecimalField("Pozycja Y (%)", max_digits=5, decimal_places=2, default=50)
     text = models.TextField("Treść tooltipa")
@@ -261,13 +402,43 @@ class ProductGalleryImage(models.Model):
 
 
 class SurfaceItem(models.Model):
+    KIND_PAVING = "paving"
+    KIND_SLAB = "slab"
+    KIND_SMALL_ARCH = "small_arch"
+    KIND_SAND = "sand"
+    KIND_CHOICES = [
+        (KIND_PAVING, "Kostka brukowa"),
+        (KIND_SLAB, "Płyta dekoracyjna"),
+        (KIND_SMALL_ARCH, "Mała architektura"),
+        (KIND_SAND, "Piasek fugowy"),
+    ]
+
     title = models.CharField("Nazwa", max_length=200)
     slug = models.SlugField("Slug", max_length=120, unique=True)
+    category = models.ForeignKey(
+        "SurfaceCategory",
+        on_delete=models.SET_NULL,
+        related_name="items",
+        verbose_name="Kategoria",
+        blank=True,
+        null=True,
+    )
+    surface_type = models.ForeignKey(
+        "SurfaceType",
+        on_delete=models.SET_NULL,
+        related_name="items",
+        verbose_name="Rodzaj powierzchni",
+        blank=True,
+        null=True,
+    )
     image = models.ImageField("Obraz", upload_to="cms/surfaces/", blank=True)
     color = models.CharField("Kolor", max_length=120, blank=True)
     surface = models.CharField("Powierzchnia", max_length=120, blank=True)
+    product_kind = models.CharField("Rodzaj produktu", max_length=20, choices=KIND_CHOICES, blank=True)
     format_size = models.CharField("Format", max_length=120, blank=True)
     thickness = models.CharField("Grubość", max_length=120, blank=True)
+    application = models.CharField("Zastosowanie", max_length=200, blank=True)
+    load_capacity = models.CharField("Nośność", max_length=120, blank=True)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywny", default=True)
 
@@ -282,6 +453,57 @@ class SurfaceItem(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+
+class SurfaceCategory(models.Model):
+    name = models.CharField("Nazwa", max_length=160)
+    slug = models.SlugField("Slug", max_length=120, unique=True)
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        related_name="children",
+        verbose_name="Sekcja nadrzędna",
+        blank=True,
+        null=True,
+    )
+    description = models.TextField("Opis", blank=True)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+    is_active = models.BooleanField("Aktywna", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "Kategoria barw i powierzchni"
+        verbose_name_plural = "Kategorie barw i powierzchni"
+
+    def __str__(self):
+        return f"{self.parent.name} — {self.name}" if self.parent else self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+class SurfaceType(models.Model):
+    name = models.CharField("Nazwa", max_length=160)
+    slug = models.SlugField("Slug", max_length=120, unique=True)
+    icon = models.ImageField("Ikona", upload_to="cms/surfaces/icons/", blank=True)
+    description = models.TextField("Opis powierzchni", blank=True)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+    is_active = models.BooleanField("Aktywny", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "Rodzaj powierzchni"
+        verbose_name_plural = "Rodzaje powierzchni"
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
 
@@ -310,10 +532,38 @@ class Tip(Article):
         verbose_name_plural = "Porady"
 
 
+class ArticleGalleryImage(models.Model):
+    LAYOUT_FULL = "full"
+    LAYOUT_HALF = "half"
+    LAYOUT_THIRD = "third"
+    LAYOUT_CHOICES = [
+        (LAYOUT_FULL, "Pełna szerokość"),
+        (LAYOUT_HALF, "1/2 szerokości"),
+        (LAYOUT_THIRD, "1/3 szerokości"),
+    ]
+
+    image = models.ImageField("Zdjęcie", upload_to="cms/articles/gallery/")
+    alt = models.CharField("Opis zdjęcia", max_length=255, blank=True)
+    layout = models.CharField("Układ", max_length=10, choices=LAYOUT_CHOICES, default=LAYOUT_FULL)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        abstract = True
+        ordering = ["sort_order", "id"]
+
+
+class TipGalleryImage(ArticleGalleryImage):
+    article = models.ForeignKey(Tip, on_delete=models.CASCADE, related_name="gallery")
+
+
 class NewsPost(Article):
     class Meta(Article.Meta):
         verbose_name = "Aktualność"
         verbose_name_plural = "Aktualności"
+
+
+class NewsGalleryImage(ArticleGalleryImage):
+    article = models.ForeignKey(NewsPost, on_delete=models.CASCADE, related_name="gallery")
 
 
 class DownloadCategory(models.Model):
@@ -345,6 +595,7 @@ class DownloadItem(models.Model):
         verbose_name="Kategoria",
     )
     title = models.CharField("Tytuł", max_length=255)
+    file_number = models.CharField("Numer pliku", max_length=100, blank=True)
     file = models.FileField("Plik", upload_to="cms/downloads/")
     kind = models.CharField("Typ", max_length=8, choices=KIND_CHOICES, default=KIND_PDF)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
@@ -366,6 +617,7 @@ class JobOpening(models.Model):
     employment_type = models.CharField("Typ zatrudnienia", max_length=120, blank=True)
     excerpt = models.TextField("Zajawka", blank=True)
     body = models.TextField("Opis", blank=True)
+    image = models.ImageField("Zdjęcie", upload_to="cms/jobs/", blank=True)
     is_active = models.BooleanField("Aktywna", default=True)
 
     class Meta:
@@ -380,3 +632,33 @@ class JobOpening(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+
+class JobApplication(models.Model):
+    job = models.ForeignKey(JobOpening, on_delete=models.CASCADE, related_name="applications")
+    name = models.CharField("Imię i nazwisko", max_length=200)
+    email = models.EmailField("E-mail")
+    phone = models.CharField("Telefon", max_length=80)
+    cv = models.FileField("CV", upload_to="cms/jobs/applications/")
+    consent = models.BooleanField("Zgoda", default=False)
+    created_at = models.DateTimeField("Data zgłoszenia", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Aplikacja"
+        verbose_name_plural = "Aplikacje"
+
+
+class LegalDocument(models.Model):
+    slug = models.SlugField("Slug", max_length=120, unique=True)
+    title = models.CharField("Tytuł", max_length=255)
+    body = models.TextField("Treść", blank=True)
+    is_active = models.BooleanField("Aktywny", default=True)
+
+    class Meta:
+        ordering = ["title"]
+        verbose_name = "Dokument"
+        verbose_name_plural = "Dokumenty"
+
+    def __str__(self):
+        return self.title

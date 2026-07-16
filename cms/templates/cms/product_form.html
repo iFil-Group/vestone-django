@@ -28,7 +28,7 @@
         </header>
         <div class="cms-card__body">
             {% for field in form %}
-                {% if field.name != "image" %}
+                {% if field.name != "image" and field.name != "packshot_image" and field.name != "related_products" %}
                 {% include "cms/partials/field.html" with field=field %}
                 {% endif %}
             {% endfor %}
@@ -52,6 +52,12 @@
                     <p class="cms-pin-editor__help">
                         Kliknij zdjęcie, aby dodać pin. Przeciągnij pin, aby zmienić pozycję. Edytuj tekst tooltipa poniżej.
                     </p>
+                    <label class="cms-field__label" for="pin-target">Edytowane zdjęcie</label>
+                    <select class="cms-select" id="pin-target" data-pin-target>
+                        {% for target in gallery_pin_targets %}
+                        <option value="{{ target.id }}" data-image="{{ target.image }}">{{ target.label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <div class="cms-pin-editor__stage" data-pin-stage>
@@ -112,10 +118,16 @@
 
             <div class="cms-card__subsection">
                 <h3 class="cms-card__subtitle">Galeria</h3>
+                <p class="cms-card__intro">Po dodaniu nowego zdjęcia zapisz produkt. Następnie wybierz je powyżej i dodaj piny.</p>
                 {{ gallery_formset.management_form }}
                 {% for form in gallery_formset %}
                 {% include "cms/partials/formset_row.html" with form=form %}
                 {% endfor %}
+            </div>
+
+            <div class="cms-card__subsection">
+                <h3 class="cms-card__subtitle">Packshot</h3>
+                {% include "cms/partials/field.html" with field=form.packshot_image %}
             </div>
         </div>
     </section>
@@ -133,6 +145,27 @@
         </div>
     </section>
 
+    <section class="cms-card" data-related-products data-search-url="{% url 'cms_product_search' %}" data-product-id="{{ product.pk|default:'' }}">
+        <header class="cms-card__head">
+            <h2 class="cms-card__title">Sprawdź inne produkty</h2>
+            <p class="cms-card__intro">Wyszukaj i przypnij konkretne produkty wyświetlane na dole karty.</p>
+        </header>
+        <div class="cms-card__body">
+            <input type="search" class="cms-input" placeholder="Wpisz nazwę produktu" data-related-search autocomplete="off">
+            <div class="cms-related-results" data-related-results></div>
+            <div class="cms-related-selected" data-related-selected>
+                {% for item in selected_related_products %}
+                <span class="cms-related-chip" data-product-id="{{ item.pk }}">
+                    {{ item.title }} — {{ item.group.title }}
+                    <button type="button" data-related-remove aria-label="Usuń">×</button>
+                    <input type="hidden" name="related_products" value="{{ item.pk }}">
+                </span>
+                {% endfor %}
+            </div>
+            {% for error in form.related_products.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        </div>
+    </section>
+
     <div class="cms-product-form__actions">
         <button type="submit" class="cms-btn cms-btn--primary">Zapisz produkt</button>
     </div>
@@ -142,4 +175,5 @@
 {% block panel_scripts %}
 <script src="{% static 'theme/js/cms-product-pins.js' %}" defer></script>
 <script src="{% static 'theme/js/cms-product-attributes.js' %}" defer></script>
+<script src="{% static 'theme/js/cms-related-products.js' %}" defer></script>
 {% endblock %}

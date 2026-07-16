@@ -8,16 +8,15 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="split-page">
+<div class="split-page split-page--single">
     <div class="split-page__content prose">
         {% if page_content.body %}
-        {{ page_content.body|linebreaks }}
+        {{ page_content.body|safe }}
         {% else %}
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
         {% endif %}
+        {% if page_content.body_extra %}{{ page_content.body_extra|safe }}{% endif %}
+        {% if page_content.image %}<img class="about-static-image" src="{{ page_content.image }}" alt="">{% endif %}
     </div>
-    <aside class="split-page__aside">
-        {% include "website/partials/contact_form_sticky.html" with form_id_prefix="warranty" form_title="Zapytanie o gwarancję" %}
-    </aside>
 </div>
 {% endblock %}

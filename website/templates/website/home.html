@@ -9,25 +9,37 @@
 
 {% block main %}
 <div class="home">
-    <aside class="home-announce" aria-label="Komunikat">
-        <div class="home-announce__inner">
-            <p class="home-announce__text">{{ announce.body }}</p>
-            {% if announce.button_label %}
-            <a href="{{ announce.button_url|default:'/porady/' }}" class="home-announce__btn">{{ announce.button_label }}</a>
-            {% endif %}
+    <aside class="home-announce{% if not promotion_slides %} is-hidden{% endif %}" aria-label="Komunikaty promocyjne" data-slider>
+        {% for item in promotion_slides %}
+        <div class="home-announce__slide{% if forloop.first %} is-active{% endif %}" data-slide>
+            <div class="home-announce__inner">
+                <div class="home-announce__text">{{ item.text|safe }}</div>
+                {% if item.link_url %}<a href="{{ item.link_url }}" class="home-announce__btn">{{ item.link_label|default:"Sprawdź" }}</a>{% endif %}
+            </div>
         </div>
+        {% endfor %}
     </aside>
 
     <section class="home-hero" aria-label="Slider główny" data-slider>
         <div class="home-hero__track">
             {% for slide in hero_slides %}
             <article class="home-hero__slide{% if forloop.first %} is-active{% endif %}" data-slide>
-                <img class="home-hero__media" src="{{ slide.image|default:placeholder_img }}" alt="" width="1920" height="800">
+                {% if slide.media_type == "video" and slide.video %}
+                <video class="home-hero__media" autoplay muted loop playsinline preload="metadata"{% if slide.image %} poster="{{ slide.image }}"{% endif %}>
+                    <source src="{{ slide.video }}">
+                </video>
+                {% else %}
+                <picture>
+                    <source media="(max-width: 767px)" srcset="{{ slide.mobile_image|default:slide.image }}">
+                    <img class="home-hero__media" src="{{ slide.image|default:placeholder_img }}" alt="" width="1920" height="1080">
+                </picture>
+                {% endif %}
                 <div class="home-hero__overlay">
                     <div class="home-hero__shell">
                         <div class="home-hero__content">
                             {% if forloop.first %}<h1 class="home-hero__title">{{ slide.title }}</h1>{% else %}<h2 class="home-hero__title">{{ slide.title }}</h2>{% endif %}
-                            <p class="home-hero__lead">{{ slide.lead }}</p>
+                            <div class="home-hero__lead">{{ slide.lead|safe }}</div>
+                            {% if slide.button_url %}<a class="home-hero__button" href="{{ slide.button_url }}">{{ slide.button_label|default:"Sprawdź" }}</a>{% endif %}
                         </div>
                     </div>
                 </div>
@@ -51,7 +63,7 @@
             <div class="home-products__header">
                 {% include "website/partials/section_heading.html" with title=products_section.title id="home-products-heading" %}
                 <div class="home-products__header-side">
-                    <p class="home-products__lead">{{ products_section.body }}</p>
+                    <div class="home-products__lead rich-text">{{ products_section.body|safe }}</div>
                     <a href="{{ products_section.button_url|default:'/produkty/' }}" class="home-products__btn">{{ products_section.button_label|default:'Zobacz wszystkie' }}</a>
                 </div>
             </div>
@@ -78,46 +90,31 @@
             </div>
             <div class="home-about__copy">
                 {% include "website/partials/section_heading.html" with title=about_section.title|default:"O nas" id="home-about-heading" modifier="light" %}
-                <p class="home-about__text">{{ about_section.body }}</p>
-                {% if about_section.body_extra %}<p class="home-about__text">{{ about_section.body_extra }}</p>{% endif %}
+                <div class="home-about__text rich-text">{{ about_section.body|safe }}</div>
                 {% if about_section.button_label %}
-                <a href="{{ about_section.button_url|default:'/#o-nas' }}" class="home-about__link">{{ about_section.button_label }}</a>
+                <a href="{{ about_section.button_url|default:'/o-nas/' }}" class="home-about__link">{{ about_section.button_label }}</a>
                 {% endif %}
             </div>
         </div>
     </section>
 
-    <section class="home-reviews" aria-labelledby="home-reviews-heading" data-slider>
-        <div class="home-reviews__inner">
-            <div class="home-reviews__intro">
-                {% include "website/partials/section_heading.html" with title=reviews_section.title id="home-reviews-heading" %}
-                <p class="home-reviews__lead">{{ reviews_section.body }}</p>
+    <section class="home-tips home-news" aria-labelledby="home-news-heading" data-card-carousel>
+        <div class="home-tips__inner">
+            <div class="home-tips__header">
+                {% include "website/partials/section_heading.html" with title=news_section.title|default:"Aktualności" id="home-news-heading" %}
+                <div class="home-tips__header-side">
+                    <div class="home-tips__lead rich-text">{{ news_section.body|safe }}</div>
+                    <a href="{{ news_section.button_url|default:'/o-nas/aktualnosci/' }}" class="home-tips__btn">{{ news_section.button_label|default:'Zobacz wszystkie' }}</a>
+                </div>
             </div>
 
-            <div class="home-reviews__carousel">
-                <div class="home-reviews__viewport">
-                    <div class="home-reviews__track">
-                        {% for slide in review_slides %}
-                        <div class="home-reviews__slide{% if forloop.first %} is-active{% endif %}" data-slide>
-                            {% for review in slide %}
-                            <blockquote class="home-review">
-                                <p class="home-review__quote">{{ review.quote }}</p>
-                                <footer class="home-review__author">{{ review.author }}</footer>
-                            </blockquote>
-                            {% endfor %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="home-reviews__nav">
-                    <button type="button" class="home-reviews__arrow" data-slider-prev aria-label="Poprzednia opinia">
-                        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M13 4l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                    </button>
-                    <div class="home-reviews__dots" data-slider-dots role="tablist" aria-label="Opinie"></div>
-                    <button type="button" class="home-reviews__arrow" data-slider-next aria-label="Następna opinia">
-                        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                    </button>
-                </div>
+            <div class="home-card-carousel">
+                <ul class="home-tips__grid" data-carousel-track>
+                    {% for item in featured_news %}
+                    <li>{% include "website/partials/home_article_card.html" with item=item url_prefix="/o-nas/aktualnosci/" %}</li>
+                    {% endfor %}
+                </ul>
+                {% include "website/partials/carousel_controls.html" with label="Aktualności" %}
             </div>
         </div>
     </section>
@@ -129,40 +126,44 @@
         <div class="home-map__panel">
             <div class="home-map__box">
                 <h2 class="home-map__title" id="home-map-heading">{{ map_section.title|default:"Gdzie kupić" }}</h2>
-                <p class="home-map__text">{{ map_section.body }}</p>
-                <a href="{{ map_section.button_url|default:'/gdzie-kupic/' }}" class="home-map__cta">{{ map_section.button_label|default:"Sprawdź" }}</a>
+                <div class="home-map__text rich-text">{{ map_section.body|safe }}</div>
+                <div class="home-map__points">
+                    {% for point in sales_points %}
+                    <article class="home-map-point">
+                        <h3><img src="{% static point.pin %}" alt=""> {{ point.name }}</h3>
+                        <address>{{ point.address }}</address>
+                        {% if point.phone %}<a href="tel:{{ point.phone }}">{{ point.phone }}</a>{% endif %}
+                        {% if point.email %}<a href="mailto:{{ point.email }}">{{ point.email }}</a>{% endif %}
+                        <div>{% if point.website_url %}<a href="{{ point.website_url }}" target="_blank" rel="noopener">Strona</a>{% endif %} <a href="{{ point.route_url }}" target="_blank" rel="noopener">Wyznacz trasę</a></div>
+                    </article>
+                    {% empty %}<p>Brak punktów sprzedaży.</p>{% endfor %}
+                </div>
+                <div class="home-map__legend">
+                    <span><img src="{% static 'img/pin-grey.png' %}" alt=""> Punkty sprzedające pełną ofertę produktów</span>
+                    <span><img src="{% static 'img/pin-red.png' %}" alt=""> Punkty sprzedające wyłącznie płyty dekoracyjne MUSSO</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="home-tips" aria-labelledby="home-tips-heading">
+    <section class="home-tips" aria-labelledby="home-tips-heading" data-card-carousel>
         <div class="home-tips__inner">
             <div class="home-tips__header">
                 {% include "website/partials/section_heading.html" with title=tips_section.title id="home-tips-heading" %}
                 <div class="home-tips__header-side">
-                    <p class="home-tips__lead">{{ tips_section.body }}</p>
+                    <div class="home-tips__lead rich-text">{{ tips_section.body|safe }}</div>
                     <a href="{{ tips_section.button_url|default:'/porady/' }}" class="home-tips__btn">{{ tips_section.button_label|default:'Zobacz wszystkie' }}</a>
                 </div>
             </div>
 
-            <ul class="home-tips__grid">
+            <div class="home-card-carousel">
+            <ul class="home-tips__grid" data-carousel-track>
                 {% for tip in featured_tips %}
-                <li>
-                    <article class="home-tip-card">
-                        <a href="/porady/{{ tip.slug }}/" class="home-tip-card__link">
-                            <span class="home-tip-card__media">
-                                <img src="{{ tip.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="260">
-                            </span>
-                            <span class="home-tip-card__body">
-                                <time class="home-tip-card__date" datetime="{{ tip.date }}">{{ tip.date_display }}</time>
-                                <h3 class="home-tip-card__title">{{ tip.title }}</h3>
-                                <span class="home-tip-card__more">Czytaj więcej</span>
-                            </span>
-                        </a>
-                    </article>
-                </li>
+                <li>{% include "website/partials/home_article_card.html" with item=tip url_prefix="/porady/" %}</li>
                 {% endfor %}
             </ul>
+            {% include "website/partials/carousel_controls.html" with label="Porady" %}
+            </div>
         </div>
     </section>
 
@@ -173,30 +174,8 @@
         <div class="home-contact__inner">
             <div class="home-contact__intro">
                 {% include "website/partials/section_heading.html" with title=contact_section.title id="home-contact-heading" modifier="light" %}
-                <p class="home-contact__lead">{{ contact_section.body }}</p>
+                <div class="home-contact__lead rich-text">{{ contact_section.body|safe }}</div>
             </div>
-
-            <form class="home-contact__form" action="#" method="post" novalidate>
-                <div class="home-contact__field">
-                    <label class="home-contact__label" for="contact-email">E-mail</label>
-                    <input class="home-contact__input" type="email" id="contact-email" name="email" autocomplete="email" placeholder="np. jan.kowalski@example.com" required>
-                </div>
-                <div class="home-contact__field">
-                    <label class="home-contact__label" for="contact-phone">Telefon</label>
-                    <input class="home-contact__input" type="tel" id="contact-phone" name="phone" autocomplete="tel" placeholder="np. +48 500 000 000">
-                </div>
-                <div class="home-contact__field">
-                    <label class="home-contact__label" for="contact-subject">Temat rozmowy</label>
-                    <input class="home-contact__input" type="text" id="contact-subject" name="subject" placeholder="W czym możemy pomóc?" required>
-                </div>
-                <div class="home-contact__field home-contact__field--checkbox">
-                    <input class="home-contact__checkbox" type="checkbox" id="contact-gdpr" name="gdpr" required>
-                    <label class="home-contact__checkbox-label" for="contact-gdpr">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="/dokumenty/polityka-prywatnosci/">Polityka prywatności</a>.
-                    </label>
-                </div>
-                <button type="submit" class="home-contact__submit">Wyślij wiadomość</button>
-            </form>
         </div>
     </section>
 </div>

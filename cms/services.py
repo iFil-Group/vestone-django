@@ -117,6 +117,8 @@ def get_hero_slides():
                 "title": "Lorem ipsum dolor sit amet",
                 "lead": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
                 "image": placeholder,
+                "mobile_image": placeholder,
+                "media_type": "image",
             }
         ]
     return [
@@ -124,8 +126,62 @@ def get_hero_slides():
             "title": slide.title,
             "lead": slide.lead,
             "image": _image_url(slide.image, placeholder),
+            "mobile_image": _image_url(slide.mobile_image, _image_url(slide.image, placeholder)),
+            "media_type": slide.media_type,
+            "video": _media_url(slide.video) or slide.video_url,
+            "button_label": slide.button_label,
+            "button_url": slide.button_url,
         }
         for slide in slides
+    ]
+
+
+def get_promotion_slides():
+    from django.db.models import Q
+    from django.utils import timezone
+    from cms.models import PromotionSlide
+
+    now = timezone.now()
+    slides = PromotionSlide.objects.filter(is_active=True).filter(
+        Q(active_from__isnull=True) | Q(active_from__lte=now),
+        Q(active_until__isnull=True) | Q(active_until__gte=now),
+    )
+    return [
+        {"text": item.text, "link_label": item.link_label, "link_url": item.link_url}
+        for item in slides
+    ]
+
+
+def get_sales_points():
+    from urllib.parse import quote_plus
+    from cms.models import SalesPoint
+
+    return [
+        {
+            "name": point.name,
+            "address": point.address,
+            "phone": point.phone,
+            "email": point.email,
+            "website_url": point.website_url,
+            "offer_type": point.offer_type,
+            "pin": "img/pin-red.png" if point.offer_type == SalesPoint.OFFER_MUSSO else "img/pin-grey.png",
+            "route_url": f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(point.address)}",
+        }
+        for point in SalesPoint.objects.filter(is_active=True)
+    ]
+
+
+def get_floating_promotions():
+    from cms.models import FloatingPromotion
+
+    return [
+        {
+            "placement": item.placement,
+            "image": _media_url(item.image),
+            "link_url": item.link_url,
+        }
+        for item in FloatingPromotion.objects.filter(is_active=True)
+        if item.image
     ]
 
 
@@ -182,6 +238,15 @@ def _product_dict(product, placeholder):
             "option__attribute"
         ).all()
     ]
+    specs = []
+    specs_by_slug = {}
+    for attribute in attributes:
+        if attribute["slug"] not in specs_by_slug:
+            spec = {"label": attribute["label"], "values": [], "slug": attribute["slug"]}
+            specs_by_slug[attribute["slug"]] = spec
+            specs.append(spec)
+        specs_by_slug[attribute["slug"]]["values"].append(attribute["value"])
+
     return {
         "slug": product.slug,
         "title": product.title,
@@ -190,16 +255,24 @@ def _product_dict(product, placeholder):
         "description": product.description,
         "description_extra": product.description_extra,
         "image": _image_url(product.image, placeholder),
+        "show_main_image": product.show_main_image,
+        "show_packshot": product.show_packshot,
+        "packshot_image": _media_url(product.packshot_image),
         "attributes": attributes,
-        "specs": attributes,
+        "specs": specs,
         "pins": [
             {"x": _pin_coord(pin.x), "y": _pin_coord(pin.y), "text": pin.text}
             for pin in product.pins.all()
+            if pin.gallery_image_id is None
         ],
         "gallery": [
             {
                 "alt": image.alt or product.title,
                 "image": _image_url(image.image, placeholder),
+                "pins": [
+                    {"x": _pin_coord(pin.x), "y": _pin_coord(pin.y), "text": pin.text}
+                    for pin in image.pins.all()
+                ],
             }
             for image in product.gallery.all()
             if image.image
@@ -208,6 +281,7 @@ def _product_dict(product, placeholder):
             {
                 "alt": product.title,
                 "image": _image_url(product.image, placeholder),
+                "pins": [],
             }
         ],
     }
@@ -249,6 +323,7 @@ def category_products(category_slug):
                 "category_slug": category_slug,
                 "search_text": _product_list_search_text(product),
                 "filter_values": _product_filter_values(product),
+                "image": _image_url(product.image, get_placeholder()),
             }
             for product in products
         ]
@@ -279,6 +354,7 @@ def get_product(category_slug, product_slug):
             "attribute_assignments__option__attribute",
             "pins",
             "gallery",
+            "gallery__pins",
         )
         .first()
     )
@@ -294,11 +370,19 @@ def get_product(category_slug, product_slug):
     return None
 
 
-def get_related_products(exclude_slug=None, limit=4):
+def get_related_products(product=None, exclude_slug=None, category_slug=None, limit=4):
     from cms.models import Product
 
     placeholder = get_placeholder()
-    qs = Product.objects.filter(is_active=True).select_related("group")
+    if product is None and exclude_slug:
+        product = Product.objects.filter(
+            slug=exclude_slug,
+            group__slug=category_slug,
+        ).first()
+    if product and product.pk and product.related_products.filter(is_active=True).exists():
+        qs = product.related_products.filter(is_active=True, group__is_active=True).select_related("group")
+    else:
+        qs = Product.objects.filter(is_active=True).select_related("group")
     if exclude_slug:
         qs = qs.exclude(slug=exclude_slug)
     if qs.exists():
@@ -307,6 +391,7 @@ def get_related_products(exclude_slug=None, limit=4):
                 "slug": product.slug,
                 "title": product.title,
                 "category_slug": product.group.slug,
+                "image": _image_url(product.image, placeholder),
             }
             for product in qs[:limit]
         ]
@@ -319,21 +404,47 @@ def get_surface_items():
     from cms.models import SurfaceItem
 
     placeholder = get_placeholder()
-    items = SurfaceItem.objects.filter(is_active=True)
+    items = SurfaceItem.objects.filter(is_active=True).select_related(
+        "category", "category__parent", "surface_type"
+    )
     if items.exists():
         return [
             {
                 "slug": item.slug,
                 "title": item.title,
                 "image": _image_url(item.image, placeholder),
+                "category": item.category.name if item.category else "",
+                "category_section": (
+                    item.category.parent.name
+                    if item.category and item.category.parent
+                    else (item.category.name if item.category else "")
+                ),
+                "surface_type": item.surface_type.name if item.surface_type else "",
+                "surface_icon": _media_url(item.surface_type.icon) if item.surface_type else None,
+                "surface_description": item.surface_type.description if item.surface_type else "",
+                "product_kind": item.get_product_kind_display() if item.product_kind else "",
+                "thickness": item.thickness,
+                "application": item.application,
+                "load_capacity": item.load_capacity,
+                "filter_values": {
+                    "grubosc": item.thickness,
+                    "powierzchnia": item.surface_type.name if item.surface_type else item.surface,
+                    "rodzaj-produktu": item.get_product_kind_display() if item.product_kind else "",
+                    "zastosowanie": item.application,
+                    "nosnosc": item.load_capacity,
+                },
                 "search_text": " ".join(
                     part
                     for part in (
                         item.title,
                         item.color,
                         item.surface,
+                        item.surface_type.name if item.surface_type else "",
+                        item.get_product_kind_display() if item.product_kind else "",
                         item.format_size,
                         item.thickness,
+                        item.application,
+                        item.load_capacity,
                     )
                     if part
                 ).lower(),
@@ -341,6 +452,25 @@ def get_surface_items():
             for item in items
         ]
     return []
+
+
+def get_surface_filters():
+    items = get_surface_items()
+    definitions = [
+        ("grubosc", "Grubość"),
+        ("powierzchnia", "Rodzaj powierzchni"),
+        ("rodzaj-produktu", "Rodzaj produktu"),
+        ("zastosowanie", "Zastosowanie"),
+        ("nosnosc", "Nośność"),
+    ]
+    filters = []
+    for name, label in definitions:
+        values = sorted(
+            {item["filter_values"].get(name, "") for item in items if item["filter_values"].get(name)}
+        )
+        if values:
+            filters.append({"name": name, "label": label, "options": [label, *values]})
+    return filters
 
 
 def _article_dict(article, placeholder):
@@ -352,6 +482,15 @@ def _article_dict(article, placeholder):
         "date": article.published_at.isoformat(),
         "date_display": date_format(article.published_at, "d.m.Y"),
         "image": _image_url(article.image, placeholder),
+        "gallery": [
+            {
+                "image": _media_url(item.image),
+                "alt": item.alt or article.title,
+                "layout": item.layout,
+            }
+            for item in article.gallery.all()
+            if item.image
+        ],
     }
 
 
@@ -359,7 +498,7 @@ def get_tips():
     from cms.models import Tip
 
     placeholder = get_placeholder()
-    tips = Tip.objects.filter(is_published=True)
+    tips = Tip.objects.filter(is_published=True).prefetch_related("gallery")
     if tips.exists():
         return [_article_dict(tip, placeholder) for tip in tips]
     from website.content_data import TIPS_POSTS
@@ -378,7 +517,7 @@ def get_news():
     from cms.models import NewsPost
 
     placeholder = get_placeholder()
-    posts = NewsPost.objects.filter(is_published=True)
+    posts = NewsPost.objects.filter(is_published=True).prefetch_related("gallery")
     if posts.exists():
         return [_article_dict(post, placeholder) for post in posts]
     from website.content_data import NEWS_POSTS
@@ -400,12 +539,14 @@ def get_job_openings():
     if jobs.exists():
         return [
             {
-                "id": job.slug,
+                "id": job.pk,
+                "slug": job.slug,
                 "title": job.title,
                 "location": job.location,
                 "type": job.employment_type,
                 "excerpt": job.excerpt,
                 "body": job.body,
+                "image": _media_url(job.image),
             }
             for job in jobs
         ]
@@ -451,6 +592,7 @@ def get_download_items():
                 {
                     "category": item.category.slug,
                     "title": item.title,
+                    "file_number": item.file_number,
                     "file": file_url,
                     "kind": item.kind,
                 }
@@ -512,16 +654,9 @@ def get_home_context():
         "placeholder_img": placeholder,
         "product_groups": get_product_groups(),
         "hero_slides": get_hero_slides(),
-        "reviews": get_reviews(),
-        "announce": _merge_content_block(
-            blocks,
-            "home-announce",
-            {
-                "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                "button_label": "Sprawdź",
-                "button_url": "/porady/",
-            },
-        ),
+        "promotion_slides": get_promotion_slides(),
+        "floating_promotions": get_floating_promotions(),
+        "sales_points": get_sales_points(),
         "products_section": _merge_content_block(
             blocks,
             "home-products-lead",
@@ -547,15 +682,17 @@ def get_home_context():
                 "button_url": "/#o-nas",
             },
         ),
-        "reviews_section": _merge_content_block(
+        "news_section": _merge_content_block(
             blocks,
-            "home-reviews-lead",
+            "home-news-lead",
             {
-                "title": "Opinie",
+                "title": "Aktualności",
                 "body": (
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
                     "Praesent commodo cursus magna."
                 ),
+                "button_label": "Zobacz wszystkie",
+                "button_url": "/o-nas/aktualnosci/",
             },
         ),
         "map_section": _merge_content_block(
@@ -585,15 +722,16 @@ def get_home_context():
             {
                 "title": "Kontakt",
                 "body": (
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu leo quam "
-                    "pellentesque ornare sem lacinia quam venenatis."
+                    "<p><strong>DZIAŁ HANDLOWY i DZIAŁ KSIĘGOWY</strong><br>"
+                    '<a href="tel:+48227555440">48 755 54 40</a><br>'
+                    '<a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a></p>'
                 ),
                 "image": placeholder,
             },
         ),
         "about_pages": about_blocks,
-        "featured_tips": get_tips()[:3],
-        "review_slides": _review_slides(get_reviews()),
+        "featured_tips": get_tips(),
+        "featured_news": get_news(),
     }
 
 

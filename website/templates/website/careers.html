@@ -10,76 +10,73 @@
 {% block page_content %}
 <div class="careers">
     {% if page_intro.body %}
-    <p class="careers__intro">{{ page_intro.body }}</p>
+    <div class="careers__intro rich-text">{{ page_intro.body|safe }}</div>
     {% endif %}
+    {% if page_intro.body_extra %}<div class="careers__intro rich-text">{{ page_intro.body_extra|safe }}</div>{% endif %}
+    {% if jobs and page_intro.image %}<img class="careers__empty-banner" src="{{ page_intro.image }}" alt="">{% endif %}
     <div class="careers__jobs">
+        {% if jobs %}
         <h2 class="careers__jobs-title">Aktualne oferty</h2>
         <ul class="careers__list">
             {% for job in jobs %}
             <li>
-                <article class="job-card" id="oferta-{{ job.id }}">
+                <article class="job-card" id="oferta-{{ job.slug }}">
+                    {% if job.image %}<img class="job-card__image" src="{{ job.image }}" alt="">{% endif %}
                     <h3 class="job-card__title">{{ job.title }}</h3>
                     <p class="job-card__meta">
                         <span class="job-card__location">{{ job.location }}</span>
                         <span class="job-card__type">{{ job.type }}</span>
                     </p>
-                    <p class="job-card__excerpt">{{ job.excerpt }}</p>
-                    <a href="#rekrutacja" class="job-card__apply" data-job-apply="{{ job.id }}">
-                        Aplikuj na to stanowisko
-                    </a>
+                    <div class="job-card__excerpt rich-text">{{ job.excerpt|safe }}</div>
+                    <button type="button" class="job-card__apply" data-job-open="{{ job.id }}">Zobacz ofertę i aplikuj</button>
                 </article>
+                <dialog class="career-modal" data-job-modal="{{ job.id }}">
+                    <button type="button" class="career-modal__close" data-job-close aria-label="Zamknij">×</button>
+                    <div class="career-modal__grid">
+                        <div class="career-modal__description">
+                            {% if job.image %}<img src="{{ job.image }}" alt="">{% endif %}
+                            <h2>{{ job.title }}</h2>
+                            <p>{{ job.location }} · {{ job.type }}</p>
+                            <div class="prose rich-text">{{ job.body|safe }}</div>
+                        </div>
+                        <form method="post" enctype="multipart/form-data" class="careers__form" data-careers-form>
+                            {% csrf_token %}
+                            <input type="hidden" name="job" value="{{ job.id }}">
+                            <h2 class="careers__form-title">Formularz rekrutacyjny</h2>
+                            {% if application_job_id == job.id|stringformat:"s" %}
+                                {{ application_form.errors }}
+                                {% for error in application_form.non_field_errors %}<p class="form-field__error">{{ error }}</p>{% endfor %}
+                            {% endif %}
+                            <div class="form-field"><label class="form-field__label" for="career-name-{{ job.id }}">Imię i nazwisko</label><input class="form-field__input" id="career-name-{{ job.id }}" name="name" value="{% if application_job_id == job.id|stringformat:'s' %}{{ application_form.name.value|default:'' }}{% endif %}" required></div>
+                            <div class="form-field"><label class="form-field__label" for="career-email-{{ job.id }}">E-mail</label><input class="form-field__input" type="email" id="career-email-{{ job.id }}" name="email" value="{% if application_job_id == job.id|stringformat:'s' %}{{ application_form.email.value|default:'' }}{% endif %}" required></div>
+                            <div class="form-field"><label class="form-field__label" for="career-phone-{{ job.id }}">Telefon</label><input class="form-field__input" type="tel" id="career-phone-{{ job.id }}" name="phone" value="{% if application_job_id == job.id|stringformat:'s' %}{{ application_form.phone.value|default:'' }}{% endif %}" required></div>
+                            <div class="form-field">
+                                <span class="form-field__label">CV</span>
+                                <label class="file-drop" data-file-drop><input type="file" class="file-drop__input" name="cv" accept=".pdf,.doc,.docx" required data-file-input><span class="file-drop__inner"><span class="file-drop__text" data-file-label>Przeciągnij plik lub kliknij</span><span class="file-drop__hint">PDF, DOC, DOCX — max. 10 MB</span></span></label>
+                            </div>
+                            <div class="form-field form-field--checkbox">
+                                <input class="form-field__checkbox" type="checkbox" id="career-consent-{{ job.id }}" name="consent" required>
+                                <label class="form-field__checkbox-label" for="career-consent-{{ job.id }}">Wyrażam zgodę na przetwarzanie moich danych osobowych przez BUDOKRUSZ S.A. w celu prowadzenia korespondencji elektronicznej.</label>
+                            </div>
+                            <p class="career-modal__rodo">Administratorem danych osobowych jest BUDOKRUSZ S.A. Zapoznaj się z <a href="/dokumenty/obowiazek-informacyjny/">Klauzulą Informacyjną RODO</a>.</p>
+                            <button type="submit" class="form-field__submit">Wyślij aplikację</button>
+                        </form>
+                    </div>
+                </dialog>
             </li>
             {% endfor %}
         </ul>
-    </div>
-
-    <div class="careers__form-wrap" id="rekrutacja">
-        <form class="careers__form" action="#" method="post" enctype="multipart/form-data" novalidate data-careers-form>
-            <h2 class="careers__form-title">Formularz rekrutacyjny</h2>
-
-            <div class="form-field">
-                <label class="form-field__label" for="career-name">Imię i nazwisko</label>
-                <input class="form-field__input" type="text" id="career-name" name="name" placeholder="Jan Kowalski" required>
-            </div>
-            <div class="form-field">
-                <label class="form-field__label" for="career-email">E-mail</label>
-                <input class="form-field__input" type="email" id="career-email" name="email" placeholder="jan.kowalski@example.com" required>
-            </div>
-            <div class="form-field">
-                <label class="form-field__label" for="career-phone">Telefon</label>
-                <input class="form-field__input" type="tel" id="career-phone" name="phone" placeholder="+48 500 000 000" required>
-            </div>
-            <div class="form-field">
-                <label class="form-field__label" for="career-position">Stanowisko</label>
-                <select class="form-field__input form-field__select" id="career-position" name="position" required data-careers-position>
-                    {% for job in jobs %}
-                    <option value="{{ job.id }}">{{ job.title }} — {{ job.location }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-field">
-                <span class="form-field__label">CV</span>
-                <label class="file-drop" data-file-drop>
-                    <input type="file" class="file-drop__input" name="cv" accept=".pdf,.doc,.docx" required data-file-input>
-                    <span class="file-drop__inner">
-                        <svg class="file-drop__icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span class="file-drop__text" data-file-label>Przeciągnij plik lub kliknij, aby wybrać</span>
-                        <span class="file-drop__hint">PDF, DOC, DOCX — max. 10 MB</span>
-                    </span>
-                </label>
-            </div>
-            <div class="form-field form-field--checkbox">
-                <input class="form-field__checkbox" type="checkbox" id="career-gdpr" name="gdpr" required>
-                <label class="form-field__checkbox-label" for="career-gdpr">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="/dokumenty/polityka-prywatnosci/">Polityka prywatności</a>.
-                </label>
-            </div>
-            <button type="submit" class="form-field__submit">Wyślij aplikację</button>
-        </form>
+        {% else %}
+            {% if page_intro.image %}<img class="careers__empty-banner" src="{{ page_intro.image }}" alt="">{% endif %}
+        {% endif %}
     </div>
 </div>
+{% if application_sent %}
+<dialog class="career-modal career-modal--thanks" data-career-thanks>
+    <button type="button" class="career-modal__close" data-job-close aria-label="Zamknij">×</button>
+    <p>Dziękujemy za przesłanie zgłoszenia, jednocześnie informujemy, że skontaktujemy się wyłącznie z wybranymi kandydatami.</p>
+</dialog>
+{% endif %}
 {% endblock %}
 
 {% block extra_scripts %}

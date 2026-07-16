@@ -6,7 +6,10 @@ from .models import (
     DownloadItem,
     HeroSlide,
     JobOpening,
+    JobApplication,
+    LegalDocument,
     NewsPost,
+    NewsGalleryImage,
     Product,
     ProductGalleryImage,
     ProductGroup,
@@ -18,7 +21,10 @@ from .models import (
     Review,
     SiteSettings,
     SurfaceItem,
+    SurfaceCategory,
+    SurfaceType,
     Tip,
+    TipGalleryImage,
 )
 
 
@@ -40,8 +46,14 @@ admin.site.register(ProductSpec)
 admin.site.register(ProductPin)
 admin.site.register(ProductGalleryImage)
 admin.site.register(SurfaceItem)
+admin.site.register(SurfaceCategory)
+admin.site.register(SurfaceType)
 admin.site.register(Tip)
 admin.site.register(NewsPost)
 admin.site.register(DownloadCategory)
 admin.site.register(DownloadItem)
 admin.site.register(JobOpening)
+admin.site.register(JobApplication)
+admin.site.register(LegalDocument)
+admin.site.register(TipGalleryImage)
+admin.site.register(NewsGalleryImage)

@@ -143,6 +143,8 @@ class Command(BaseCommand):
             ("Dodaj grupę produktów", reverse("cms_product_group_add")),
             ("Barwy i powierzchnie", reverse("cms_surfaces")),
             ("Dodaj barwę", reverse("cms_surface_add")),
+            ("Dodaj kategorię barw", reverse("cms_surface_category_add")),
+            ("Dodaj rodzaj powierzchni", reverse("cms_surface_type_add")),
             ("Porady", reverse("cms_tips")),
             ("Dodaj poradę", reverse("cms_tip_add")),
             ("Aktualności", reverse("cms_news")),
@@ -150,6 +152,14 @@ class Command(BaseCommand):
             ("Pliki", reverse("cms_downloads")),
             ("Dodaj kategorię plików", reverse("cms_download_category_add")),
             ("Dodaj plik", reverse("cms_download_add")),
+            ("Dokumenty", reverse("cms_documents")),
+            ("Dodaj dokument", reverse("cms_document_add")),
+            ("Punkty sprzedaży", reverse("cms_sales_points")),
+            ("Dodaj punkt sprzedaży", reverse("cms_sales_point_add")),
+            ("Promocje i formularze", reverse("cms_promotions")),
+            ("Dodaj komunikat", reverse("cms_promotion_slide_add")),
+            ("Dodaj formularz", reverse("cms_form_widget_add")),
+            ("Dodaj widget promocyjny", reverse("cms_floating_promotion_add")),
             ("Strona", reverse("cms_pages")),
             ("Dodaj blok", reverse("cms_page_block_add")),
             ("Dodaj slajd hero", reverse("cms_hero_add")),
@@ -467,6 +477,10 @@ class Command(BaseCommand):
         }
         if product.is_active:
             data["is_active"] = "on"
+        if product.show_main_image:
+            data["show_main_image"] = "on"
+        if product.show_packshot:
+            data["show_packshot"] = "on"
 
         for prefix in ("attributes", "pins", "gallery"):
             total = self._input_value(html, f"{prefix}-TOTAL_FORMS")

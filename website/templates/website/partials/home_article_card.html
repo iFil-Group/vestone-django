@@ -1,0 +1,12 @@
+<article class="home-tip-card">
+    <a href="{{ url_prefix }}{{ item.slug }}/" class="home-tip-card__link">
+        <span class="home-tip-card__media">
+            <img src="{{ item.image }}" alt="" loading="lazy" width="400" height="260">
+        </span>
+        <span class="home-tip-card__body">
+            <time class="home-tip-card__date" datetime="{{ item.date }}">{{ item.date_display }}</time>
+            <h3 class="home-tip-card__title">{{ item.title }}</h3>
+            <span class="home-tip-card__more">Czytaj więcej</span>
+        </span>
+    </a>
+</article>

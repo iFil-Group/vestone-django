@@ -1,0 +1,15 @@
+<div class="cms-richtext" data-richtext>
+    <div class="cms-richtext__toolbar" role="toolbar" aria-label="Formatowanie tekstu">
+        <button type="button" data-command="bold" title="Pogrubienie"><strong>B</strong></button>
+        <button type="button" data-command="italic" title="Kursywa"><em>I</em></button>
+        <button type="button" data-command="underline" title="Podkreślenie"><u>U</u></button>
+        <button type="button" data-command="insertUnorderedList" title="Lista punktowana">• Lista</button>
+        <button type="button" data-command="insertOrderedList" title="Lista numerowana">1. Lista</button>
+        <button type="button" data-command="createLink" title="Dodaj link">Link</button>
+        <button type="button" data-command="unlink" title="Usuń link">Usuń link</button>
+        <button type="button" data-command="nbsp" title="Wstaw twardą spację">Twarda spacja</button>
+        <button type="button" data-command="removeFormat" title="Wyczyść formatowanie">Wyczyść</button>
+    </div>
+    <div class="cms-richtext__editor" contenteditable="true" role="textbox" aria-multiline="true"></div>
+    {% include "django/forms/widgets/textarea.html" %}
+</div>

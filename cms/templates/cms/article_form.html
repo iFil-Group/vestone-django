@@ -1,0 +1,30 @@
+{% extends "cms/base_panel.html" %}
+{% load static %}
+
+{% block panel_content %}
+<div class="cms-toolbar"><a href="{{ back_url }}" class="cms-btn cms-btn--ghost">Wróć</a></div>
+<form method="post" enctype="multipart/form-data" class="cms-form">
+    {% csrf_token %}
+    {% for field in form %}{% include "cms/partials/field.html" with field=field %}{% endfor %}
+
+    <section class="cms-card__subsection" data-gallery-formset>
+        <h2 class="cms-section__title">Galeria</h2>
+        <p class="cms-section__help">Dodawaj zdjęcia, wybieraj ich szerokość i kolejność. Na stronie utworzą karuzelę.</p>
+        {{ gallery_formset.management_form }}
+        <div data-gallery-rows>
+            {% for gallery_form in gallery_formset %}
+            {% include "cms/partials/formset_row.html" with form=gallery_form %}
+            {% endfor %}
+        </div>
+        <template data-gallery-template>
+            {% include "cms/partials/formset_row.html" with form=gallery_formset.empty_form %}
+        </template>
+        <button type="button" class="cms-btn cms-btn--ghost" data-gallery-add>Dodaj zdjęcie</button>
+    </section>
+    <button type="submit" class="cms-btn cms-btn--primary">Zapisz</button>
+</form>
+{% endblock %}
+
+{% block panel_scripts %}
+<script src="{% static 'theme/js/cms-gallery-formset.js' %}" defer></script>
+{% endblock %}

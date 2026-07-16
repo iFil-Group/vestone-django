@@ -1,0 +1,55 @@
+{% extends "cms/base_panel.html" %}
+
+{% block panel_content %}
+<section class="cms-section">
+    <div class="cms-toolbar">
+        <h2 class="cms-section__title">Pasek promocyjny</h2>
+        <a href="{% url 'cms_promotion_slide_add' %}" class="cms-btn cms-btn--primary">Dodaj komunikat</a>
+    </div>
+    <div class="cms-table-wrap"><table class="cms-table">
+        <thead><tr><th>Komunikat</th><th>Aktywny od</th><th>Aktywny do</th><th></th></tr></thead>
+        <tbody>{% for item in promotion_slides %}<tr>
+            <td>{{ item.text|striptags|truncatechars:80 }}</td><td>{{ item.active_from|default:"—" }}</td><td>{{ item.active_until|default:"—" }}</td>
+            <td class="cms-table__actions">
+                <a href="{% url 'cms_promotion_slide_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                <form method="post" action="{% url 'cms_delete' 'promotion-slide' item.pk %}" onsubmit="return confirm('Usunąć tę pozycję?')">{% csrf_token %}<button class="cms-btn cms-btn--small" type="submit">Usuń</button></form>
+            </td>
+        </tr>{% empty %}<tr><td colspan="4" class="cms-table__empty">Brak komunikatów.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+
+<section class="cms-section">
+    <div class="cms-toolbar">
+        <h2 class="cms-section__title">Widgety formularzy</h2>
+        <a href="{% url 'cms_form_widget_add' %}" class="cms-btn cms-btn--primary">Dodaj formularz</a>
+    </div>
+    <div class="cms-table-wrap"><table class="cms-table">
+        <thead><tr><th>Nazwa</th><th>Adres strony</th><th>Zgłoszenia</th><th></th></tr></thead>
+        <tbody>{% for item in form_widgets %}<tr>
+            <td>{{ item.title }}</td><td><a href="/formularz/{{ item.slug }}/" target="_blank">/formularz/{{ item.slug }}/</a></td><td>{{ item.submissions.count }}</td>
+            <td class="cms-table__actions">
+                <a href="{% url 'cms_form_submissions_export' item.pk %}" class="cms-btn cms-btn--small">Pobierz CSV</a>
+                <a href="{% url 'cms_form_widget_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                <form method="post" action="{% url 'cms_delete' 'form-widget' item.pk %}" onsubmit="return confirm('Usunąć formularz i zgłoszenia?')">{% csrf_token %}<button class="cms-btn cms-btn--small" type="submit">Usuń</button></form>
+            </td>
+        </tr>{% empty %}<tr><td colspan="4" class="cms-table__empty">Brak formularzy.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+
+<section class="cms-section">
+    <div class="cms-toolbar">
+        <h2 class="cms-section__title">Okno dialogowe i widget boczny</h2>
+        <a href="{% url 'cms_floating_promotion_add' %}" class="cms-btn cms-btn--primary">Dodaj widget</a>
+    </div>
+    <div class="cms-table-wrap"><table class="cms-table">
+        <thead><tr><th>Typ</th><th>Link</th><th></th></tr></thead>
+        <tbody>{% for item in floating_promotions %}<tr>
+            <td>{{ item.get_placement_display }}</td><td>{{ item.link_url }}</td>
+            <td class="cms-table__actions">
+                <a href="{% url 'cms_floating_promotion_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                <form method="post" action="{% url 'cms_delete' 'floating-promotion' item.pk %}" onsubmit="return confirm('Usunąć tę pozycję?')">{% csrf_token %}<button class="cms-btn cms-btn--small" type="submit">Usuń</button></form>
+            </td>
+        </tr>{% empty %}<tr><td colspan="3" class="cms-table__empty">Brak widgetów.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+{% endblock %}

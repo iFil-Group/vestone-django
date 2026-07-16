@@ -1,0 +1,28 @@
+{% extends "website/page.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+{% endblock %}
+
+{% block page_content %}
+{% if article.gallery %}
+<section class="article-gallery" data-article-gallery>
+    <div class="article-gallery__viewport">
+        <div class="article-gallery__track" data-article-gallery-track>
+            {% for image in article.gallery %}
+            <figure class="article-gallery__slide article-gallery__slide--{{ image.layout }}">
+                <img src="{{ image.image }}" alt="{{ image.alt }}" loading="lazy">
+            </figure>
+            {% endfor %}
+        </div>
+    </div>
+    <button type="button" data-article-prev aria-label="Poprzednie zdjęcie">‹</button>
+    <button type="button" data-article-next aria-label="Następne zdjęcie">›</button>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'theme/js/article-gallery.js' %}" defer></script>
+{% endblock %}

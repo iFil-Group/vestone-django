@@ -102,11 +102,34 @@
         autoplayMs: 7000,
     });
 
-    var reviews = document.querySelector(".home-reviews[data-slider]");
-    initSlider(reviews, {
+    var announcement = document.querySelector(".home-announce[data-slider]");
+    initSlider(announcement, {
         slideSelector: "[data-slide]",
-        dotBtnClass: "home-reviews__dot",
-        dotLabel: "Opinia",
-        autoplayMs: 6000,
+        dotBtnClass: "",
+        autoplayMs: 3000,
     });
+
+    document.querySelectorAll("[data-card-carousel]").forEach(function (root) {
+        var track = root.querySelector("[data-carousel-track]");
+        var prev = root.querySelector("[data-carousel-prev]");
+        var next = root.querySelector("[data-carousel-next]");
+        var controls = root.querySelector(".home-card-carousel__controls");
+        if (!track || !prev || !next) return;
+
+        function step(direction) {
+            var card = track.querySelector("li");
+            if (!card) return;
+            track.scrollBy({ left: direction * (card.offsetWidth + 20), behavior: "smooth" });
+        }
+        prev.addEventListener("click", function () { step(-1); });
+        next.addEventListener("click", function () { step(1); });
+
+        function updateControls() {
+            var count = track.querySelectorAll("li").length;
+            controls.classList.toggle("is-hidden", window.innerWidth >= 768 && count <= 3);
+        }
+        window.addEventListener("resize", updateControls);
+        updateControls();
+    });
+
 })();

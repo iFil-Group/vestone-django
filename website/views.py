@@ -65,8 +65,47 @@ def home(request):
     return render(request, "website/home.html", context)
 
 
+def form_widget(request, slug):
+    from django.core.mail import send_mail
+    from django.shortcuts import get_object_or_404
+    from cms.models import FormWidget
+    from website.forms import WidgetSubmissionForm
+
+    widget = get_object_or_404(FormWidget, slug=slug, is_active=True)
+    submitted = False
+    form = WidgetSubmissionForm(request.POST or None, widget=widget)
+    if request.method == "POST" and form.is_valid():
+        submission = form.save()
+        send_mail(
+            subject=f"Nowe zgłoszenie — {widget.title}",
+            message=(
+                f"Imię i nazwisko: {submission.first_name} {submission.last_name}\n"
+                f"Adres: {submission.street} {submission.house_number}, "
+                f"{submission.postal_code} {submission.city}\n"
+                f"Firma: {submission.company or '—'}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[widget.recipient_email],
+            fail_silently=True,
+        )
+        submitted = True
+        form = WidgetSubmissionForm(widget=widget)
+
+    return render(
+        request,
+        "website/form_widget.html",
+        {
+            "page_title": widget.title,
+            "page_heading": widget.title,
+            "widget": widget,
+            "form": form,
+            "submitted": submitted,
+        },
+    )
+
+
 def products_list(request):
-    from cms.services import get_placeholder, get_product_groups
+    from cms.services import get_content_block, get_placeholder, get_product_groups
 
     return render(
         request,
@@ -76,6 +115,15 @@ def products_list(request):
             "page_heading": "Produkty",
             "page_body_class": "page-body--products-catalog",
             "product_groups": get_product_groups(),
+            "products_cta": get_content_block(
+                "products-cta",
+                {
+                    "title": "Nie wiesz co wybrać?",
+                    "body": "Skontaktuj się z nami, a pomożemy dobrać rozwiązanie.",
+                    "button_label": "Skontaktuj się",
+                    "button_url": "/#kontakt",
+                },
+            ),
             "placeholder_img": get_placeholder(),
         },
     )
@@ -130,14 +178,16 @@ def product_detail(request, category_slug, product_slug):
             "page_heading": product["title"],
             "category": category,
             "product": product,
-            "related_products": get_related_products(exclude_slug=product_slug),
+            "related_products": get_related_products(
+                exclude_slug=product_slug, category_slug=category_slug
+            ),
             "placeholder_img": get_placeholder(),
         },
     )
 
 
 def surfaces(request):
-    from cms.services import get_placeholder, get_surface_items
+    from cms.services import get_placeholder, get_surface_filters, get_surface_items
 
     surface_items = get_surface_items()
     return render(
@@ -146,7 +196,7 @@ def surfaces(request):
         {
             "page_title": "Barwy i powierzchnie",
             "page_heading": "Barwy i powierzchnie",
-            "product_filters": [],
+            "product_filters": get_surface_filters(),
             "placeholder_img": get_placeholder(),
             "surface_items": surface_items,
         },
@@ -191,12 +241,16 @@ def tip_detail(request, slug):
     if tip is None:
         raise Http404
 
-    return _page(
+    return render(
         request,
-        tip["title"],
-        heading=tip["title"],
-        lead=tip["excerpt"],
-        body=tip.get("body"),
+        "website/article_detail.html",
+        {
+            "page_title": tip["title"],
+            "page_heading": tip["title"],
+            "page_lead": tip["excerpt"],
+            "page_body": tip.get("body"),
+            "article": tip,
+        },
     )
 
 
@@ -217,7 +271,16 @@ def downloads(request):
 
 
 def about_company(request):
-    return redirect("/#o-nas")
+    from cms.services import get_content_block
+
+    content = get_content_block("page-about-company")
+    return _page(
+        request,
+        "O nas",
+        heading=content.get("title") or "O nas",
+        lead=content.get("subtitle"),
+        body=(content.get("body") or "") + (content.get("body_extra") or ""),
+    )
 
 
 def news(request):
@@ -244,22 +307,48 @@ def news_detail(request, slug):
     if post is None:
         raise Http404
 
-    return _page(
+    return render(
         request,
-        post["title"],
-        heading=post["title"],
-        lead=post["excerpt"],
-        body=post.get("body"),
+        "website/article_detail.html",
+        {
+            "page_title": post["title"],
+            "page_heading": post["title"],
+            "page_lead": post["excerpt"],
+            "page_body": post.get("body"),
+            "article": post,
+        },
     )
 
 
 def careers(request):
-    from cms.services import get_content_block, get_job_openings
+    from django.core.mail import EmailMessage
+    from cms.services import get_content_block, get_job_openings, get_site_settings
+    from website.forms import JobApplicationForm
 
     intro = get_content_block(
         "page-careers-intro",
         {"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."},
     )
+    application_sent = False
+    application_job_id = request.POST.get("job", "") if request.method == "POST" else ""
+    application_form = JobApplicationForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and application_form.is_valid():
+        application = application_form.save()
+        email = EmailMessage(
+            subject=f"Aplikacja: {application.job.title}",
+            body=(
+                f"Kandydat: {application.name}\nE-mail: {application.email}\n"
+                f"Telefon: {application.phone}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[get_site_settings()["email"] or settings.DEFAULT_FROM_EMAIL],
+        )
+        application.cv.open("rb")
+        email.attach(application.cv.name.rsplit("/", 1)[-1], application.cv.read())
+        email.send(fail_silently=True)
+        application.cv.close()
+        application_sent = True
+        application_form = JobApplicationForm()
     return render(
         request,
         "website/careers.html",
@@ -268,6 +357,9 @@ def careers(request):
             "page_heading": "Praca i kariera",
             "jobs": get_job_openings(),
             "page_intro": intro,
+            "application_form": application_form,
+            "application_job_id": application_job_id,
+            "application_sent": application_sent,
         },
     )
 
@@ -310,12 +402,15 @@ DOCUMENT_PAGES = {
 
 
 def document(request, slug):
-    title = DOCUMENT_PAGES.get(slug)
+    from cms.models import LegalDocument
+
+    document_obj = LegalDocument.objects.filter(slug=slug, is_active=True).first()
+    title = document_obj.title if document_obj else DOCUMENT_PAGES.get(slug)
     if title is None:
         from django.http import Http404
 
         raise Http404
-    return _page(request, title)
+    return _page(request, title, body=document_obj.body if document_obj else None)
 
 
 def page_not_found(request, exception=None):

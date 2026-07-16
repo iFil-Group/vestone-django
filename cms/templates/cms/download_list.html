@@ -20,6 +20,7 @@
                     <td>{{ category.slug }}</td>
                     <td class="cms-table__actions">
                         <a href="{% url 'cms_download_category_edit' category.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                        <form method="post" action="{% url 'cms_delete' 'download-category' category.pk %}" onsubmit="return confirm('Usunąć kategorię i jej pliki?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
                     </td>
                 </tr>
                 {% empty %}
@@ -35,20 +36,26 @@
     <div class="cms-table-wrap">
         <table class="cms-table">
             <thead>
-                <tr><th>Tytuł</th><th>Kategoria</th><th>Typ</th><th></th></tr>
+                <tr><th>Tytuł</th><th>Numer</th><th>Kategoria</th><th>Typ</th><th>Kolejność</th><th></th></tr>
             </thead>
             <tbody>
                 {% for item in items %}
                 <tr>
                     <td>{{ item.title }}</td>
+                    <td>{{ item.file_number|default:"—" }}</td>
                     <td>{{ item.category.label }}</td>
                     <td>{{ item.kind }}</td>
                     <td class="cms-table__actions">
+                        <form method="post" action="{% url 'cms_download_move' item.pk 'up' %}">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w górę">↑</button></form>
+                        <form method="post" action="{% url 'cms_download_move' item.pk 'down' %}">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w dół">↓</button></form>
+                    </td>
+                    <td class="cms-table__actions">
                         <a href="{% url 'cms_download_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                        <form method="post" action="{% url 'cms_delete' 'download' item.pk %}" onsubmit="return confirm('Usunąć plik?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" class="cms-table__empty">Brak plików.</td></tr>
+                <tr><td colspan="6" class="cms-table__empty">Brak plików.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

@@ -29,6 +29,12 @@
                 {% endfor %}
                 <td class="cms-table__actions">
                     <a href="{% url edit_url_name item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
+                    {% if delete_model %}
+                    <form method="post" action="{% url 'cms_delete' delete_model item.pk %}" onsubmit="return confirm('Usunąć tę pozycję?')">
+                        {% csrf_token %}
+                        <button type="submit" class="cms-btn cms-btn--small">Usuń</button>
+                    </form>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

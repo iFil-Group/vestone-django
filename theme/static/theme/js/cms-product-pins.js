@@ -15,6 +15,7 @@
     var template = editor.querySelector("[data-pin-empty-template]");
     var imageInput = document.getElementById("id_image");
     var addButton = editor.querySelector("[data-pin-add]");
+    var targetSelect = editor.querySelector("[data-pin-target]");
     var pinObjectUrl = null;
     var PIN_PREVIEW_MAX_WIDTH = 1200;
 
@@ -82,6 +83,7 @@
             x: row.querySelector('[name$="-x"]'),
             y: row.querySelector('[name$="-y"]'),
             text: row.querySelector('[name$="-text"]'),
+            galleryImage: row.querySelector('[name$="-gallery_image"]'),
             sort: row.querySelector('[name$="-sort_order"]'),
             deleteInput: row.querySelector('[name$="-DELETE"]'),
             idInput: row.querySelector('[name$="-id"]'),
@@ -99,7 +101,18 @@
 
     function visibleRows() {
         return allRows().filter(function (row) {
-            return !row.hidden && !rowIsDeleted(row);
+            var fields = getRowFields(row);
+            var target = fields.galleryImage ? fields.galleryImage.value : "";
+            var selectedTarget = targetSelect ? targetSelect.value : "";
+            return !rowIsDeleted(row) && target === selectedTarget;
+        });
+    }
+
+    function refreshRows() {
+        allRows().forEach(function (row) {
+            var fields = getRowFields(row);
+            var target = fields.galleryImage ? fields.galleryImage.value : "";
+            row.hidden = rowIsDeleted(row) || target !== (targetSelect ? targetSelect.value : "");
         });
     }
 
@@ -193,6 +206,7 @@
 
         var row = rowsContainer.lastElementChild;
         var fields = getRowFields(row);
+        setFieldValue(fields.galleryImage, targetSelect ? targetSelect.value : "");
         setFieldValue(fields.x, x.toFixed(2));
         setFieldValue(fields.y, y.toFixed(2));
         if (text) {
@@ -203,6 +217,7 @@
 
         bindRow(row);
         reindexRows();
+        refreshRows();
         selectRow(row, { focus: false });
         return row;
     }
@@ -222,6 +237,7 @@
             activeRow = null;
         }
         reindexRows();
+        refreshRows();
         renderPins();
     }
 
@@ -312,6 +328,17 @@
 
     rowsContainer.querySelectorAll("[data-pin-row]").forEach(bindRow);
 
+    if (targetSelect) {
+        targetSelect.addEventListener("change", function () {
+            var option = targetSelect.options[targetSelect.selectedIndex];
+            if (option && option.dataset.image) image.src = option.dataset.image;
+            activeRow = null;
+            refreshRows();
+            renderPins();
+            if (visibleRows().length) selectRow(visibleRows()[0], { focus: false });
+        });
+    }
+
     visibleRows().forEach(function (row, index) {
         var fields = getRowFields(row);
         if (fields.sort) {
@@ -325,7 +352,11 @@
     if (productForm) {
         productForm.addEventListener("cms:file-selected", function (event) {
             var detail = event.detail || {};
-            if (detail.input && detail.input.id === "id_image") {
+            if (
+                detail.input
+                && detail.input.id === "id_image"
+                && (!targetSelect || targetSelect.value === "")
+            ) {
                 setPinPreviewFromFile(detail.file);
             }
         });
@@ -336,6 +367,7 @@
     }
 
     reindexRows();
+    refreshRows();
     renderPins();
 
     if (visibleRows().length) {

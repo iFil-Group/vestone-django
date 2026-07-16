@@ -6,7 +6,7 @@
         <span class="tip-card__body">
             <time class="tip-card__date" datetime="{{ tip.date }}">{{ tip.date_display }}</time>
             <h2 class="tip-card__title">{{ tip.title }}</h2>
-            <p class="tip-card__excerpt">{{ tip.excerpt }}</p>
+            <div class="tip-card__excerpt rich-text">{{ tip.excerpt|safe }}</div>
             <span class="tip-card__more">Czytaj więcej</span>
         </span>
     </a>

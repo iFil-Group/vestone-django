@@ -15,17 +15,9 @@
         track.querySelectorAll(".product-gallery__slide")
     );
     var originalCount = slides.length;
-    if (originalCount < 4) {
-        return;
-    }
-
-    slides.forEach(function (slide) {
-        track.appendChild(slide.cloneNode(true));
-    });
-
     var index = 0;
-    var timer = null;
-    var autoplayMs = 4200;
+    var prevButton = root.querySelector("[data-product-gallery-prev]");
+    var nextButton = root.querySelector("[data-product-gallery-next]");
 
     function getGap() {
         var styles = window.getComputedStyle(track);
@@ -40,49 +32,43 @@
         return first.getBoundingClientRect().width + getGap();
     }
 
+    function visibleCount() {
+        if (!slides[0]) return 1;
+        return Math.max(1, Math.round(root.clientWidth / slides[0].getBoundingClientRect().width));
+    }
+
     function update(animate) {
-        track.style.transition = animate === false ? "none" : "transform 0.55s ease";
+        var maxIndex = Math.max(0, originalCount - visibleCount());
+        index = Math.min(index, maxIndex);
+        track.style.transition = animate === false ? "none" : "transform 0.4s ease";
         track.style.transform = "translateX(" + -index * slideStep() + "px)";
+        var hasOverflow = maxIndex > 0;
+        if (prevButton) {
+            prevButton.hidden = !hasOverflow;
+            prevButton.disabled = index === 0;
+        }
+        if (nextButton) {
+            nextButton.hidden = !hasOverflow;
+            nextButton.disabled = index === maxIndex;
+        }
     }
 
     function next() {
-        index += 1;
+        index = Math.min(index + 1, Math.max(0, originalCount - visibleCount()));
         update(true);
-
-        if (index >= originalCount) {
-            track.addEventListener(
-                "transitionend",
-                function onEnd() {
-                    track.removeEventListener("transitionend", onEnd);
-                    index = 0;
-                    update(false);
-                },
-                { once: true }
-            );
-        }
     }
 
-    function startAutoplay() {
-        if (timer) {
-            clearInterval(timer);
-        }
-        timer = setInterval(next, autoplayMs);
+    function previous() {
+        index = Math.max(0, index - 1);
+        update(true);
     }
 
-    function stopAutoplay() {
-        if (timer) {
-            clearInterval(timer);
-            timer = null;
-        }
-    }
-
-    root.addEventListener("mouseenter", stopAutoplay);
-    root.addEventListener("mouseleave", startAutoplay);
+    if (prevButton) prevButton.addEventListener("click", previous);
+    if (nextButton) nextButton.addEventListener("click", next);
 
     window.addEventListener("resize", function () {
         update(false);
     });
 
     update(false);
-    startAutoplay();
 })();
