@@ -458,7 +458,7 @@ class Command(BaseCommand):
         html = response.content.decode()
         report.add(
             "Formularz ma stylowane pola plików",
-            "cms-file__button" in html,
+            "cms-file__dropzone" in html,
         )
         report.add(
             "Skrypt pól plików załadowany",
@@ -467,6 +467,7 @@ class Command(BaseCommand):
 
     def _build_product_post_data(self, product, html):
         data = {
+            "card_type": product.card_type or "standard",
             "group": str(product.group_id),
             "title": product.title,
             "slug": product.slug,
@@ -481,8 +482,9 @@ class Command(BaseCommand):
             data["show_main_image"] = "on"
         if product.show_packshot:
             data["show_packshot"] = "on"
+        data["packshot_columns"] = str(product.packshot_columns or 2)
 
-        for prefix in ("attributes", "pins", "gallery"):
+        for prefix in ("attributes", "pins", "gallery", "packshots"):
             total = self._input_value(html, f"{prefix}-TOTAL_FORMS")
             initial = self._input_value(html, f"{prefix}-INITIAL_FORMS")
             min_num = self._input_value(html, f"{prefix}-MIN_NUM_FORMS")
@@ -519,6 +521,9 @@ class Command(BaseCommand):
 
         for index, pin in enumerate(product.pins.order_by("sort_order", "id")):
             data[f"pins-{index}-id"] = str(pin.pk)
+            data[f"pins-{index}-gallery_image"] = (
+                str(pin.gallery_image_id) if pin.gallery_image_id else ""
+            )
             data[f"pins-{index}-x"] = str(pin.x)
             data[f"pins-{index}-y"] = str(pin.y)
             data[f"pins-{index}-text"] = pin.text
@@ -528,11 +533,23 @@ class Command(BaseCommand):
             data[f"gallery-{index}-id"] = str(image.pk)
             data[f"gallery-{index}-alt"] = image.alt
             data[f"gallery-{index}-sort_order"] = str(image.sort_order)
+            if image.pins_enabled:
+                data[f"gallery-{index}-pins_enabled"] = "on"
 
         gallery_total = int(data.get("gallery-TOTAL_FORMS", product.gallery.count()))
         for index in range(product.gallery.count(), gallery_total):
             data[f"gallery-{index}-alt"] = ""
             data[f"gallery-{index}-sort_order"] = "0"
+
+        for index, image in enumerate(product.packshots.order_by("sort_order", "id")):
+            data[f"packshots-{index}-id"] = str(image.pk)
+            data[f"packshots-{index}-caption"] = image.caption
+            data[f"packshots-{index}-sort_order"] = str(image.sort_order)
+
+        packshot_total = int(data.get("packshots-TOTAL_FORMS", product.packshots.count()))
+        for index in range(product.packshots.count(), packshot_total):
+            data[f"packshots-{index}-caption"] = ""
+            data[f"packshots-{index}-sort_order"] = "0"
 
         return data
 

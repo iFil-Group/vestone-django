@@ -12,15 +12,30 @@
         }
     }
 
-    function setPreviewImage(preview, input, file) {
+    function setHidden(el, hidden) {
+        if (!el) return;
+        el.classList.toggle("is-hidden", !!hidden);
+        el.hidden = !!hidden;
+    }
+
+    function setPreviewImage(preview, input, file, callback) {
         if (!preview || !file || file.type.indexOf("image/") !== 0) {
+            if (callback) callback(false);
             return;
         }
 
         if (file.size > MAX_PREVIEW_BYTES) {
             preview.hidden = true;
             preview.removeAttribute("src");
+            if (callback) callback(false);
             return;
+        }
+
+        function applyUrl(objectUrl) {
+            input._cmsObjectUrl = objectUrl;
+            preview.src = objectUrl;
+            preview.hidden = false;
+            if (callback) callback(true);
         }
 
         if (typeof createImageBitmap === "function") {
@@ -38,12 +53,10 @@
                     canvas.toBlob(
                         function (blob) {
                             if (!blob) {
+                                if (callback) callback(false);
                                 return;
                             }
-                            var objectUrl = URL.createObjectURL(blob);
-                            input._cmsObjectUrl = objectUrl;
-                            preview.src = objectUrl;
-                            preview.hidden = false;
+                            applyUrl(URL.createObjectURL(blob));
                         },
                         "image/jpeg",
                         0.82
@@ -51,19 +64,25 @@
                 })
                 .catch(function () {
                     revokeObjectUrl(input);
-                    var objectUrl = URL.createObjectURL(file);
-                    input._cmsObjectUrl = objectUrl;
-                    preview.src = objectUrl;
-                    preview.hidden = false;
+                    applyUrl(URL.createObjectURL(file));
                 });
             return;
         }
 
         revokeObjectUrl(input);
-        var fallbackUrl = URL.createObjectURL(file);
-        input._cmsObjectUrl = fallbackUrl;
-        preview.src = fallbackUrl;
-        preview.hidden = false;
+        applyUrl(URL.createObjectURL(file));
+    }
+
+    function assignFiles(input, files) {
+        if (!input || !files || !files.length) return;
+        try {
+            var transfer = new DataTransfer();
+            transfer.items.add(files[0]);
+            input.files = transfer.files;
+        } catch (err) {
+            return;
+        }
+        input.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
     function bindFileField(wrapper) {
@@ -74,11 +93,41 @@
 
         var input = wrapper.querySelector(".cms-file__input");
         var trigger = wrapper.querySelector("[data-cms-file-trigger]");
+        var dropzone = wrapper.querySelector("[data-cms-file-dropzone]");
         var nameEl = wrapper.querySelector("[data-cms-file-name]");
         var preview = wrapper.querySelector("[data-cms-file-preview]");
         var clearButton = wrapper.querySelector("[data-cms-file-clear]");
         var clearField = wrapper.querySelector("[data-cms-file-clear-field] input[type='checkbox']");
         var currentBlock = wrapper.querySelector("[data-cms-file-current]");
+        var pending = wrapper.querySelector("[data-cms-file-pending]");
+        var pendingPreview = wrapper.querySelector("[data-cms-file-pending-preview]");
+        var pendingName = wrapper.querySelector("[data-cms-file-pending-name]");
+        var pendingClear = wrapper.querySelector("[data-cms-file-pending-clear]");
+
+        function showFilled(file) {
+            wrapper.classList.add("cms-file--has-file");
+            setHidden(dropzone, true);
+            setHidden(currentBlock, true);
+            setHidden(pending, false);
+            if (pendingName) pendingName.textContent = file.name;
+            setPreviewImage(pendingPreview || preview, input, file);
+        }
+
+        function showEmpty() {
+            wrapper.classList.remove("cms-file--has-file");
+            setHidden(pending, true);
+            setHidden(currentBlock, true);
+            setHidden(dropzone, false);
+            if (nameEl) nameEl.textContent = "Przeciągnij plik lub kliknij";
+            if (preview) {
+                preview.hidden = true;
+                preview.removeAttribute("src");
+            }
+            if (pendingPreview) {
+                pendingPreview.hidden = true;
+                pendingPreview.removeAttribute("src");
+            }
+        }
 
         if (trigger && input) {
             trigger.addEventListener("click", function (event) {
@@ -87,17 +136,36 @@
             });
         }
 
-        if (input && nameEl) {
+        if (dropzone) {
+            ["dragenter", "dragover"].forEach(function (type) {
+                dropzone.addEventListener(type, function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropzone.classList.add("is-dragover");
+                });
+            });
+            ["dragleave", "drop"].forEach(function (type) {
+                dropzone.addEventListener(type, function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropzone.classList.remove("is-dragover");
+                });
+            });
+            dropzone.addEventListener("drop", function (event) {
+                var files = event.dataTransfer && event.dataTransfer.files;
+                assignFiles(input, files);
+            });
+        }
+
+        if (input) {
             input.addEventListener("change", function () {
                 var file = input.files && input.files[0];
                 if (!file) {
                     return;
                 }
-
-                nameEl.textContent = file.name;
-
+                if (clearField) clearField.checked = false;
+                showFilled(file);
                 window.setTimeout(function () {
-                    setPreviewImage(preview, input, file);
                     input.dispatchEvent(
                         new CustomEvent("cms:file-selected", {
                             bubbles: true,
@@ -109,13 +177,27 @@
         }
 
         if (clearButton && clearField) {
-            clearButton.addEventListener("click", function () {
-                var marked = clearField.checked;
-                clearField.checked = !marked;
-                clearButton.textContent = marked ? "Usuń plik" : "Przywróć plik";
-                clearButton.classList.toggle("is-active", !marked);
-                if (currentBlock) {
-                    currentBlock.classList.toggle("is-marked-delete", !marked);
+            clearButton.addEventListener("click", function (event) {
+                event.preventDefault();
+                clearField.checked = true;
+                revokeObjectUrl(input);
+                if (input) input.value = "";
+                showEmpty();
+            });
+        }
+
+        if (pendingClear) {
+            pendingClear.addEventListener("click", function (event) {
+                event.preventDefault();
+                revokeObjectUrl(input);
+                if (input) input.value = "";
+                if (clearField) clearField.checked = true;
+                if (currentBlock && !clearField) {
+                    showEmpty();
+                } else if (currentBlock && clearField) {
+                    showEmpty();
+                } else {
+                    showEmpty();
                 }
             });
         }
@@ -129,19 +211,12 @@
             return;
         }
 
-        function syncRowState() {
-            var marked = deleteField.checked;
-            row.classList.toggle("is-marked-delete", marked);
-            deleteButton.textContent = marked ? "Przywróć" : "Usuń";
-            deleteButton.classList.toggle("is-active", marked);
-        }
-
-        deleteButton.addEventListener("click", function () {
-            deleteField.checked = !deleteField.checked;
-            syncRowState();
+        deleteButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            deleteField.checked = true;
+            row.classList.add("is-removed");
+            row.hidden = true;
         });
-
-        syncRowState();
     }
 
     function bindToggle(field) {

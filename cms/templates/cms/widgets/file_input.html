@@ -1,12 +1,23 @@
 <div class="cms-file" data-cms-file>
-    <div class="cms-file__control">
-        <button type="button" class="cms-file__button" data-cms-file-trigger>
-            <span class="cms-file__button-icon" aria-hidden="true">↑</span>
-            Wybierz plik
-        </button>
-        <span class="cms-file__name" data-cms-file-name>Nie wybrano pliku</span>
+    <div class="cms-file__dropzone" data-cms-file-dropzone data-cms-file-trigger>
+        <span class="cms-file__drop-title" data-cms-file-name>Przeciągnij plik lub kliknij</span>
+        <span class="cms-file__drop-hint">JPG, PNG, WEBP</span>
+        <img class="cms-file__preview cms-file__preview--pending" data-cms-file-preview hidden alt="">
     </div>
-    <img class="cms-file__preview cms-file__preview--pending" data-cms-file-preview hidden alt="">
+
+    <div class="cms-file__pending is-hidden" data-cms-file-pending>
+        <div class="cms-file__filled-body">
+            <img class="cms-file__preview" data-cms-file-pending-preview alt="" hidden>
+            <div class="cms-file__meta">
+                <span class="cms-file__current-name" data-cms-file-pending-name></span>
+                <a href="#" class="cms-row-action cms-row-action--delete" data-cms-file-pending-clear>
+                    {% include "cms/partials/icon_trash.html" %}
+                    <span>Usuń</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <input
         type="{{ widget.type }}"
         name="{{ widget.name }}"

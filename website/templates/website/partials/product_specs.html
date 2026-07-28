@@ -1,0 +1,10 @@
+{% if product.specs %}
+<dl class="product-detail__specs">
+    {% for spec in product.specs %}
+    <div class="product-detail__spec">
+        <dt>{{ spec.label }}</dt>
+        <dd>{{ spec.values|join:", " }}</dd>
+    </div>
+    {% endfor %}
+</dl>
+{% endif %}

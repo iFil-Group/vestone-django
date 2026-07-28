@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.utils.formats import date_format
+from django.utils.html import strip_tags
 
 
 def _media_url(file_field):
@@ -11,6 +12,14 @@ def _media_url(file_field):
 def _image_url(file_field, fallback):
     url = _media_url(file_field)
     return url or fallback
+
+
+def _richtext_or_empty(value):
+    if not value:
+        return ""
+    if not strip_tags(value).strip():
+        return ""
+    return value
 
 
 def get_placeholder():
@@ -245,19 +254,29 @@ def _product_dict(product, placeholder):
             spec = {"label": attribute["label"], "values": [], "slug": attribute["slug"]}
             specs_by_slug[attribute["slug"]] = spec
             specs.append(spec)
-        specs_by_slug[attribute["slug"]]["values"].append(attribute["value"])
+        if attribute["value"] not in specs_by_slug[attribute["slug"]]["values"]:
+            specs_by_slug[attribute["slug"]]["values"].append(attribute["value"])
 
     return {
         "slug": product.slug,
         "title": product.title,
         "category_slug": product.group.slug,
         "subtitle": product.subtitle,
-        "description": product.description,
-        "description_extra": product.description_extra,
+        "card_type": product.card_type,
+        "description": _richtext_or_empty(product.description),
+        "description_extra": _richtext_or_empty(product.description_extra),
         "image": _image_url(product.image, placeholder),
         "show_main_image": product.show_main_image,
         "show_packshot": product.show_packshot,
-        "packshot_image": _media_url(product.packshot_image),
+        "packshot_columns": product.packshot_columns,
+        "packshots": [
+            {
+                "image": _media_url(item.image),
+                "caption": (item.caption or "").strip(),
+            }
+            for item in product.packshots.all()
+            if item.image and getattr(item.image, "name", None)
+        ],
         "attributes": attributes,
         "specs": specs,
         "pins": [
@@ -272,17 +291,12 @@ def _product_dict(product, placeholder):
                 "pins": [
                     {"x": _pin_coord(pin.x), "y": _pin_coord(pin.y), "text": pin.text}
                     for pin in image.pins.all()
-                ],
+                ]
+                if image.pins_enabled
+                else [],
             }
             for image in product.gallery.all()
             if image.image
-        ]
-        or [
-            {
-                "alt": product.title,
-                "image": _image_url(product.image, placeholder),
-                "pins": [],
-            }
         ],
     }
 

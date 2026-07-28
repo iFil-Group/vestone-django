@@ -1,0 +1,23 @@
+<div class="product-detail__image-wrap">
+    <img
+        class="product-detail__image"
+        src="{{ product.image|default:placeholder_img }}"
+        alt="{{ product.title }}"
+        width="800"
+        height="600"
+    >
+    {% for pin in product.pins %}
+    <button
+        type="button"
+        class="product-pin"
+        style="--pin-x: {{ pin.x }}%; --pin-y: {{ pin.y }}%;"
+        aria-describedby="pin-tip-{{ forloop.counter }}"
+        data-product-pin
+    >
+        <span class="product-pin__dot" aria-hidden="true"></span>
+        <span class="product-pin__tooltip" id="pin-tip-{{ forloop.counter }}" role="tooltip">
+            {{ pin.text }}
+        </span>
+    </button>
+    {% endfor %}
+</div>

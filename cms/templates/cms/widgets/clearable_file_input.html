@@ -1,31 +1,45 @@
-<div class="cms-file" data-cms-file>
+<div class="cms-file{% if widget.is_initial %} cms-file--has-file{% endif %}" data-cms-file>
     {% if widget.is_initial %}
-    <div class="cms-file__current" data-cms-file-current>
-        <p class="cms-file__current-label">Aktualny plik</p>
-        <div class="cms-file__current-body">
+    <div class="cms-file__filled" data-cms-file-current>
+        <div class="cms-file__filled-body">
             {% if widget.value.url %}
-            <img src="{{ widget.value.url }}" alt="" class="cms-file__preview" loading="lazy">
+            <img src="{{ widget.value.url }}" alt="" class="cms-file__preview" loading="lazy" data-cms-file-existing-preview>
             {% endif %}
-            <span class="cms-file__current-name">{{ widget.value.name }}</span>
+            <div class="cms-file__meta">
+                <span class="cms-file__current-name">{{ widget.value.name }}</span>
+                <a href="#" class="cms-row-action cms-row-action--delete" data-cms-file-clear>
+                    {% include "cms/partials/icon_trash.html" %}
+                    <span>Usuń</span>
+                </a>
+            </div>
         </div>
         {% if not widget.required %}
         <div class="visually-hidden" data-cms-file-clear-field>
             <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}">
         </div>
-        <button type="button" class="cms-btn cms-btn--ghost cms-btn--danger" data-cms-file-clear>Usuń plik</button>
         {% endif %}
     </div>
     {% endif %}
-    <div class="cms-file__control">
-        <button type="button" class="cms-file__button" data-cms-file-trigger>
-            <span class="cms-file__button-icon" aria-hidden="true">↑</span>
-            {% if widget.is_initial %}Zmień plik{% else %}Wybierz plik{% endif %}
-        </button>
-        <span class="cms-file__name" data-cms-file-name>
-            {% if widget.is_initial %}Wybierz nowy plik{% else %}Nie wybrano pliku{% endif %}
-        </span>
+
+    <div class="cms-file__dropzone{% if widget.is_initial %} is-hidden{% endif %}" data-cms-file-dropzone data-cms-file-trigger>
+        <span class="cms-file__drop-title" data-cms-file-name>{% if widget.is_initial %}Upuść nowy plik lub kliknij{% else %}Przeciągnij plik lub kliknij{% endif %}</span>
+        <span class="cms-file__drop-hint">JPG, PNG, WEBP</span>
+        <img class="cms-file__preview cms-file__preview--pending" data-cms-file-preview hidden alt="">
     </div>
-    <img class="cms-file__preview cms-file__preview--pending" data-cms-file-preview hidden alt="">
+
+    <div class="cms-file__pending is-hidden" data-cms-file-pending>
+        <div class="cms-file__filled-body">
+            <img class="cms-file__preview" data-cms-file-pending-preview alt="" hidden>
+            <div class="cms-file__meta">
+                <span class="cms-file__current-name" data-cms-file-pending-name></span>
+                <a href="#" class="cms-row-action cms-row-action--delete" data-cms-file-pending-clear>
+                    {% include "cms/partials/icon_trash.html" %}
+                    <span>Usuń</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <input
         type="{{ widget.type }}"
         name="{{ widget.name }}"

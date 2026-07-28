@@ -3,15 +3,17 @@
 {% block panel_content %}
 <div class="cms-toolbar">
     <a href="{% url 'cms_product_add' %}" class="cms-btn cms-btn--primary">Dodaj produkt</a>
-    <a href="{% url 'cms_product_group_add' %}" class="cms-btn cms-btn--ghost">Dodaj grupę</a>
+    <a href="{% url 'cms_product_group_add' %}" class="cms-btn cms-btn--ghost">Dodaj kategorię (grupę)</a>
 </div>
 
 <section class="cms-section">
-    <h2 class="cms-section__title">Grupy produktów</h2>
+    <h2 class="cms-section__title">Kategorie produktów (grupy)</h2>
+    <p class="cms-section__intro">Zdjęcie kategorii pojawia się na <a href="/produkty/" target="_blank" rel="noopener">/produkty/</a>. Edytuj grupę, aby wgrać lub zmienić obraz.</p>
     <div class="cms-table-wrap">
         <table class="cms-table">
             <thead>
                 <tr>
+                    <th>Zdjęcie</th>
                     <th>Nazwa</th>
                     <th>Slug</th>
                     <th>Kolejność</th>
@@ -21,20 +23,41 @@
             <tbody>
                 {% for group in groups %}
                 <tr>
+                    <td class="cms-table__thumb">
+                        {% if group.image %}
+                        <img src="{{ group.image.url }}" alt="" width="64" height="48" loading="lazy">
+                        {% else %}
+                        <span class="cms-table__thumb-empty">Brak zdjęcia</span>
+                        {% endif %}
+                    </td>
                     <td>{{ group.title }}</td>
                     <td>{{ group.slug }}</td>
                     <td>{{ group.sort_order }}</td>
                     <td class="cms-table__actions">
-                        <a href="{% url 'cms_product_group_edit' group.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                        <form method="post" action="{% url 'cms_delete' 'product-group' group.pk %}" onsubmit="return confirm('Usunąć grupę i jej produkty?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
+                        {% url 'cms_product_group_edit' group.pk as row_edit_url %}
+                        {% url 'cms_delete' 'product-group' group.pk as row_delete_url %}
+                        {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć grupę i jej produkty?" %}
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" class="cms-table__empty">Brak grup.</td></tr>
+                <tr><td colspan="5" class="cms-table__empty">Brak grup.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</section>
+
+<section class="cms-section">
+    <h2 class="cms-section__title">Nie wiesz co wybrać?</h2>
+    <p class="cms-section__intro">Kafel CTA na końcu siatki kategorii na stronie produktów — nagłówek, treść i link.</p>
+    <form method="post" class="cms-form cms-form--inline-card">
+        {% csrf_token %}
+        <input type="hidden" name="_form" value="products-cta">
+        {% for field in products_cta_form %}
+        {% include "cms/partials/field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="cms-btn cms-btn--primary">Zapisz kafel CTA</button>
+    </form>
 </section>
 
 <section class="cms-section">
@@ -44,7 +67,7 @@
             <thead>
                 <tr>
                     <th>Nazwa</th>
-                    <th>Grupa</th>
+                    <th>Kategoria</th>
                     <th>Slug</th>
                     <th></th>
                 </tr>
@@ -56,8 +79,9 @@
                     <td>{{ item.group.title }}</td>
                     <td>{{ item.slug }}</td>
                     <td class="cms-table__actions">
-                        <a href="{% url 'cms_product_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                        <form method="post" action="{% url 'cms_delete' 'product' item.pk %}" onsubmit="return confirm('Usunąć produkt?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
+                        {% url 'cms_product_edit' item.pk as row_edit_url %}
+                        {% url 'cms_delete' 'product' item.pk as row_delete_url %}
+                        {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć produkt?" %}
                     </td>
                 </tr>
                 {% empty %}

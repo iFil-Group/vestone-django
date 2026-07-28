@@ -19,8 +19,9 @@
                     <td>{{ category.label }}</td>
                     <td>{{ category.slug }}</td>
                     <td class="cms-table__actions">
-                        <a href="{% url 'cms_download_category_edit' category.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                        <form method="post" action="{% url 'cms_delete' 'download-category' category.pk %}" onsubmit="return confirm('Usunąć kategorię i jej pliki?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
+                        {% url 'cms_download_category_edit' category.pk as row_edit_url %}
+                        {% url 'cms_delete' 'download-category' category.pk as row_delete_url %}
+                        {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć kategorię i jej pliki?" %}
                     </td>
                 </tr>
                 {% empty %}
@@ -50,8 +51,9 @@
                         <form method="post" action="{% url 'cms_download_move' item.pk 'down' %}">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w dół">↓</button></form>
                     </td>
                     <td class="cms-table__actions">
-                        <a href="{% url 'cms_download_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                        <form method="post" action="{% url 'cms_delete' 'download' item.pk %}" onsubmit="return confirm('Usunąć plik?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
+                        {% url 'cms_download_edit' item.pk as row_edit_url %}
+                        {% url 'cms_delete' 'download' item.pk as row_delete_url %}
+                        {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć plik?" %}
                     </td>
                 </tr>
                 {% empty %}

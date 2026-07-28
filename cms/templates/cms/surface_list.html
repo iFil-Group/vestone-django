@@ -1,9 +1,25 @@
 {% extends "cms/base_panel.html" %}
 
 {% block panel_content %}
+<section class="cms-card cms-section-help">
+    <header class="cms-card__head">
+        <h2 class="cms-card__title">Jak to działa?</h2>
+    </header>
+    <div class="cms-card__body">
+        <ul class="cms-help-list">
+            <li><strong>Kategorie</strong> — etykiety grupujące karty (np. Nawierzchnie → Kostki brukowe). Służą do opisu na karcie, same z siebie nie pojawiają się jako osobna lista na stronie.</li>
+            <li><strong>Rodzaje powierzchni</strong> — linie wykończenia (np. TOP ARTE, COLORATTO): nazwa, ikona, opis. Trafiają do filtra „Rodzaj powierzchni” oraz na kartę wariantu.</li>
+            <li><strong>Kolory i warianty</strong> — właściwy katalog na <a href="/barwy-i-powierzchnie/" target="_blank" rel="noopener">/barwy-i-powierzchnie/</a>. Bez pozycji w tej sekcji strona będzie pusta, nawet jeśli masz kategorie i rodzaje.</li>
+        </ul>
+    </div>
+</section>
+
 <section class="cms-section">
     <div class="cms-toolbar">
-        <h2 class="cms-section__title">Kategorie</h2>
+        <div>
+            <h2 class="cms-section__title">Kategorie</h2>
+            <p class="cms-section__intro">Taksonomia / sekcje (opcjonalnie z kategorią nadrzędną).</p>
+        </div>
         <a href="{% url 'cms_surface_category_add' %}" class="cms-btn cms-btn--primary">Dodaj kategorię</a>
     </div>
     <div class="cms-table-wrap"><table class="cms-table">
@@ -11,8 +27,9 @@
         <tbody>{% for item in categories %}<tr>
             <td>{{ item.name }}</td><td>{{ item.parent|default:"—" }}</td>
             <td class="cms-table__actions">
-                <a href="{% url 'cms_surface_category_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                <form method="post" action="{% url 'cms_delete' 'surface-category' item.pk %}" onsubmit="return confirm('Usunąć kategorię?')">{% csrf_token %}<button class="cms-btn cms-btn--small" type="submit">Usuń</button></form>
+                {% url 'cms_surface_category_edit' item.pk as row_edit_url %}
+                {% url 'cms_delete' 'surface-category' item.pk as row_delete_url %}
+                {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć kategorię?" %}
             </td>
         </tr>{% empty %}<tr><td colspan="3" class="cms-table__empty">Brak kategorii.</td></tr>{% endfor %}</tbody>
     </table></div>
@@ -20,7 +37,10 @@
 
 <section class="cms-section">
     <div class="cms-toolbar">
-        <h2 class="cms-section__title">Rodzaje powierzchni</h2>
+        <div>
+            <h2 class="cms-section__title">Rodzaje powierzchni</h2>
+            <p class="cms-section__intro">Linie wykończenia używane w filtrach i na kartach wariantów.</p>
+        </div>
         <a href="{% url 'cms_surface_type_add' %}" class="cms-btn cms-btn--primary">Dodaj powierzchnię</a>
     </div>
     <div class="cms-table-wrap"><table class="cms-table">
@@ -28,8 +48,9 @@
         <tbody>{% for item in surface_types %}<tr>
             <td>{{ item.name }}</td><td>{{ item.description|striptags|truncatechars:90 }}</td>
             <td class="cms-table__actions">
-                <a href="{% url 'cms_surface_type_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                <form method="post" action="{% url 'cms_delete' 'surface-type' item.pk %}" onsubmit="return confirm('Usunąć rodzaj powierzchni?')">{% csrf_token %}<button class="cms-btn cms-btn--small" type="submit">Usuń</button></form>
+                {% url 'cms_surface_type_edit' item.pk as row_edit_url %}
+                {% url 'cms_delete' 'surface-type' item.pk as row_delete_url %}
+                {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć rodzaj powierzchni?" %}
             </td>
         </tr>{% empty %}<tr><td colspan="3" class="cms-table__empty">Brak rodzajów powierzchni.</td></tr>{% endfor %}</tbody>
     </table></div>
@@ -37,7 +58,10 @@
 
 <section class="cms-section">
     <div class="cms-toolbar">
-        <h2 class="cms-section__title">Kolory i warianty</h2>
+        <div>
+            <h2 class="cms-section__title">Kolory i warianty</h2>
+            <p class="cms-section__intro">To właśnie te pozycje widać na stronie barw i powierzchni. Dodaj tu konkretne kolory / warianty i przypisz rodzaj powierzchni.</p>
+        </div>
         <a href="{% url 'cms_surface_add' %}" class="cms-btn cms-btn--primary">Dodaj pozycję</a>
     </div>
     <div class="cms-table-wrap"><table class="cms-table">
@@ -45,10 +69,11 @@
         <tbody>{% for item in items %}<tr>
             <td>{{ item.title }}</td><td>{{ item.category|default:"—" }}</td><td>{{ item.get_product_kind_display|default:"—" }}</td><td>{{ item.surface_type|default:item.surface|default:"—" }}</td>
             <td class="cms-table__actions">
-                <a href="{% url 'cms_surface_edit' item.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                <form method="post" action="{% url 'cms_delete' 'surface' item.pk %}" onsubmit="return confirm('Usunąć pozycję?')">{% csrf_token %}<button class="cms-btn cms-btn--small" type="submit">Usuń</button></form>
+                {% url 'cms_surface_edit' item.pk as row_edit_url %}
+                {% url 'cms_delete' 'surface' item.pk as row_delete_url %}
+                {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć pozycję?" %}
             </td>
-        </tr>{% empty %}<tr><td colspan="5" class="cms-table__empty">Brak pozycji.</td></tr>{% endfor %}</tbody>
+        </tr>{% empty %}<tr><td colspan="5" class="cms-table__empty">Brak pozycji — strona /barwy-i-powierzchnie/ będzie pusta, dopóki tu czegoś nie dodasz.</td></tr>{% endfor %}</tbody>
     </table></div>
 </section>
 {% endblock %}

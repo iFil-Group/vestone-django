@@ -33,32 +33,38 @@
     }
 
     function visibleCount() {
-        if (!slides[0]) return 1;
-        return Math.max(1, Math.round(root.clientWidth / slides[0].getBoundingClientRect().width));
+        if (!slides[0] || !root.clientWidth) return 1;
+        var width = slides[0].getBoundingClientRect().width;
+        if (!width) return 1;
+        return Math.max(1, Math.round(root.clientWidth / width));
     }
 
     function update(animate) {
         var maxIndex = Math.max(0, originalCount - visibleCount());
-        index = Math.min(index, maxIndex);
+        index = Math.min(Math.max(0, index), maxIndex);
         track.style.transition = animate === false ? "none" : "transform 0.4s ease";
         track.style.transform = "translateX(" + -index * slideStep() + "px)";
         var hasOverflow = maxIndex > 0;
         if (prevButton) {
             prevButton.hidden = !hasOverflow;
-            prevButton.disabled = index === 0;
+            prevButton.disabled = !hasOverflow || index === 0;
+            prevButton.setAttribute("aria-hidden", hasOverflow ? "false" : "true");
         }
         if (nextButton) {
             nextButton.hidden = !hasOverflow;
-            nextButton.disabled = index === maxIndex;
+            nextButton.disabled = !hasOverflow || index === maxIndex;
+            nextButton.setAttribute("aria-hidden", hasOverflow ? "false" : "true");
         }
     }
 
     function next() {
+        if (nextButton && nextButton.disabled) return;
         index = Math.min(index + 1, Math.max(0, originalCount - visibleCount()));
         update(true);
     }
 
     function previous() {
+        if (prevButton && prevButton.disabled) return;
         index = Math.max(0, index - 1);
         update(true);
     }
@@ -70,5 +76,18 @@
         update(false);
     });
 
+    // Recalculate after images load — slide width can be 0 on first paint.
+    slides.forEach(function (slide) {
+        var img = slide.querySelector("img");
+        if (img && !img.complete) {
+            img.addEventListener("load", function () {
+                update(false);
+            });
+        }
+    });
+
     update(false);
+    window.requestAnimationFrame(function () {
+        update(false);
+    });
 })();

@@ -11,6 +11,7 @@ class ProductGroupAssignmentTests(TestCase):
         product = Product.objects.create(group=first, title="Test", slug="test")
         form = ProductForm(
             data={
+                "card_type": Product.CARD_STANDARD,
                 "group": second.pk,
                 "title": product.title,
                 "slug": product.slug,

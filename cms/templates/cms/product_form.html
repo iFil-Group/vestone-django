@@ -6,10 +6,10 @@
     <a href="{{ back_url }}" class="cms-btn cms-btn--ghost">Wróć</a>
 </div>
 
-<form method="post" enctype="multipart/form-data" class="cms-product-form" id="product-form">
+<form method="post" enctype="multipart/form-data" class="cms-product-form" id="product-form" data-product-card-type="{{ form.card_type.value|default:'standard' }}">
     {% csrf_token %}
 
-    {% if form.errors or attribute_formset.non_form_errors or pin_formset.non_form_errors or gallery_formset.non_form_errors %}
+    {% if form.errors or attribute_formset.non_form_errors or pin_formset.non_form_errors or gallery_formset.non_form_errors or packshot_formset.non_form_errors %}
     <div class="cms-form-errors" role="alert">
         <p class="cms-form-errors__title">Formularz zawiera błędy — popraw zaznaczone pola i zapisz ponownie.</p>
         {% if form.non_field_errors %}
@@ -18,8 +18,27 @@
         {% for error in attribute_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
         {% for error in pin_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
         {% for error in gallery_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% for error in packshot_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
     </div>
     {% endif %}
+
+    <section class="cms-card">
+        <header class="cms-card__head">
+            <h2 class="cms-card__title">Typ karty</h2>
+            <p class="cms-card__intro">Wybierz układ strony produktu.</p>
+        </header>
+        <div class="cms-card__body">
+            <div class="cms-card-type" data-card-type-switch>
+                {% for radio in form.card_type %}
+                <label class="cms-card-type__option">
+                    {{ radio.tag }}
+                    <span class="cms-card-type__label">{{ radio.choice_label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            {% for error in form.card_type.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        </div>
+    </section>
 
     <section class="cms-card">
         <header class="cms-card__head">
@@ -28,111 +47,112 @@
         </header>
         <div class="cms-card__body">
             {% for field in form %}
-                {% if field.name != "image" and field.name != "packshot_image" and field.name != "related_products" %}
+                {% if field.name != "image" and field.name != "related_products" and field.name != "card_type" and field.name != "description_extra" and field.name != "show_main_image" and field.name != "show_packshot" and field.name != "packshot_columns" %}
                 {% include "cms/partials/field.html" with field=field %}
                 {% endif %}
             {% endfor %}
+            <div data-standard-only>
+                {% include "cms/partials/field.html" with field=form.description_extra %}
+            </div>
         </div>
     </section>
 
-    <section class="cms-card">
+    <section class="cms-card" data-standard-only data-packshot-editor>
         <header class="cms-card__head">
-            <h2 class="cms-card__title">Grafiki</h2>
-            <p class="cms-card__intro">Zdjęcie główne, piny na podglądzie oraz galeria produktu.</p>
+            <h2 class="cms-card__title">Packshot</h2>
+            <p class="cms-card__intro">Galeria w siatce. Wybierz liczbę kolumn, potem „Dodaj zdjęcie packshot” dla każdego kadru. Puste wiersze nie są zapisywane.</p>
         </header>
         <div class="cms-card__body">
-            <div class="cms-card__subsection">
-                <h3 class="cms-card__subtitle">Zdjęcie główne</h3>
-                {% include "cms/partials/field.html" with field=form.image %}
-            </div>
+            {% include "cms/partials/field.html" with field=form.show_packshot %}
 
-            <div class="cms-card__subsection cms-pin-editor" data-pin-editor data-pin-prefix="pins">
-                <div class="cms-pin-editor__head">
-                    <h3 class="cms-card__subtitle">Piny na zdjęciu</h3>
-                    <p class="cms-pin-editor__help">
-                        Kliknij zdjęcie, aby dodać pin. Przeciągnij pin, aby zmienić pozycję. Edytuj tekst tooltipa poniżej.
-                    </p>
-                    <label class="cms-field__label" for="pin-target">Edytowane zdjęcie</label>
-                    <select class="cms-select" id="pin-target" data-pin-target>
-                        {% for target in gallery_pin_targets %}
-                        <option value="{{ target.id }}" data-image="{{ target.image }}">{{ target.label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="cms-pin-editor__stage" data-pin-stage>
-                    <img
-                        class="cms-pin-editor__image"
-                        data-pin-image
-                        src="{{ product_image_url }}"
-                        alt="Podgląd zdjęcia produktu"
-                    >
-                    <div class="cms-pin-editor__overlay" data-pin-overlay aria-hidden="true"></div>
-                </div>
-
-                {{ pin_formset.management_form }}
-
-                <div class="cms-pin-editor__rows" data-pin-rows>
-                    {% for pin_form in pin_formset %}
-                    <div class="cms-pin-row{% if pin_form.errors %} cms-pin-row--error{% endif %}" data-pin-row data-pin-index="{{ forloop.counter0 }}">
-                        {% if pin_form.non_field_errors %}
-                        <p class="cms-field__error">{{ pin_form.non_field_errors }}</p>
-                        {% endif %}
-                        {% for hidden in pin_form.hidden_fields %}{{ hidden }}{% endfor %}
-                        <div class="cms-pin-row__header">
-                            <span class="cms-pin-row__label">Pin <span data-pin-label-num>{{ forloop.counter }}</span></span>
-                            <button type="button" class="cms-btn cms-btn--small cms-btn--ghost" data-pin-remove>Usuń</button>
-                        </div>
-                        <div class="cms-field">
-                            <label for="{{ pin_form.text.id_for_label }}">Treść tooltipa</label>
-                            {{ pin_form.text }}
-                            {% for error in pin_form.text.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
-                        </div>
-                        {% if pin_form.DELETE %}
-                        <div class="visually-hidden">{{ pin_form.DELETE }}</div>
-                        {% endif %}
-                    </div>
+            <div class="cms-field">
+                <span class="cms-field__label">{{ form.packshot_columns.label }}</span>
+                <div class="cms-card-type" data-packshot-columns>
+                    {% for radio in form.packshot_columns %}
+                    <label class="cms-card-type__option">
+                        {{ radio.tag }}
+                        <span class="cms-card-type__label">{{ radio.choice_label }}</span>
+                    </label>
                     {% endfor %}
                 </div>
-
-                <div class="cms-pin-editor__actions">
-                    <button type="button" class="cms-btn cms-btn--ghost" data-pin-add>Dodaj pin</button>
-                </div>
-
-                <template data-pin-empty-template>
-                    <div class="cms-pin-row" data-pin-row data-pin-index="__prefix__">
-                        {% with f=pin_formset.empty_form %}
-                        {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
-                        <div class="cms-pin-row__header">
-                            <span class="cms-pin-row__label">Pin <span data-pin-label-num>__num__</span></span>
-                            <button type="button" class="cms-btn cms-btn--small cms-btn--ghost" data-pin-remove>Usuń</button>
-                        </div>
-                        <div class="cms-field">
-                            <label for="{{ f.text.id_for_label }}">Treść tooltipa</label>
-                            {{ f.text }}
-                        </div>
-                        {% endwith %}
-                    </div>
-                </template>
+                {% for error in form.packshot_columns.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
             </div>
 
-            <div class="cms-card__subsection">
-                <h3 class="cms-card__subtitle">Galeria</h3>
-                <p class="cms-card__intro">Po dodaniu nowego zdjęcia zapisz produkt. Następnie wybierz je powyżej i dodaj piny.</p>
-                {{ gallery_formset.management_form }}
-                {% for form in gallery_formset %}
-                {% include "cms/partials/formset_row.html" with form=form %}
+            {{ packshot_formset.management_form }}
+            <div class="cms-media-tiles" data-packshot-tiles>
+                {% for pform in packshot_formset %}
+                {% include "cms/partials/packshot_tile.html" with form=pform tile_number=forloop.counter %}
                 {% endfor %}
             </div>
+            <div class="cms-packshot-editor__actions">
+                <button type="button" class="cms-btn cms-btn--ghost" data-packshot-add>Dodaj zdjęcie packshot</button>
+            </div>
+            <template data-packshot-empty-template>
+                {% include "cms/partials/packshot_tile.html" with form=packshot_formset.empty_form tile_number="__num__" %}
+            </template>
+        </div>
+    </section>
 
-            <div class="cms-card__subsection">
-                <h3 class="cms-card__subtitle">Packshot</h3>
-                {% include "cms/partials/field.html" with field=form.packshot_image %}
+    <section class="cms-card" data-standard-only data-main-image-section>
+        <header class="cms-card__head">
+            <h2 class="cms-card__title">Zdjęcie główne</h2>
+            <p class="cms-card__intro">Przełącznik steruje widocznością na stronie produktu. Plik i piny edytujesz zawsze tutaj.</p>
+        </header>
+        <div class="cms-card__body">
+            {% include "cms/partials/field.html" with field=form.show_main_image %}
+
+            <div class="cms-split-media cms-pin-editor" data-pin-editor data-pin-target-id="" data-pin-image-url="{{ product_image_url }}">
+                <div class="cms-split-media__file">
+                    <h3 class="cms-card__subtitle">Plik</h3>
+                    {% include "cms/partials/field.html" with field=form.image %}
+                </div>
+                <div class="cms-split-media__stage">
+                    <h3 class="cms-card__subtitle">Piny</h3>
+                    <p class="cms-pin-editor__help">
+                        Kliknij podgląd, aby dodać pin. Przeciągnij, aby zmienić pozycję.
+                    </p>
+                    <div class="cms-pin-editor__stage" data-pin-stage>
+                        <img
+                            class="cms-pin-editor__image"
+                            data-pin-image
+                            src="{{ product_image_url }}"
+                            alt="Podgląd zdjęcia produktu"
+                        >
+                        <div class="cms-pin-editor__overlay" data-pin-overlay aria-hidden="true"></div>
+                    </div>
+                </div>
+                <div class="cms-split-media__rows">
+                    <div class="cms-pin-editor__rows" data-pin-rows></div>
+                    <div class="cms-pin-editor__actions">
+                        <button type="button" class="cms-btn cms-btn--ghost" data-pin-add>Dodaj pin</button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="cms-card cms-product-attributes" data-product-attributes>
+    <section class="cms-card" data-standard-only data-gallery-editor>
+        <header class="cms-card__head">
+            <h2 class="cms-card__title">Galeria</h2>
+            <p class="cms-card__intro">Każde zdjęcie ma osobną kartę. Dodaj pin na podglądzie — „Aktywuj piny” włączy się samo. Strzałki na stronie widać, gdy zdjęć jest więcej niż mieści się w rzędzie.</p>
+        </header>
+        <div class="cms-card__body">
+            {{ gallery_formset.management_form }}
+            <div class="cms-media-tiles" data-gallery-tiles>
+                {% for gform in gallery_formset %}
+                {% include "cms/partials/gallery_tile.html" with form=gform tile_number=forloop.counter %}
+                {% endfor %}
+            </div>
+            <div class="cms-packshot-editor__actions">
+                <button type="button" class="cms-btn cms-btn--ghost" data-gallery-add>Dodaj zdjęcie do galerii</button>
+            </div>
+            <template data-gallery-empty-template>
+                {% include "cms/partials/gallery_tile.html" with form=gallery_formset.empty_form tile_number="__num__" %}
+            </template>
+        </div>
+    </section>
+
+    <section class="cms-card cms-product-attributes" data-product-attributes data-standard-only>
         <header class="cms-card__head">
             <h2 class="cms-card__title">Atrybuty</h2>
             <p class="cms-card__intro">
@@ -166,6 +186,53 @@
         </div>
     </section>
 
+    {{ pin_formset.management_form }}
+    <div class="visually-hidden" data-pin-bank aria-hidden="true">
+        {% for pin_form in pin_formset %}
+        <div class="cms-pin-row{% if pin_form.errors %} cms-pin-row--error{% endif %}" data-pin-row data-pin-index="{{ forloop.counter0 }}">
+            {% if pin_form.non_field_errors %}
+            <p class="cms-field__error">{{ pin_form.non_field_errors }}</p>
+            {% endif %}
+            {% for hidden in pin_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="cms-pin-row__header">
+                <span class="cms-pin-row__label">Pin <span data-pin-label-num>{{ forloop.counter }}</span></span>
+                <a href="#" class="cms-row-action cms-row-action--delete" data-pin-remove>
+                    {% include "cms/partials/icon_trash.html" %}
+                    <span>Usuń</span>
+                </a>
+            </div>
+            <div class="cms-field">
+                <label for="{{ pin_form.text.id_for_label }}">Treść tooltipa</label>
+                {{ pin_form.text }}
+                {% for error in pin_form.text.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+            </div>
+            {% if pin_form.DELETE %}
+            <div class="visually-hidden">{{ pin_form.DELETE }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <template data-pin-empty-template>
+        <div class="cms-pin-row" data-pin-row data-pin-index="__prefix__">
+            {% with f=pin_formset.empty_form %}
+            {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="cms-pin-row__header">
+                <span class="cms-pin-row__label">Pin <span data-pin-label-num>__num__</span></span>
+                <a href="#" class="cms-row-action cms-row-action--delete" data-pin-remove>
+                    {% include "cms/partials/icon_trash.html" %}
+                    <span>Usuń</span>
+                </a>
+            </div>
+            <div class="cms-field">
+                <label for="{{ f.text.id_for_label }}">Treść tooltipa</label>
+                {{ f.text }}
+            </div>
+            {% if f.DELETE %}<div class="visually-hidden">{{ f.DELETE }}</div>{% endif %}
+            {% endwith %}
+        </div>
+    </template>
+
     <div class="cms-product-form__actions">
         <button type="submit" class="cms-btn cms-btn--primary">Zapisz produkt</button>
     </div>
@@ -173,7 +240,10 @@
 {% endblock %}
 
 {% block panel_scripts %}
-<script src="{% static 'theme/js/cms-product-pins.js' %}" defer></script>
-<script src="{% static 'theme/js/cms-product-attributes.js' %}" defer></script>
-<script src="{% static 'theme/js/cms-related-products.js' %}" defer></script>
+<script src="{% static 'theme/js/cms-product-pins.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-product-gallery.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-product-packshots.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-product-card-type.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-product-attributes.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-related-products.js' %}?v=20260728i" defer></script>
 {% endblock %}

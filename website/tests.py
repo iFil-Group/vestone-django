@@ -11,6 +11,7 @@ from cms.models import (
     LegalDocument,
     Product,
     ProductGalleryImage,
+    ProductPackshotImage,
     ProductGroup,
     ProductPin,
     PromotionSlide,
@@ -91,12 +92,21 @@ class ProductExtensionsTests(TestCase):
             image="products/a.jpg",
             show_main_image=False,
             show_packshot=True,
-            packshot_image="products/packshot.jpg",
+            packshot_columns=3,
+        )
+        ProductPackshotImage.objects.create(
+            product=self.product,
+            image="products/packshot.jpg",
+            caption="Wariant jasny",
+            sort_order=0,
         )
 
     def test_gallery_image_has_own_pins(self):
         gallery = ProductGalleryImage.objects.create(
-            product=self.product, image="products/gallery.jpg", alt="Detal"
+            product=self.product,
+            image="products/gallery.jpg",
+            alt="Detal",
+            pins_enabled=True,
         )
         ProductPin.objects.create(
             product=self.product, gallery_image=gallery, x=25, y=75, text="Detal pinu"
@@ -104,7 +114,15 @@ class ProductExtensionsTests(TestCase):
         data = get_product("plyty", "produkt-a")
         self.assertFalse(data["show_main_image"])
         self.assertTrue(data["show_packshot"])
+        self.assertEqual(data["packshot_columns"], 3)
+        self.assertEqual(data["packshots"][0]["caption"], "Wariant jasny")
         self.assertEqual(data["gallery"][0]["pins"][0]["text"], "Detal pinu")
+        self.assertEqual(data["card_type"], "standard")
+
+        gallery.pins_enabled = False
+        gallery.save(update_fields=["pins_enabled"])
+        data = get_product("plyty", "produkt-a")
+        self.assertEqual(data["gallery"][0]["pins"], [])
 
     def test_selected_related_products_are_preferred(self):
         related = Product.objects.create(

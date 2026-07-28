@@ -11,7 +11,10 @@
     {% endfor %}
     {% if form.DELETE %}
     <div class="cms-formset-row__actions">
-        <button type="button" class="cms-btn cms-btn--ghost cms-btn--danger" data-cms-row-delete>Usuń</button>
+        <a href="#" class="cms-row-action cms-row-action--delete" data-cms-row-delete>
+            {% include "cms/partials/icon_trash.html" %}
+            <span>Usuń</span>
+        </a>
     </div>
     {% endif %}
 </div>

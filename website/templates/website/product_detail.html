@@ -5,65 +5,92 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260728i">
+{% if product.card_type == "descriptive" %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+{% endif %}
 {% endblock %}
 
 {% block main %}
-<div class="product-page product-page--detail">
+<div class="product-page product-page--detail{% if product.card_type == 'descriptive' %} product-page--descriptive{% endif %}">
     {% include "website/partials/page_hero.html" %}
 
+    {% if product.card_type == "descriptive" %}
+    <section class="page-body">
+        <div class="page-body__inner">
+            {% if product.description %}
+            <div class="prose">{{ product.description|safe }}</div>
+            {% endif %}
+        </div>
+    </section>
+    {% else %}
     <article class="product-detail" id="karta-produktu">
         <div class="product-detail__shell">
-            <div class="product-detail__main{% if not product.show_main_image %} product-detail__main--copy-only{% endif %}">
-                <div class="product-detail__copy">
-                    <div class="product-detail__text rich-text">{{ product.description|safe }}</div>
-                    <div class="product-detail__text rich-text">{{ product.description_extra|safe }}</div>
-
-                    {% if product.specs %}
-                    <dl class="product-detail__specs">
-                        {% for spec in product.specs %}
-                        <div class="product-detail__spec">
-                            <dt>{{ spec.label }}</dt>
-                            <dd>{% for value in spec.values %}<span>{{ value }}</span>{% endfor %}</dd>
-                        </div>
-                        {% endfor %}
-                    </dl>
-                    {% endif %}
-                </div>
-
-                {% if product.show_main_image %}
-                <div class="product-detail__visual" data-product-pins>
-                    <div class="product-detail__image-wrap">
-                        <img
-                            class="product-detail__image"
-                            src="{{ product.image|default:placeholder_img }}"
-                            alt="{{ product.title }}"
-                            width="800"
-                            height="600"
-                        >
-                        {% for pin in product.pins %}
-                        <button
-                            type="button"
-                            class="product-pin"
-                            style="--pin-x: {{ pin.x }}%; --pin-y: {{ pin.y }}%;"
-                            aria-describedby="pin-tip-{{ forloop.counter }}"
-                            data-product-pin
-                        >
-                            <span class="product-pin__dot" aria-hidden="true"></span>
-                            <span class="product-pin__tooltip" id="pin-tip-{{ forloop.counter }}" role="tooltip">
-                                {{ pin.text }}
-                            </span>
-                        </button>
-                        {% endfor %}
+            {% if product.show_main_image and product.description_extra %}
+            {# Dwa wiersze: opis | zdjęcie, potem atrybuty | opis dodatkowy #}
+            <div class="product-detail__layout product-detail__layout--two-rows">
+                <div class="product-detail__row">
+                    <div class="product-detail__copy">
+                        {% if product.description %}
+                        <div class="product-detail__text rich-text">{{ product.description|safe }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="product-detail__visual" data-product-pins>
+                        {% include "website/partials/product_main_image.html" %}
                     </div>
                 </div>
+                <div class="product-detail__row">
+                    <div class="product-detail__attrs">
+                        {% include "website/partials/product_specs.html" %}
+                    </div>
+                    <div class="product-detail__extra rich-text">
+                        {{ product.description_extra|safe }}
+                    </div>
+                </div>
+            </div>
+            {% elif product.show_main_image %}
+            {# Bez opisu dodatkowego: lewa kolumna (opis+atrybuty), prawe zdjęcie sticky #}
+            <div class="product-detail__layout product-detail__layout--sticky-visual">
+                <div class="product-detail__copy-stack">
+                    {% if product.description %}
+                    <div class="product-detail__text rich-text">{{ product.description|safe }}</div>
+                    {% endif %}
+                    {% include "website/partials/product_specs.html" %}
+                </div>
+                <div class="product-detail__visual" data-product-pins>
+                    {% include "website/partials/product_main_image.html" %}
+                </div>
+            </div>
+            {% else %}
+            <div class="product-detail__layout product-detail__layout--copy-only">
+                {% if product.description %}
+                <div class="product-detail__text rich-text">{{ product.description|safe }}</div>
+                {% endif %}
+                {% include "website/partials/product_specs.html" %}
+                {% if product.description_extra %}
+                <div class="product-detail__extra rich-text">{{ product.description_extra|safe }}</div>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
 
-        {% if product.show_packshot and product.packshot_image %}
-        <section class="product-packshot" aria-label="Packshot">
-            <img src="{{ product.packshot_image }}" alt="{{ product.title }} — packshot" loading="lazy">
+        {% if product.show_packshot and product.packshots %}
+        <section class="product-packshot" aria-label="Packshot" data-packshot-columns="{{ product.packshot_columns }}">
+            <ul class="product-packshot__grid product-packshot__grid--cols-{{ product.packshot_columns }}">
+                {% for item in product.packshots %}
+                <li class="product-packshot__item">
+                    <img
+                        class="product-packshot__img"
+                        src="{{ item.image }}"
+                        alt="{% if item.caption %}{{ item.caption }}{% else %}{{ product.title }} — packshot{% endif %}"
+                        loading="lazy"
+                    >
+                    {% if item.caption %}
+                    <p class="product-packshot__caption">{{ item.caption }}</p>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
         </section>
         {% endif %}
 
@@ -77,6 +104,7 @@
                         <img
                             class="product-gallery__img"
                             src="{{ image.image|default:placeholder_img }}"
+                            alt="{{ image.alt }}"
                             width="640"
                             height="480"
                             loading="lazy"
@@ -92,11 +120,16 @@
                     {% endfor %}
                 </div>
             </div>
-            <button type="button" class="product-gallery__arrow product-gallery__arrow--prev" data-product-gallery-prev aria-label="Poprzednie zdjęcie">‹</button>
-            <button type="button" class="product-gallery__arrow product-gallery__arrow--next" data-product-gallery-next aria-label="Następne zdjęcie">›</button>
+            <button type="button" class="product-gallery__arrow product-gallery__arrow--prev" data-product-gallery-prev aria-label="Poprzednie zdjęcie">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.4 4.6 8 12l7.4 7.4 1.2-1.2L10.4 12l6.2-6.2z"/></svg>
+            </button>
+            <button type="button" class="product-gallery__arrow product-gallery__arrow--next" data-product-gallery-next aria-label="Następne zdjęcie">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8.6 4.6-1.2 1.2L13.6 12l-6.2 6.2 1.2 1.2L16 12z"/></svg>
+            </button>
         </section>
         {% endif %}
     </article>
+    {% endif %}
 
     <section class="product-related" aria-labelledby="product-related-heading">
         <div class="product-related__inner">
@@ -118,6 +151,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'theme/js/product-pins.js' %}" defer></script>
-<script src="{% static 'theme/js/product-gallery.js' %}" defer></script>
+{% if product.card_type != "descriptive" %}
+<script src="{% static 'theme/js/product-pins.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/product-gallery.js' %}?v=20260728i" defer></script>
+{% endif %}
 {% endblock %}

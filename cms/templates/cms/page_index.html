@@ -15,8 +15,9 @@
                     <td>{{ slide.title }}</td>
                     <td>{{ slide.sort_order }}</td>
                     <td class="cms-table__actions">
-                        <a href="{% url 'cms_hero_edit' slide.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                        <form method="post" action="{% url 'cms_delete' 'hero' slide.pk %}" onsubmit="return confirm('Usunąć slajd?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
+                        {% url 'cms_hero_edit' slide.pk as row_edit_url %}
+                        {% url 'cms_delete' 'hero' slide.pk as row_delete_url %}
+                        {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć slajd?" %}
                     </td>
                 </tr>
                 {% empty %}
@@ -41,8 +42,9 @@
                     <td>{{ block.label }}</td>
                     <td><code>{{ block.key }}</code></td>
                     <td class="cms-table__actions">
-                        <a href="{% url 'cms_page_block_edit' block.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                        <form method="post" action="{% url 'cms_delete' 'content-block' block.pk %}" onsubmit="return confirm('Usunąć blok?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
+                        {% url 'cms_page_block_edit' block.pk as row_edit_url %}
+                        {% url 'cms_delete' 'content-block' block.pk as row_delete_url %}
+                        {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć blok?" %}
                     </td>
                 </tr>
                 {% empty %}
@@ -68,8 +70,9 @@
                     <td>{{ block.label }}</td>
                     <td><code>{{ block.key }}</code></td>
                     <td class="cms-table__actions">
-                        <a href="{% url 'cms_page_block_edit' block.pk %}" class="cms-btn cms-btn--small">Edytuj</a>
-                        <form method="post" action="{% url 'cms_delete' 'content-block' block.pk %}" onsubmit="return confirm('Usunąć blok?')">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small">Usuń</button></form>
+                        {% url 'cms_page_block_edit' block.pk as row_edit_url %}
+                        {% url 'cms_delete' 'content-block' block.pk as row_delete_url %}
+                        {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć blok?" %}
                     </td>
                 </tr>
                 {% empty %}

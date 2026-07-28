@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from .forms import (
     ContentBlockForm,
+    ProductsCtaForm,
     DownloadCategoryForm,
     DownloadItemForm,
     EmailAuthenticationForm,
@@ -19,6 +20,7 @@ from .forms import (
     NewsGalleryFormSet,
     ProductForm,
     ProductGalleryFormSet,
+    ProductPackshotFormSet,
     ProductGroupForm,
     ProductPinFormSet,
     ProductAttributeAssignmentFormSet,
@@ -107,10 +109,38 @@ def dashboard(request):
 def product_list(request):
     items = Product.objects.select_related("group").order_by("group__title", "sort_order", "title")
     groups = ProductGroup.objects.order_by("sort_order", "title")
+    cta_block, _ = ContentBlock.objects.get_or_create(
+        key="products-cta",
+        defaults={
+            "group": ContentBlock.GROUP_HOME,
+            "label": "Produkty — kafel kontaktowy",
+            "title": "Nie wiesz co wybrać?",
+            "body": "Skontaktuj się z nami, a pomożemy dobrać rozwiązanie.",
+            "button_label": "Skontaktuj się",
+            "button_url": "/#kontakt",
+            "is_active": True,
+        },
+    )
+
+    if request.method == "POST" and request.POST.get("_form") == "products-cta":
+        cta_form = ProductsCtaForm(request.POST, instance=cta_block)
+        if cta_form.is_valid():
+            cta_form.save()
+            messages.success(request, "Kafel „Nie wiesz co wybrać?” został zapisany.")
+            return redirect("cms_products")
+    else:
+        cta_form = ProductsCtaForm(instance=cta_block)
+
     return render(
         request,
         "cms/product_list.html",
-        _panel_context("products", "Produkty", items=items, groups=groups),
+        _panel_context(
+            "products",
+            "Produkty",
+            items=items,
+            groups=groups,
+            products_cta_form=cta_form,
+        ),
     )
 
 
@@ -154,12 +184,19 @@ def product_edit(request, pk=None):
             instance=product,
             prefix="gallery",
         )
+        packshot_formset = ProductPackshotFormSet(
+            request.POST,
+            request.FILES,
+            instance=product,
+            prefix="packshots",
+        )
 
         if (
             form_valid
             and attribute_formset.is_valid()
             and pin_formset.is_valid()
             and gallery_formset.is_valid()
+            and packshot_formset.is_valid()
         ):
             from django.db import transaction
 
@@ -168,8 +205,10 @@ def product_edit(request, pk=None):
                 attribute_formset.instance = product
                 pin_formset.instance = product
                 gallery_formset.instance = product
+                packshot_formset.instance = product
                 attribute_formset.save()
                 gallery_formset.save()
+                packshot_formset.save()
                 pin_formset.save()
             messages.success(request, "Produkt został zapisany.")
             return redirect("cms_product_edit", pk=product.pk)
@@ -180,6 +219,7 @@ def product_edit(request, pk=None):
         )
         pin_formset = ProductPinFormSet(instance=instance, prefix="pins")
         gallery_formset = ProductGalleryFormSet(instance=instance, prefix="gallery")
+        packshot_formset = ProductPackshotFormSet(instance=instance, prefix="packshots")
 
     return render(
         request,
@@ -194,6 +234,7 @@ def product_edit(request, pk=None):
             all_attributes=_all_attributes(),
             pin_formset=pin_formset,
             gallery_formset=gallery_formset,
+            packshot_formset=packshot_formset,
             back_url=reverse("cms_products"),
             product_image_url=_product_image_url(product),
             gallery_pin_targets=_gallery_pin_targets(product),

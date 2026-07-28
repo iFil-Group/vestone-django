@@ -20,6 +20,7 @@ from .models import (
     ProductAttributeOption,
     ProductGalleryImage,
     ProductGroup,
+    ProductPackshotImage,
     ProductPin,
     PromotionSlide,
     Review,
@@ -86,6 +87,8 @@ class StyledModelForm(forms.ModelForm):
                 field.widget.attrs.setdefault("class", "cms-checkbox")
             elif isinstance(widget, forms.Textarea):
                 field.widget = RichTextWidget(attrs=widget.attrs)
+            elif isinstance(widget, forms.RadioSelect):
+                continue
             elif isinstance(widget, forms.Select):
                 field.widget.attrs.setdefault("class", "cms-select")
             else:
@@ -198,11 +201,33 @@ class ProductGroupForm(StyledModelForm):
         model = ProductGroup
         fields = ("title", "slug", "image", "sort_order", "is_active")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].label = "Zdjęcie kategorii"
+        self.fields["image"].help_text = "Kafelek na stronie /produkty/ oraz w sekcji produktów na stronie głównej."
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+
+
+class ProductsCtaForm(StyledModelForm):
+    class Meta:
+        model = ContentBlock
+        fields = ("title", "body", "button_label", "button_url")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["title"].label = "Nagłówek"
+        self.fields["body"].label = "Treść"
+        self.fields["button_label"].label = "Tekst przycisku / linku"
+        self.fields["button_url"].label = "Adres linku"
+        self.fields["button_url"].help_text = "Np. /#kontakt albo /gdzie-kupic/"
+        self.fields["button_url"].widget.attrs.setdefault("placeholder", "/#kontakt")
+
 
 class ProductForm(StyledModelForm):
     class Meta:
         model = Product
         fields = (
+            "card_type",
             "group",
             "title",
             "slug",
@@ -212,21 +237,26 @@ class ProductForm(StyledModelForm):
             "image",
             "show_main_image",
             "show_packshot",
-            "packshot_image",
+            "packshot_columns",
             "related_products",
             "sort_order",
             "is_active",
         )
+        widgets = {
+            "card_type": forms.RadioSelect,
+            "packshot_columns": forms.RadioSelect,
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["group"].queryset = ProductGroup.objects.all().order_by("sort_order", "title")
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
-        self.fields["packshot_image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["related_products"].queryset = Product.objects.exclude(
             pk=self.instance.pk
         ).select_related("group").order_by("title")
         self.fields["related_products"].widget = forms.MultipleHiddenInput()
+        self.fields["card_type"].widget.attrs["class"] = "cms-card-type"
+        self.fields["packshot_columns"].widget.attrs["class"] = "cms-card-type"
 
 
 
@@ -480,19 +510,72 @@ ProductPinFormSet = inlineformset_factory(
 class ProductGalleryInlineForm(StyledModelForm):
     class Meta:
         model = ProductGalleryImage
-        fields = ("image", "alt", "sort_order")
+        fields = ("image", "alt", "pins_enabled", "sort_order")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["sort_order"].widget = forms.HiddenInput()
+        self.fields["alt"].widget.attrs.setdefault("placeholder", "Tekst alternatywny (opcjonalnie)")
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("DELETE"):
+            return cleaned
+        image = cleaned.get("image")
+        clearing = image is False
+        has_existing = bool(self.instance.pk and self.instance.image)
+        if clearing or (not image and not has_existing):
+            cleaned["DELETE"] = True
+            return cleaned
+        # If this gallery image has pins in POST/DB, keep storefront pins active.
+        if self.instance.pk and self.instance.pins.exists():
+            cleaned["pins_enabled"] = True
+        return cleaned
 
 
 ProductGalleryFormSet = inlineformset_factory(
     Product,
     ProductGalleryImage,
     form=ProductGalleryInlineForm,
-    fields=("image", "alt", "sort_order"),
-    extra=1,
+    fields=("image", "alt", "pins_enabled", "sort_order"),
+    extra=0,
+    can_delete=True,
+)
+
+
+class ProductPackshotInlineForm(StyledModelForm):
+    class Meta:
+        model = ProductPackshotImage
+        fields = ("image", "caption", "sort_order")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["sort_order"].widget = forms.HiddenInput()
+        self.fields["caption"].widget.attrs.setdefault(
+            "placeholder", "Opcjonalny podpis pod zdjęciem"
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("DELETE"):
+            return cleaned
+        image = cleaned.get("image")
+        clearing = image is False
+        has_existing = bool(self.instance.pk and self.instance.image)
+        if clearing or (not image and not has_existing):
+            # Drop blank rows — empty formset slots must never become ghost images.
+            cleaned["DELETE"] = True
+        return cleaned
+
+
+ProductPackshotFormSet = inlineformset_factory(
+    Product,
+    ProductPackshotImage,
+    form=ProductPackshotInlineForm,
+    fields=("image", "caption", "sort_order"),
+    extra=0,
     can_delete=True,
 )
 

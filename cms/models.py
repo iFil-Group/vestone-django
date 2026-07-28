@@ -229,6 +229,13 @@ class ProductGroup(models.Model):
 
 
 class Product(models.Model):
+    CARD_STANDARD = "standard"
+    CARD_DESCRIPTIVE = "descriptive"
+    CARD_TYPE_CHOICES = [
+        (CARD_STANDARD, "Standardowa karta"),
+        (CARD_DESCRIPTIVE, "Karta opisowa"),
+    ]
+
     group = models.ForeignKey(
         ProductGroup,
         on_delete=models.CASCADE,
@@ -238,12 +245,28 @@ class Product(models.Model):
     slug = models.SlugField("Slug", max_length=120)
     title = models.CharField("Nazwa", max_length=200)
     subtitle = models.CharField("Podtytuł", max_length=255, blank=True)
+    card_type = models.CharField(
+        "Typ karty",
+        max_length=20,
+        choices=CARD_TYPE_CHOICES,
+        default=CARD_STANDARD,
+    )
     description = models.TextField("Opis", blank=True)
     description_extra = models.TextField("Opis dodatkowy", blank=True)
     image = models.ImageField("Obraz główny", upload_to="cms/products/", blank=True)
     show_main_image = models.BooleanField("Pokaż zdjęcie główne z pinami", default=True)
     show_packshot = models.BooleanField("Pokaż sekcję Packshot", default=False)
-    packshot_image = models.ImageField("Zdjęcie Packshot", upload_to="cms/products/packshots/", blank=True)
+    PACKSHOT_COLUMNS_CHOICES = [
+        (1, "1 kolumna"),
+        (2, "2 kolumny"),
+        (3, "3 kolumny"),
+        (4, "4 kolumny"),
+    ]
+    packshot_columns = models.PositiveSmallIntegerField(
+        "Liczba kolumn packshotów",
+        choices=PACKSHOT_COLUMNS_CHOICES,
+        default=2,
+    )
     related_products = models.ManyToManyField(
         "self",
         symmetrical=False,
@@ -390,6 +413,7 @@ class ProductGalleryImage(models.Model):
     )
     image = models.ImageField("Obraz", upload_to="cms/products/gallery/", blank=True)
     alt = models.CharField("Alt", max_length=255, blank=True)
+    pins_enabled = models.BooleanField("Aktywuj piny", default=False)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
 
     class Meta:
@@ -399,6 +423,26 @@ class ProductGalleryImage(models.Model):
 
     def __str__(self):
         return self.alt or f"Galeria #{self.pk}"
+
+
+class ProductPackshotImage(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="packshots",
+        verbose_name="Produkt",
+    )
+    image = models.ImageField("Zdjęcie", upload_to="cms/products/packshots/", blank=True)
+    caption = models.CharField("Podpis", max_length=255, blank=True)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Zdjęcie packshot"
+        verbose_name_plural = "Zdjęcia packshot"
+
+    def __str__(self):
+        return self.caption or f"Packshot #{self.pk}"
 
 
 class SurfaceItem(models.Model):

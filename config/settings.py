@@ -93,7 +93,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = config("MEDIA_URL", default="/media/")
 MEDIA_ROOT = BASE_DIR / config("MEDIA_ROOT", default="media")
 
-SERVE_MEDIA = config("SERVE_MEDIA", default=False, cast=bool)
+# Local runserver needs this; production should serve media via nginx/CDN.
+SERVE_MEDIA = config("SERVE_MEDIA", default=DEBUG, cast=bool)
 
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
