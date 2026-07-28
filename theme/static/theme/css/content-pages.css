@@ -344,6 +344,7 @@
     line-height: 1.35;
 }
 
+.downloads__item-meta,
 .downloads__item-file {
     display: block;
     margin-top: 0.15rem;

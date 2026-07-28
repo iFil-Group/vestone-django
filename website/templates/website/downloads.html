@@ -59,15 +59,14 @@
                     class="downloads__item"
                     data-download-item
                     data-category="{{ item.category }}"
-                    data-search="{{ item.title|lower }} {{ item.file|lower }}"
+                    data-search="{{ item.title|lower }}{% if item.file_number %} {{ item.file_number|lower }}{% endif %}"
                 >
                     <div class="downloads__item-icon downloads__item-icon--{{ item.kind }}" aria-hidden="true">
                         {{ item.kind|upper }}
                     </div>
                     <div class="downloads__item-body">
                         <span class="downloads__item-title">{{ item.title }}</span>
-                        {% if item.file_number %}<span class="downloads__item-file">Numer: {{ item.file_number }}</span>{% endif %}
-                        <span class="downloads__item-file">{{ item.file }}</span>
+                        {% if item.file_number %}<span class="downloads__item-meta">Numer: {{ item.file_number }}</span>{% endif %}
                     </div>
                     <a href="{{ item.file }}" class="downloads__item-btn" download aria-label="Pobierz {{ item.title }}">
                         Pobierz
