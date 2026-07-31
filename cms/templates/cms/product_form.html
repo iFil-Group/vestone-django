@@ -22,11 +22,8 @@
     </div>
     {% endif %}
 
-    <section class="cms-card">
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Typ karty</h2>
-            <p class="cms-card__intro">Wybierz układ strony produktu.</p>
-        </header>
+    <section class="cms-card is-collapsed">
+        {% include "cms/partials/card_head.html" with title="Typ karty" intro="Wybierz układ strony produktu." %}
         <div class="cms-card__body">
             <div class="cms-card-type" data-card-type-switch>
                 {% for radio in form.card_type %}
@@ -40,11 +37,8 @@
         </div>
     </section>
 
-    <section class="cms-card">
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Podstawowe informacje</h2>
-            <p class="cms-card__intro">Nazwa, kategoria, opisy i ustawienia publikacji produktu.</p>
-        </header>
+    <section class="cms-card is-collapsed">
+        {% include "cms/partials/card_head.html" with title="Podstawowe informacje" intro="Nazwa, kategoria, opisy i ustawienia publikacji produktu." %}
         <div class="cms-card__body">
             {% for field in form %}
                 {% if field.name != "image" and field.name != "related_products" and field.name != "card_type" and field.name != "description_extra" and field.name != "show_main_image" and field.name != "show_packshot" and field.name != "packshot_columns" %}
@@ -57,11 +51,8 @@
         </div>
     </section>
 
-    <section class="cms-card" data-standard-only data-packshot-editor>
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Packshot</h2>
-            <p class="cms-card__intro">Galeria w siatce. Wybierz liczbę kolumn, potem „Dodaj zdjęcie packshot” dla każdego kadru. Puste wiersze nie są zapisywane.</p>
-        </header>
+    <section class="cms-card is-collapsed" data-standard-only data-packshot-editor>
+        {% include "cms/partials/card_head.html" with title="Packshot" intro="Galeria w siatce. Wybierz liczbę kolumn, potem „Dodaj zdjęcie packshot” dla każdego kadru. Puste wiersze nie są zapisywane." %}
         <div class="cms-card__body">
             {% include "cms/partials/field.html" with field=form.show_packshot %}
 
@@ -93,11 +84,8 @@
         </div>
     </section>
 
-    <section class="cms-card" data-standard-only data-main-image-section>
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Zdjęcie główne</h2>
-            <p class="cms-card__intro">Przełącznik steruje widocznością na stronie produktu. Plik i piny edytujesz zawsze tutaj.</p>
-        </header>
+    <section class="cms-card is-collapsed" data-standard-only data-main-image-section>
+        {% include "cms/partials/card_head.html" with title="Zdjęcie główne" intro="Przełącznik steruje widocznością na stronie produktu. Plik i piny edytujesz zawsze tutaj." %}
         <div class="cms-card__body">
             {% include "cms/partials/field.html" with field=form.show_main_image %}
 
@@ -131,11 +119,8 @@
         </div>
     </section>
 
-    <section class="cms-card" data-standard-only data-gallery-editor>
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Galeria</h2>
-            <p class="cms-card__intro">Każde zdjęcie ma osobną kartę. Dodaj pin na podglądzie — „Aktywuj piny” włączy się samo. Strzałki na stronie widać, gdy zdjęć jest więcej niż mieści się w rzędzie.</p>
-        </header>
+    <section class="cms-card is-collapsed" data-standard-only data-gallery-editor>
+        {% include "cms/partials/card_head.html" with title="Galeria" intro="Każde zdjęcie ma osobną kartę. Dodaj pin na podglądzie — „Aktywuj piny” włączy się samo. Strzałki na stronie widać, gdy zdjęć jest więcej niż mieści się w rzędzie." %}
         <div class="cms-card__body">
             {{ gallery_formset.management_form }}
             <div class="cms-media-tiles" data-gallery-tiles>
@@ -152,37 +137,22 @@
         </div>
     </section>
 
-    <section class="cms-card cms-product-attributes" data-product-attributes data-standard-only>
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Atrybuty</h2>
-            <p class="cms-card__intro">
-                Każdy atrybut to osobna karta. Wewnątrz karty dodajesz wiele wartości produktu
-                (np. Kolor → Opal, Czarny). Zaznacz „W filtrach”, aby atrybut był widoczny w filtrach kategorii.
-            </p>
-        </header>
+    <section class="cms-card cms-product-attributes is-collapsed" data-product-attributes data-standard-only>
+        {% include "cms/partials/card_head.html" with title="Atrybuty" intro="Każdy atrybut to osobna karta. Wewnątrz karty dodajesz wiele wartości produktu (np. Kolor → Opal, Czarny). Zaznacz „W filtrach”, aby atrybut był widoczny w filtrach kategorii." %}
         <div class="cms-card__body">
             {% include "cms/partials/attribute_editor.html" %}
         </div>
     </section>
 
-    <section class="cms-card" data-standard-only>
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Dane techniczne</h2>
-            <p class="cms-card__intro">
-                Paczki niezależne od atrybutów. Każda ma nazwę i listę „Etykieta: Wartość”.
-                Możesz kopiować paczkę albo wczytać dane z innego produktu.
-            </p>
-        </header>
+    <section class="cms-card is-collapsed" data-standard-only>
+        {% include "cms/partials/card_head.html" with title="Dane techniczne" intro="Paczki niezależne od atrybutów. Każda ma nazwę i listę „Etykieta: Wartość”. Możesz kopiować paczkę albo wczytać dane z innego produktu." %}
         <div class="cms-card__body">
             {% include "cms/partials/tech_packs_editor.html" %}
         </div>
     </section>
 
-    <section class="cms-card" data-related-products data-search-url="{% url 'cms_product_search' %}" data-product-id="{{ product.pk|default:'' }}">
-        <header class="cms-card__head">
-            <h2 class="cms-card__title">Sprawdź inne produkty</h2>
-            <p class="cms-card__intro">Wyszukaj i przypnij konkretne produkty wyświetlane na dole karty.</p>
-        </header>
+    <section class="cms-card is-collapsed" data-related-products data-search-url="{% url 'cms_product_search' %}" data-product-id="{{ product.pk|default:'' }}">
+        {% include "cms/partials/card_head.html" with title="Sprawdź inne produkty" intro="Wyszukaj i przypnij konkretne produkty wyświetlane na dole karty." %}
         <div class="cms-card__body">
             <input type="search" class="cms-input" placeholder="Wpisz nazwę produktu" data-related-search autocomplete="off">
             <div class="cms-related-results" data-related-results></div>
@@ -253,6 +223,7 @@
 {% endblock %}
 
 {% block panel_scripts %}
+<script src="{% static 'theme/js/cms-product-sections.js' %}?v=20260731g" defer></script>
 <script src="{% static 'theme/js/cms-product-pins.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/cms-product-gallery.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/cms-product-packshots.js' %}?v=20260728i" defer></script>

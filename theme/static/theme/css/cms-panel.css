@@ -173,6 +173,55 @@ body.cms-body--panel {
     margin-bottom: 1rem;
 }
 
+.cms-toolbar--split {
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.cms-toolbar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.cms-switch {
+    display: inline-flex;
+    padding: 0.2rem;
+    background: rgba(55, 70, 80, 0.08);
+    border: 1px solid rgba(55, 70, 80, 0.12);
+    border-radius: 999px;
+    gap: 0.15rem;
+}
+
+.cms-switch__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 7.5rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: 999px;
+    font-family: "Barlow Condensed", "Barlow", sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: rgba(55, 70, 80, 0.72);
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cms-switch__btn:hover {
+    color: #374650;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.cms-switch__btn.is-active {
+    color: #fff;
+    background: #e11946;
+    box-shadow: 0 1px 3px rgba(225, 25, 70, 0.28);
+}
+
 .cms-section {
     margin-bottom: 1.75rem;
 }
@@ -188,6 +237,62 @@ body.cms-body--panel {
     margin-bottom: 1.15rem;
     padding-bottom: 0.85rem;
     border-bottom: 1px solid rgba(55, 70, 80, 0.08);
+}
+
+.cms-card__head--collapsible {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cms-card__head-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.cms-card__toggle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(55, 70, 80, 0.14);
+    border-radius: 999px;
+    background: rgba(55, 70, 80, 0.04);
+    color: #374650;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.cms-card__toggle:hover {
+    background: rgba(225, 25, 70, 0.08);
+    border-color: rgba(225, 25, 70, 0.35);
+    color: #e11946;
+}
+
+.cms-card__chevron {
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.cms-card.is-collapsed .cms-card__head--collapsible {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.cms-card.is-collapsed .cms-card__body {
+    display: none;
+}
+
+.cms-card.is-collapsed .cms-card__chevron {
+    transform: rotate(-90deg);
 }
 
 .cms-card__title {

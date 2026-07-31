@@ -1,0 +1,17 @@
+<header class="cms-card__head cms-card__head--collapsible">
+    <div class="cms-card__head-text">
+        <h2 class="cms-card__title">{{ title }}</h2>
+        {% if intro %}<p class="cms-card__intro">{{ intro }}</p>{% endif %}
+    </div>
+    <button
+        type="button"
+        class="cms-card__toggle"
+        data-cms-collapse-toggle
+        aria-expanded="false"
+        aria-label="Rozwiń: {{ title }}"
+    >
+        <svg class="cms-card__chevron" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+</header>

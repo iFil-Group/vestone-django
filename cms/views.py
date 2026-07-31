@@ -109,6 +109,9 @@ def dashboard(request):
 def product_list(request):
     items = Product.objects.select_related("group").order_by("group__title", "sort_order", "title")
     groups = ProductGroup.objects.order_by("sort_order", "title")
+    active_tab = request.GET.get("tab", "produkty")
+    if active_tab not in {"produkty", "kategorie"}:
+        active_tab = "produkty"
     cta_block, _ = ContentBlock.objects.get_or_create(
         key="products-cta",
         defaults={
@@ -127,7 +130,7 @@ def product_list(request):
         if cta_form.is_valid():
             cta_form.save()
             messages.success(request, "Kafel „Nie wiesz co wybrać?” został zapisany.")
-            return redirect("cms_products")
+            return redirect(f"{reverse('cms_products')}?tab=kategorie")
     else:
         cta_form = ProductsCtaForm(instance=cta_block)
 
@@ -140,6 +143,7 @@ def product_list(request):
             items=items,
             groups=groups,
             products_cta_form=cta_form,
+            active_tab=active_tab,
         ),
     )
 
@@ -148,10 +152,11 @@ def product_list(request):
 def product_group_edit(request, pk=None):
     instance = get_object_or_404(ProductGroup, pk=pk) if pk else None
     form = ProductGroupForm(request.POST or None, request.FILES or None, instance=instance)
+    categories_url = f"{reverse('cms_products')}?tab=kategorie"
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Grupa produktów została zapisana.")
-        return redirect("cms_products")
+        return redirect(categories_url)
     return render(
         request,
         "cms/form.html",
@@ -159,7 +164,7 @@ def product_group_edit(request, pk=None):
             "products",
             "Edycja grupy produktów" if instance else "Nowa grupa produktów",
             form=form,
-            back_url=reverse("cms_products"),
+            back_url=categories_url,
         ),
     )
 
@@ -973,4 +978,6 @@ def delete_object(request, model_name, pk):
     model, redirect_name = model_config
     get_object_or_404(model, pk=pk).delete()
     messages.success(request, "Pozycja została usunięta.")
+    if model_name == "product-group":
+        return redirect(f"{reverse(redirect_name)}?tab=kategorie")
     return redirect(redirect_name)

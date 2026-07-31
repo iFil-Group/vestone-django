@@ -1,13 +1,33 @@
 {% extends "cms/base_panel.html" %}
 
 {% block panel_content %}
-<div class="cms-toolbar">
-    <a href="{% url 'cms_product_add' %}" class="cms-btn cms-btn--primary">Dodaj produkt</a>
-    <a href="{% url 'cms_product_group_add' %}" class="cms-btn cms-btn--ghost">Dodaj kategorię (grupę)</a>
+<div class="cms-toolbar cms-toolbar--split">
+    <nav class="cms-switch" role="tablist" aria-label="Sekcja produktów">
+        <a
+            href="{% url 'cms_products' %}?tab=produkty"
+            class="cms-switch__btn{% if active_tab == 'produkty' %} is-active{% endif %}"
+            role="tab"
+            aria-selected="{% if active_tab == 'produkty' %}true{% else %}false{% endif %}"
+        >Produkty</a>
+        <a
+            href="{% url 'cms_products' %}?tab=kategorie"
+            class="cms-switch__btn{% if active_tab == 'kategorie' %} is-active{% endif %}"
+            role="tab"
+            aria-selected="{% if active_tab == 'kategorie' %}true{% else %}false{% endif %}"
+        >Kategorie</a>
+    </nav>
+    <div class="cms-toolbar__actions">
+        {% if active_tab == 'kategorie' %}
+        <a href="{% url 'cms_product_group_add' %}" class="cms-btn cms-btn--primary">Dodaj kategorię</a>
+        {% else %}
+        <a href="{% url 'cms_product_add' %}" class="cms-btn cms-btn--primary">Dodaj produkt</a>
+        {% endif %}
+    </div>
 </div>
 
+{% if active_tab == 'kategorie' %}
 <section class="cms-section">
-    <h2 class="cms-section__title">Kategorie produktów (grupy)</h2>
+    <h2 class="cms-section__title">Kategorie produktów</h2>
     <p class="cms-section__intro">Zdjęcie kategorii pojawia się na <a href="/produkty/" target="_blank" rel="noopener">/produkty/</a>. Edytuj grupę, aby wgrać lub zmienić obraz.</p>
     <div class="cms-table-wrap">
         <table class="cms-table">
@@ -59,7 +79,7 @@
         <button type="submit" class="cms-btn cms-btn--primary">Zapisz kafel CTA</button>
     </form>
 </section>
-
+{% else %}
 <section class="cms-section">
     <h2 class="cms-section__title">Produkty</h2>
     <div class="cms-table-wrap">
@@ -91,4 +111,5 @@
         </table>
     </div>
 </section>
+{% endif %}
 {% endblock %}
