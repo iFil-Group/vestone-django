@@ -1,0 +1,54 @@
+{% load static %}
+<div
+    class="cms-tech-editor"
+    data-tech-editor
+    data-tech-search-url="{% url 'cms_product_search' %}"
+    data-tech-copy-url-template="{% url 'cms_product_tech_packs' 0 %}"
+    data-product-id="{{ product.pk|default:'' }}"
+>
+    {{ tech_packs|json_script:"tech-packs-data" }}
+    <input type="hidden" name="tech_packs_json" value="[]" data-tech-packs-json>
+
+    <div class="cms-tech-editor__toolbar">
+        <label class="cms-tech-editor__copy">
+            <span>Kopiuj z produktu</span>
+            <input type="search" class="cms-input" placeholder="Szukaj produktu…" data-tech-copy-search autocomplete="off">
+        </label>
+        <div class="cms-related-results" data-tech-copy-results></div>
+    </div>
+
+    <div class="cms-tech-packs" data-tech-packs></div>
+
+    <div class="cms-tech-editor__actions">
+        <button type="button" class="cms-btn cms-btn--ghost" data-tech-add-pack>Dodaj paczkę</button>
+    </div>
+
+    <template data-tech-pack-template>
+        <article class="cms-tech-pack" data-tech-pack>
+            <header class="cms-tech-pack__head">
+                <div class="cms-field cms-tech-pack__name">
+                    <label>Nazwa paczki</label>
+                    <input type="text" class="cms-input" data-tech-pack-name placeholder="np. Wymiary">
+                </div>
+                <div class="cms-tech-pack__actions">
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small" data-tech-pack-copy>Kopiuj paczkę</button>
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-tech-pack-remove>Usuń</button>
+                </div>
+            </header>
+            <div class="cms-tech-pack__rows" data-tech-rows></div>
+            <button type="button" class="cms-btn cms-btn--ghost cms-btn--small" data-tech-add-row>Dodaj etykietę / wartość</button>
+        </article>
+    </template>
+
+    <template data-tech-row-template>
+        <div class="cms-tech-row" data-tech-row>
+            <input type="text" class="cms-input" data-tech-row-label placeholder="Etykieta">
+            <span class="cms-tech-row__sep">:</span>
+            <input type="text" class="cms-input" data-tech-row-value placeholder="Wartość">
+            <a href="#" class="cms-row-action cms-row-action--delete" data-tech-row-remove>
+                {% include "cms/partials/icon_trash.html" %}
+                <span>Usuń</span>
+            </a>
+        </div>
+    </template>
+</div>

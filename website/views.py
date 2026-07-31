@@ -187,18 +187,16 @@ def product_detail(request, category_slug, product_slug):
 
 
 def surfaces(request):
-    from cms.services import get_placeholder, get_surface_filters, get_surface_items
+    from cms.services import get_placeholder, get_surface_groups
 
-    surface_items = get_surface_items()
     return render(
         request,
         "website/surfaces.html",
         {
             "page_title": "Barwy i powierzchnie",
             "page_heading": "Barwy i powierzchnie",
-            "product_filters": get_surface_filters(),
             "placeholder_img": get_placeholder(),
-            "surface_items": surface_items,
+            "surface_groups": get_surface_groups(),
         },
     )
 

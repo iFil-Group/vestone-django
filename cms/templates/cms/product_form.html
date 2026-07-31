@@ -165,6 +165,19 @@
         </div>
     </section>
 
+    <section class="cms-card" data-standard-only>
+        <header class="cms-card__head">
+            <h2 class="cms-card__title">Dane techniczne</h2>
+            <p class="cms-card__intro">
+                Paczki niezależne od atrybutów. Każda ma nazwę i listę „Etykieta: Wartość”.
+                Możesz kopiować paczkę albo wczytać dane z innego produktu.
+            </p>
+        </header>
+        <div class="cms-card__body">
+            {% include "cms/partials/tech_packs_editor.html" %}
+        </div>
+    </section>
+
     <section class="cms-card" data-related-products data-search-url="{% url 'cms_product_search' %}" data-product-id="{{ product.pk|default:'' }}">
         <header class="cms-card__head">
             <h2 class="cms-card__title">Sprawdź inne produkty</h2>
@@ -245,5 +258,6 @@
 <script src="{% static 'theme/js/cms-product-packshots.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/cms-product-card-type.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/cms-product-attributes.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-product-tech.js' %}?v=20260731e" defer></script>
 <script src="{% static 'theme/js/cms-related-products.js' %}?v=20260728i" defer></script>
 {% endblock %}

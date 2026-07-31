@@ -5,7 +5,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260728i">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260731e">
 {% if product.card_type == "descriptive" %}
 <link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
 {% endif %}
@@ -26,39 +26,22 @@
     {% else %}
     <article class="product-detail" id="karta-produktu">
         <div class="product-detail__shell">
-            {% if product.show_main_image and product.description_extra %}
-            {# Dwa wiersze: opis | zdjęcie, potem atrybuty | opis dodatkowy #}
-            <div class="product-detail__layout product-detail__layout--two-rows">
-                <div class="product-detail__row">
-                    <div class="product-detail__copy">
-                        {% if product.description %}
-                        <div class="product-detail__text rich-text">{{ product.description|safe }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="product-detail__visual" data-product-pins>
-                        {% include "website/partials/product_main_image.html" %}
-                    </div>
-                </div>
-                <div class="product-detail__row">
-                    <div class="product-detail__attrs">
-                        {% include "website/partials/product_specs.html" %}
-                    </div>
-                    <div class="product-detail__extra rich-text">
-                        {{ product.description_extra|safe }}
-                    </div>
-                </div>
-            </div>
-            {% elif product.show_main_image %}
-            {# Bez opisu dodatkowego: lewa kolumna (opis+atrybuty), prawe zdjęcie sticky #}
-            <div class="product-detail__layout product-detail__layout--sticky-visual">
-                <div class="product-detail__copy-stack">
+            {% if product.show_main_image %}
+            {# Dwie kolumny: lewa opis+atrybuty, prawa zdjęcie+opis dodatkowy #}
+            <div class="product-detail__layout product-detail__layout--two-cols">
+                <div class="product-detail__col product-detail__col--copy">
                     {% if product.description %}
                     <div class="product-detail__text rich-text">{{ product.description|safe }}</div>
                     {% endif %}
                     {% include "website/partials/product_specs.html" %}
                 </div>
-                <div class="product-detail__visual" data-product-pins>
-                    {% include "website/partials/product_main_image.html" %}
+                <div class="product-detail__col product-detail__col--visual">
+                    <div class="product-detail__visual" data-product-pins>
+                        {% include "website/partials/product_main_image.html" %}
+                    </div>
+                    {% if product.description_extra %}
+                    <div class="product-detail__extra rich-text">{{ product.description_extra|safe }}</div>
+                    {% endif %}
                 </div>
             </div>
             {% else %}
@@ -126,6 +109,29 @@
             <button type="button" class="product-gallery__arrow product-gallery__arrow--next" data-product-gallery-next aria-label="Następne zdjęcie">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8.6 4.6-1.2 1.2L13.6 12l-6.2 6.2 1.2 1.2L16 12z"/></svg>
             </button>
+        </section>
+        {% endif %}
+
+        {% if product.tech_packs %}
+        <section class="product-tech" aria-labelledby="product-tech-heading">
+            <div class="product-tech__inner">
+                {% include "website/partials/section_heading.html" with title="Dane techniczne" id="product-tech-heading" %}
+                <ul class="product-tech__grid">
+                    {% for pack in product.tech_packs %}
+                    <li class="product-tech__pack">
+                        <h3 class="product-tech__pack-name">{{ pack.name }}</h3>
+                        <dl class="product-tech__rows">
+                            {% for row in pack.rows %}
+                            <div class="product-tech__row">
+                                <dt>{{ row.label }}</dt>
+                                <dd>{{ row.value }}</dd>
+                            </div>
+                            {% endfor %}
+                        </dl>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </section>
         {% endif %}
     </article>

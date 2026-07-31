@@ -298,7 +298,73 @@ def _product_dict(product, placeholder):
             for image in product.gallery.all()
             if image.image
         ],
+        "tech_packs": [
+            pack_data
+            for pack_data in (
+                {
+                    "name": pack.name,
+                    "rows": [
+                        {"label": row.label, "value": row.value}
+                        for row in pack.rows.all()
+                        if (row.label or "").strip() or (row.value or "").strip()
+                    ],
+                }
+                for pack in product.tech_packs.prefetch_related("rows").all()
+            )
+            if (pack_data["name"] or "").strip() and pack_data["rows"]
+        ],
     }
+
+
+def serialize_product_tech_packs(product):
+    if not product or not product.pk:
+        return []
+    return [
+        {
+            "name": pack.name,
+            "rows": [
+                {"label": row.label, "value": row.value}
+                for row in pack.rows.all()
+            ],
+        }
+        for pack in product.tech_packs.prefetch_related("rows").all()
+    ]
+
+
+def save_product_tech_packs(product, packs_data):
+    from cms.models import ProductTechPack, ProductTechRow
+
+    product.tech_packs.all().delete()
+    if not packs_data:
+        return
+
+    for pack_index, pack_data in enumerate(packs_data):
+        if not isinstance(pack_data, dict):
+            continue
+        name = str(pack_data.get("name") or "").strip()
+        rows = pack_data.get("rows") or []
+        if not name and not rows:
+            continue
+        pack = ProductTechPack.objects.create(
+            product=product,
+            name=name or f"Paczka {pack_index + 1}",
+            sort_order=pack_index,
+        )
+        row_index = 0
+        for row_data in rows:
+            if not isinstance(row_data, dict):
+                continue
+            label = str(row_data.get("label") or "").strip()
+            value = str(row_data.get("value") or "").strip()
+            if not label and not value:
+                continue
+            ProductTechRow.objects.create(
+                pack=pack,
+                label=label,
+                value=value,
+                sort_order=row_index,
+            )
+            row_index += 1
 
 
 def _product_filter_values(product):
@@ -414,77 +480,48 @@ def get_related_products(product=None, exclude_slug=None, category_slug=None, li
     return RELATED_PRODUCTS[:limit]
 
 
-def get_surface_items():
-    from cms.models import SurfaceItem
+def get_surface_groups():
+    """Catalog for /barwy-i-powierzchnie/: product groups with nested colors."""
+    from cms.models import SurfaceType
 
     placeholder = get_placeholder()
-    items = SurfaceItem.objects.filter(is_active=True).select_related(
-        "category", "category__parent", "surface_type"
+    groups = (
+        SurfaceType.objects.filter(is_active=True)
+        .prefetch_related("items")
+        .order_by("sort_order", "name")
     )
-    if items.exists():
-        return [
+    result = []
+    for group in groups:
+        items = [
             {
                 "slug": item.slug,
                 "title": item.title,
                 "image": _image_url(item.image, placeholder),
-                "category": item.category.name if item.category else "",
-                "category_section": (
-                    item.category.parent.name
-                    if item.category and item.category.parent
-                    else (item.category.name if item.category else "")
-                ),
-                "surface_type": item.surface_type.name if item.surface_type else "",
-                "surface_icon": _media_url(item.surface_type.icon) if item.surface_type else None,
-                "surface_description": item.surface_type.description if item.surface_type else "",
-                "product_kind": item.get_product_kind_display() if item.product_kind else "",
-                "thickness": item.thickness,
-                "application": item.application,
-                "load_capacity": item.load_capacity,
-                "filter_values": {
-                    "grubosc": item.thickness,
-                    "powierzchnia": item.surface_type.name if item.surface_type else item.surface,
-                    "rodzaj-produktu": item.get_product_kind_display() if item.product_kind else "",
-                    "zastosowanie": item.application,
-                    "nosnosc": item.load_capacity,
-                },
-                "search_text": " ".join(
-                    part
-                    for part in (
-                        item.title,
-                        item.color,
-                        item.surface,
-                        item.surface_type.name if item.surface_type else "",
-                        item.get_product_kind_display() if item.product_kind else "",
-                        item.format_size,
-                        item.thickness,
-                        item.application,
-                        item.load_capacity,
-                    )
-                    if part
-                ).lower(),
+                "search_text": f"{item.title} {group.name}".lower(),
             }
-            for item in items
+            for item in group.items.all()
+            if item.is_active
         ]
-    return []
-
-
-def get_surface_filters():
-    items = get_surface_items()
-    definitions = [
-        ("grubosc", "Grubość"),
-        ("powierzchnia", "Rodzaj powierzchni"),
-        ("rodzaj-produktu", "Rodzaj produktu"),
-        ("zastosowanie", "Zastosowanie"),
-        ("nosnosc", "Nośność"),
-    ]
-    filters = []
-    for name, label in definitions:
-        values = sorted(
-            {item["filter_values"].get(name, "") for item in items if item["filter_values"].get(name)}
+        if not items:
+            continue
+        result.append(
+            {
+                "slug": group.slug,
+                "name": group.name,
+                "image": _image_url(group.image, placeholder),
+                "items": items,
+            }
         )
-        if values:
-            filters.append({"name": name, "label": label, "options": [label, *values]})
-    return filters
+    return result
+
+
+def get_surface_items():
+    """Flat list kept for compatibility; prefer get_surface_groups()."""
+    items = []
+    for group in get_surface_groups():
+        for item in group["items"]:
+            items.append({**item, "group_name": group["name"], "group_slug": group["slug"]})
+    return items
 
 
 def _article_dict(article, placeholder):

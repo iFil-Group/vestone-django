@@ -404,6 +404,47 @@ class ProductPin(models.Model):
         return f"Pin {self.x}/{self.y}"
 
 
+class ProductTechPack(models.Model):
+    """Paczka danych technicznych na karcie produktu (niezależna od atrybutów)."""
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="tech_packs",
+        verbose_name="Produkt",
+    )
+    name = models.CharField("Nazwa", max_length=200)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Paczka danych technicznych"
+        verbose_name_plural = "Paczki danych technicznych"
+
+    def __str__(self):
+        return self.name
+
+
+class ProductTechRow(models.Model):
+    pack = models.ForeignKey(
+        ProductTechPack,
+        on_delete=models.CASCADE,
+        related_name="rows",
+        verbose_name="Paczka",
+    )
+    label = models.CharField("Etykieta", max_length=200)
+    value = models.CharField("Wartość", max_length=255)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Wiersz danych technicznych"
+        verbose_name_plural = "Wiersze danych technicznych"
+
+    def __str__(self):
+        return f"{self.label}: {self.value}"
+
+
 class ProductGalleryImage(models.Model):
     product = models.ForeignKey(
         Product,
@@ -445,46 +486,43 @@ class ProductPackshotImage(models.Model):
         return self.caption or f"Packshot #{self.pk}"
 
 
+class SurfaceType(models.Model):
+    """Grupa produktowa w katalogu barw (np. TOP ARTE)."""
+
+    name = models.CharField("Nazwa", max_length=160)
+    slug = models.SlugField("Slug", max_length=120, unique=True)
+    image = models.ImageField("Zdjęcie", upload_to="cms/surfaces/groups/", blank=True)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+    is_active = models.BooleanField("Aktywna", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "Grupa produktowa (barwy)"
+        verbose_name_plural = "Grupy produktowe (barwy)"
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
 class SurfaceItem(models.Model):
-    KIND_PAVING = "paving"
-    KIND_SLAB = "slab"
-    KIND_SMALL_ARCH = "small_arch"
-    KIND_SAND = "sand"
-    KIND_CHOICES = [
-        (KIND_PAVING, "Kostka brukowa"),
-        (KIND_SLAB, "Płyta dekoracyjna"),
-        (KIND_SMALL_ARCH, "Mała architektura"),
-        (KIND_SAND, "Piasek fugowy"),
-    ]
+    """Pojedyncza barwa / powierzchnia przypisana do grupy produktowej."""
 
     title = models.CharField("Nazwa", max_length=200)
     slug = models.SlugField("Slug", max_length=120, unique=True)
-    category = models.ForeignKey(
-        "SurfaceCategory",
-        on_delete=models.SET_NULL,
-        related_name="items",
-        verbose_name="Kategoria",
-        blank=True,
-        null=True,
-    )
     surface_type = models.ForeignKey(
-        "SurfaceType",
-        on_delete=models.SET_NULL,
+        SurfaceType,
+        on_delete=models.CASCADE,
         related_name="items",
-        verbose_name="Rodzaj powierzchni",
-        blank=True,
-        null=True,
+        verbose_name="Grupa produktowa",
     )
-    image = models.ImageField("Obraz", upload_to="cms/surfaces/", blank=True)
-    color = models.CharField("Kolor", max_length=120, blank=True)
-    surface = models.CharField("Powierzchnia", max_length=120, blank=True)
-    product_kind = models.CharField("Rodzaj produktu", max_length=20, choices=KIND_CHOICES, blank=True)
-    format_size = models.CharField("Format", max_length=120, blank=True)
-    thickness = models.CharField("Grubość", max_length=120, blank=True)
-    application = models.CharField("Zastosowanie", max_length=200, blank=True)
-    load_capacity = models.CharField("Nośność", max_length=120, blank=True)
+    image = models.ImageField("Zdjęcie", upload_to="cms/surfaces/", blank=True)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
-    is_active = models.BooleanField("Aktywny", default=True)
+    is_active = models.BooleanField("Aktywna", default=True)
 
     class Meta:
         ordering = ["sort_order", "title"]
@@ -501,6 +539,8 @@ class SurfaceItem(models.Model):
 
 
 class SurfaceCategory(models.Model):
+    """Legacy taxonomy — unused on the public surfaces page."""
+
     name = models.CharField("Nazwa", max_length=160)
     slug = models.SlugField("Slug", max_length=120, unique=True)
     parent = models.ForeignKey(
@@ -517,33 +557,11 @@ class SurfaceCategory(models.Model):
 
     class Meta:
         ordering = ["sort_order", "name"]
-        verbose_name = "Kategoria barw i powierzchni"
-        verbose_name_plural = "Kategorie barw i powierzchni"
+        verbose_name = "Kategoria barw (archiwum)"
+        verbose_name_plural = "Kategorie barw (archiwum)"
 
     def __str__(self):
         return f"{self.parent.name} — {self.name}" if self.parent else self.name
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-
-class SurfaceType(models.Model):
-    name = models.CharField("Nazwa", max_length=160)
-    slug = models.SlugField("Slug", max_length=120, unique=True)
-    icon = models.ImageField("Ikona", upload_to="cms/surfaces/icons/", blank=True)
-    description = models.TextField("Opis powierzchni", blank=True)
-    sort_order = models.PositiveIntegerField("Kolejność", default=0)
-    is_active = models.BooleanField("Aktywny", default=True)
-
-    class Meta:
-        ordering = ["sort_order", "name"]
-        verbose_name = "Rodzaj powierzchni"
-        verbose_name_plural = "Rodzaje powierzchni"
-
-    def __str__(self):
-        return self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:

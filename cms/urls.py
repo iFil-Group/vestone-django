@@ -21,6 +21,11 @@ urlpatterns = [
     path("ifil-log/panel/produkty/dodaj/", views.product_edit, name="cms_product_add"),
     path("ifil-log/panel/produkty/<int:pk>/", views.product_edit, name="cms_product_edit"),
     path("ifil-log/panel/produkty/szukaj/", views.product_search, name="cms_product_search"),
+    path(
+        "ifil-log/panel/produkty/<int:pk>/dane-techniczne/",
+        views.product_tech_packs_json,
+        name="cms_product_tech_packs",
+    ),
     path("ifil-log/panel/barwy/", views.surface_list, name="cms_surfaces"),
     path("ifil-log/panel/barwy/dodaj/", views.surface_edit, name="cms_surface_add"),
     path("ifil-log/panel/barwy/<int:pk>/", views.surface_edit, name="cms_surface_edit"),

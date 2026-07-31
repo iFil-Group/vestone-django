@@ -13,6 +13,8 @@ from .models import (
     Product,
     ProductGalleryImage,
     ProductPackshotImage,
+    ProductTechPack,
+    ProductTechRow,
     ProductGroup,
     ProductPin,
     ProductAttribute,
@@ -47,6 +49,8 @@ admin.site.register(ProductSpec)
 admin.site.register(ProductPin)
 admin.site.register(ProductGalleryImage)
 admin.site.register(ProductPackshotImage)
+admin.site.register(ProductTechPack)
+admin.site.register(ProductTechRow)
 admin.site.register(SurfaceItem)
 admin.site.register(SurfaceCategory)
 admin.site.register(SurfaceType)

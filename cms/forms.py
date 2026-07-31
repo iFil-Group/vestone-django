@@ -586,28 +586,17 @@ class SurfaceItemForm(StyledModelForm):
         fields = (
             "title",
             "slug",
-            "category",
             "surface_type",
             "image",
-            "color",
-            "surface",
-            "product_kind",
-            "format_size",
-            "thickness",
-            "application",
-            "load_capacity",
             "sort_order",
             "is_active",
         )
 
-    def clean(self):
-        cleaned = super().clean()
-        if (
-            cleaned.get("product_kind") in (SurfaceItem.KIND_PAVING, SurfaceItem.KIND_SLAB)
-            and not cleaned.get("surface_type")
-        ):
-            self.add_error("surface_type", "Wybierz rodzaj powierzchni dla kostki lub płyty.")
-        return cleaned
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["surface_type"].label = "Grupa produktowa"
+        self.fields["surface_type"].queryset = SurfaceType.objects.order_by("sort_order", "name")
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
 
 
 class SurfaceCategoryForm(StyledModelForm):
@@ -619,7 +608,13 @@ class SurfaceCategoryForm(StyledModelForm):
 class SurfaceTypeForm(StyledModelForm):
     class Meta:
         model = SurfaceType
-        fields = ("name", "slug", "icon", "description", "sort_order", "is_active")
+        fields = ("name", "slug", "image", "sort_order", "is_active")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].label = "Zdjęcie grupy"
+        self.fields["image"].help_text = "Wyświetlane wyśrodkowane nad siatką barw na stronie barw i powierzchni."
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
 
 
 class TipForm(StyledModelForm):

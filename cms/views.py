@@ -191,14 +191,21 @@ def product_edit(request, pk=None):
             prefix="packshots",
         )
 
+        tech_packs_ok, tech_packs_data = _parse_tech_packs_payload(
+            request.POST.get("tech_packs_json")
+        )
+
         if (
             form_valid
             and attribute_formset.is_valid()
             and pin_formset.is_valid()
             and gallery_formset.is_valid()
             and packshot_formset.is_valid()
+            and tech_packs_ok
         ):
             from django.db import transaction
+
+            from cms.services import save_product_tech_packs
 
             with transaction.atomic():
                 product = form.save()
@@ -210,8 +217,11 @@ def product_edit(request, pk=None):
                 gallery_formset.save()
                 packshot_formset.save()
                 pin_formset.save()
+                save_product_tech_packs(product, tech_packs_data)
             messages.success(request, "Produkt został zapisany.")
             return redirect("cms_product_edit", pk=product.pk)
+        if not tech_packs_ok:
+            messages.error(request, "Nie udało się odczytać danych technicznych.")
     else:
         form = ProductForm(instance=instance)
         attribute_formset = ProductAttributeAssignmentFormSet(
@@ -220,6 +230,8 @@ def product_edit(request, pk=None):
         pin_formset = ProductPinFormSet(instance=instance, prefix="pins")
         gallery_formset = ProductGalleryFormSet(instance=instance, prefix="gallery")
         packshot_formset = ProductPackshotFormSet(instance=instance, prefix="packshots")
+
+    from cms.services import serialize_product_tech_packs
 
     return render(
         request,
@@ -235,6 +247,7 @@ def product_edit(request, pk=None):
             pin_formset=pin_formset,
             gallery_formset=gallery_formset,
             packshot_formset=packshot_formset,
+            tech_packs=serialize_product_tech_packs(instance),
             back_url=reverse("cms_products"),
             product_image_url=_product_image_url(product),
             gallery_pin_targets=_gallery_pin_targets(product),
@@ -281,6 +294,28 @@ def product_search(request):
         for item in products.order_by("title")[:20]
     ]
     return JsonResponse({"results": results})
+
+
+@login_required
+def product_tech_packs_json(request, pk):
+    from cms.services import serialize_product_tech_packs
+
+    product = get_object_or_404(Product, pk=pk)
+    return JsonResponse({"packs": serialize_product_tech_packs(product)})
+
+
+def _parse_tech_packs_payload(raw):
+    import json
+
+    if raw in (None, ""):
+        return True, []
+    try:
+        data = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return False, []
+    if not isinstance(data, list):
+        return False, []
+    return True, data
 
 
 def _attribute_options_data():
@@ -406,7 +441,9 @@ def _product_image_url(product):
 
 @login_required
 def surface_list(request):
-    items = SurfaceItem.objects.order_by("sort_order", "title")
+    items = SurfaceItem.objects.select_related("surface_type").order_by(
+        "surface_type__sort_order", "sort_order", "title"
+    )
     return render(
         request,
         "cms/surface_list.html",
@@ -414,8 +451,7 @@ def surface_list(request):
             "surfaces",
             "Barwy i powierzchnie",
             items=items,
-            categories=SurfaceCategory.objects.all(),
-            surface_types=SurfaceType.objects.all(),
+            surface_types=SurfaceType.objects.order_by("sort_order", "name"),
         ),
     )
 
@@ -426,7 +462,7 @@ def surface_edit(request, pk=None):
     form = SurfaceItemForm(request.POST or None, request.FILES or None, instance=instance)
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Pozycja została zapisana.")
+        messages.success(request, "Barwa / powierzchnia została zapisana.")
         return redirect("cms_surfaces")
     return render(
         request,
@@ -442,19 +478,7 @@ def surface_edit(request, pk=None):
 
 @login_required
 def surface_category_edit(request, pk=None):
-    instance = get_object_or_404(SurfaceCategory, pk=pk) if pk else None
-    form = SurfaceCategoryForm(request.POST or None, instance=instance)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Kategoria została zapisana.")
-        return redirect("cms_surfaces")
-    return render(
-        request, "cms/form.html",
-        _panel_context(
-            "surfaces", "Edycja kategorii" if instance else "Nowa kategoria",
-            form=form, back_url=reverse("cms_surfaces"),
-        ),
-    )
+    return redirect("cms_surfaces")
 
 
 @login_required
@@ -463,13 +487,16 @@ def surface_type_edit(request, pk=None):
     form = SurfaceTypeForm(request.POST or None, request.FILES or None, instance=instance)
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Rodzaj powierzchni został zapisany.")
+        messages.success(request, "Grupa produktowa została zapisana.")
         return redirect("cms_surfaces")
     return render(
-        request, "cms/form.html",
+        request,
+        "cms/form.html",
         _panel_context(
-            "surfaces", "Edycja rodzaju powierzchni" if instance else "Nowy rodzaj powierzchni",
-            form=form, back_url=reverse("cms_surfaces"),
+            "surfaces",
+            "Edycja grupy produktowej" if instance else "Nowa grupa produktowa",
+            form=form,
+            back_url=reverse("cms_surfaces"),
         ),
     )
 

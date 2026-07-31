@@ -27,7 +27,7 @@ from cms.services import (
     get_product,
     get_promotion_slides,
     get_related_products,
-    get_surface_filters,
+    get_surface_groups,
     get_tip,
 )
 
@@ -133,23 +133,18 @@ class ProductExtensionsTests(TestCase):
         self.assertEqual([item["slug"] for item in result], ["produkt-b"])
 
 
-class SurfaceFilterTests(TestCase):
-    def test_surface_filters_cover_required_fields(self):
+class SurfaceCatalogTests(TestCase):
+    def test_surface_groups_nest_colors(self):
         surface_type = SurfaceType.objects.get(slug="top-arte")
         SurfaceItem.objects.create(
             title="Opal",
             slug="opal",
             surface_type=surface_type,
-            product_kind=SurfaceItem.KIND_PAVING,
-            thickness="8 cm",
-            application="Podjazd",
-            load_capacity="Samochody osobowe",
         )
-        names = {item["name"] for item in get_surface_filters()}
-        self.assertEqual(
-            names,
-            {"grubosc", "powierzchnia", "rodzaj-produktu", "zastosowanie", "nosnosc"},
-        )
+        groups = get_surface_groups()
+        top = next(group for group in groups if group["slug"] == "top-arte")
+        self.assertEqual(top["name"], "TOP ARTE")
+        self.assertEqual([item["title"] for item in top["items"]], ["Opal"])
 
 
 class ContentModuleTests(TestCase):
