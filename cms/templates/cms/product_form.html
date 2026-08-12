@@ -9,7 +9,7 @@
 <form method="post" enctype="multipart/form-data" class="cms-product-form" id="product-form" data-product-card-type="{{ form.card_type.value|default:'standard' }}">
     {% csrf_token %}
 
-    {% if form.errors or attribute_formset.non_form_errors or pin_formset.non_form_errors or gallery_formset.non_form_errors or packshot_formset.non_form_errors %}
+    {% if form.errors or attribute_formset.non_form_errors or pin_formset.non_form_errors or gallery_formset.non_form_errors or packshot_formset.non_form_errors or pin_formset.is_bound and not pin_formset.is_valid or gallery_formset.is_bound and not gallery_formset.is_valid or packshot_formset.is_bound and not packshot_formset.is_valid or attribute_formset.is_bound and not attribute_formset.is_valid %}
     <div class="cms-form-errors" role="alert">
         <p class="cms-form-errors__title">Formularz zawiera błędy — popraw zaznaczone pola i zapisz ponownie.</p>
         {% if form.non_field_errors %}
@@ -17,6 +17,13 @@
         {% endif %}
         {% for error in attribute_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
         {% for error in pin_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% if pin_formset.is_bound %}
+            {% for pin_errors in pin_formset.errors %}
+                {% for field, messages in pin_errors.items %}
+                    {% for error in messages %}<p class="cms-field__error">Pin: {{ error }}</p>{% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
         {% for error in gallery_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
         {% for error in packshot_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
     </div>
@@ -188,6 +195,8 @@
                 <label for="{{ pin_form.text.id_for_label }}">Treść tooltipa</label>
                 {{ pin_form.text }}
                 {% for error in pin_form.text.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+                {% for error in pin_form.gallery_image.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+                {% for error in pin_form.non_field_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
             </div>
             {% if pin_form.DELETE %}
             <div class="visually-hidden">{{ pin_form.DELETE }}</div>

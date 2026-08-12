@@ -462,23 +462,31 @@ class ProductPinInlineForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["text"].widget = forms.Textarea(attrs={"class": "cms-textarea", "rows": 3})
-        product_id = getattr(self.instance, "product_id", None)
-        self.fields["gallery_image"].queryset = ProductGalleryImage.objects.filter(
-            product_id=product_id
-        )
+        # Queryset is finalized in BaseProductPinFormSet._construct_form after the
+        # parent product FK is assigned (instance.product_id is still None here).
+        self.fields["gallery_image"].queryset = ProductGalleryImage.objects.none()
 
     def clean(self):
         cleaned = super().clean()
         gallery_image = cleaned.get("gallery_image")
         product_id = getattr(self.instance, "product_id", None)
-        if gallery_image and gallery_image.product_id != product_id:
+        if gallery_image and product_id and gallery_image.product_id != product_id:
             self.add_error("gallery_image", "Wybrane zdjęcie nie należy do tego produktu.")
         return cleaned
 
 
 class BaseProductPinFormSet(forms.BaseInlineFormSet):
+    def _construct_form(self, i, **kwargs):
+        form = super()._construct_form(i, **kwargs)
+        product_id = getattr(self.instance, "pk", None) or getattr(form.instance, "product_id", None)
+        form.fields["gallery_image"].queryset = ProductGalleryImage.objects.filter(
+            product_id=product_id
+        )
+        return form
+
     def save(self, commit=True):
         saved = []
+        enabled_gallery_ids = set()
         for form in self.forms:
             if not form.cleaned_data:
                 continue
@@ -492,7 +500,11 @@ class BaseProductPinFormSet(forms.BaseInlineFormSet):
             gallery_image = form.cleaned_data.get("gallery_image")
             if gallery_image and not ProductGalleryImage.objects.filter(pk=gallery_image.pk).exists():
                 continue
+            if gallery_image:
+                enabled_gallery_ids.add(gallery_image.pk)
             saved.append(form.save(commit=commit))
+        if enabled_gallery_ids:
+            ProductGalleryImage.objects.filter(pk__in=enabled_gallery_ids).update(pins_enabled=True)
         return saved
 
 
@@ -528,7 +540,9 @@ class ProductGalleryInlineForm(StyledModelForm):
         if clearing or (not image and not has_existing):
             cleaned["DELETE"] = True
             return cleaned
-        # If this gallery image has pins in POST/DB, keep storefront pins active.
+        # Keep storefront pins active when checkbox is on or DB already has pins.
+        if cleaned.get("pins_enabled"):
+            return cleaned
         if self.instance.pk and self.instance.pins.exists():
             cleaned["pins_enabled"] = True
         return cleaned
