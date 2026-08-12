@@ -221,6 +221,8 @@ def product_edit(request, pk=None):
                 attribute_formset.save()
                 gallery_formset.save()
                 packshot_formset.save()
+                # Resolve pins aimed at not-yet-saved gallery tiles (pending:N).
+                pin_formset.apply_pending_gallery_images(gallery_formset)
                 pin_formset.save()
                 save_product_tech_packs(product, tech_packs_data)
             messages.success(request, "Produkt został zapisany.")

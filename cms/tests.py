@@ -52,6 +52,7 @@ class ProductGalleryPinFormSetTests(TestCase):
             "pins-MIN_NUM_FORMS": "0",
             "pins-MAX_NUM_FORMS": "1000",
             "pins-0-gallery_image": str(self.gallery.pk),
+            "pins-0-gallery_pending": "",
             "pins-0-x": "12.5",
             "pins-0-y": "33.3",
             "pins-0-text": "Nowy pin galerii",
@@ -73,6 +74,7 @@ class ProductGalleryPinFormSetTests(TestCase):
             "pins-MIN_NUM_FORMS": "0",
             "pins-MAX_NUM_FORMS": "1000",
             "pins-0-gallery_image": "",
+            "pins-0-gallery_pending": "",
             "pins-0-x": "50",
             "pins-0-y": "50",
             "pins-0-text": "Pin główny",
@@ -86,3 +88,45 @@ class ProductGalleryPinFormSetTests(TestCase):
                 product=self.product, gallery_image__isnull=True, text="Pin główny"
             ).exists()
         )
+
+    def test_pending_gallery_pins_resolve_after_gallery_save(self):
+        from cms.forms import ProductGalleryFormSet
+
+        gallery_data = {
+            "gallery-TOTAL_FORMS": "1",
+            "gallery-INITIAL_FORMS": "1",
+            "gallery-MIN_NUM_FORMS": "0",
+            "gallery-MAX_NUM_FORMS": "1000",
+            "gallery-0-id": str(self.gallery.pk),
+            "gallery-0-alt": "",
+            "gallery-0-pins_enabled": "",
+            "gallery-0-sort_order": "0",
+        }
+        gallery_formset = ProductGalleryFormSet(
+            gallery_data, instance=self.product, prefix="gallery"
+        )
+        self.assertTrue(gallery_formset.is_valid(), gallery_formset.errors)
+
+        pin_data = {
+            "pins-TOTAL_FORMS": "1",
+            "pins-INITIAL_FORMS": "0",
+            "pins-MIN_NUM_FORMS": "0",
+            "pins-MAX_NUM_FORMS": "1000",
+            "pins-0-gallery_image": "",
+            "pins-0-gallery_pending": "0",
+            "pins-0-x": "40",
+            "pins-0-y": "60",
+            "pins-0-text": "Pin na nowym zdjęciu",
+            "pins-0-sort_order": "0",
+        }
+        pin_formset = ProductPinFormSet(pin_data, instance=self.product, prefix="pins")
+        self.assertTrue(pin_formset.is_valid(), pin_formset.errors)
+
+        gallery_formset.save()
+        pin_formset.apply_pending_gallery_images(gallery_formset)
+        pin_formset.save()
+
+        pin = ProductPin.objects.get(text="Pin na nowym zdjęciu")
+        self.assertEqual(pin.gallery_image_id, self.gallery.pk)
+        self.gallery.refresh_from_db()
+        self.assertTrue(self.gallery.pins_enabled)

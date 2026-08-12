@@ -1468,6 +1468,7 @@ body.cms-body--panel {
     height: auto;
     vertical-align: top;
     background: #fff;
+    pointer-events: none;
 }
 
 .cms-pin-editor__image[hidden] {
@@ -1478,6 +1479,8 @@ body.cms-body--panel {
     position: absolute;
     inset: 0;
     z-index: 1;
+    cursor: crosshair;
+    pointer-events: auto;
 }
 
 .cms-pin-editor__pin {

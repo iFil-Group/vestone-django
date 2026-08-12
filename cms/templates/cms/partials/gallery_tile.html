@@ -40,12 +40,10 @@
     </div>
 
     <div
-        class="cms-split-media{% if form.instance.pk %} cms-pin-editor{% endif %}"
-        {% if form.instance.pk %}
+        class="cms-split-media cms-pin-editor"
         data-pin-editor
-        data-pin-target-id="{{ form.instance.pk }}"
+        data-pin-target-id="{% if form.instance.pk %}{{ form.instance.pk }}{% else %}pending:{{ tile_index }}{% endif %}"
         data-pin-image-url="{% if has_image %}{{ form.instance.image.url }}{% endif %}"
-        {% endif %}
         data-gallery-preview
     >
         <div class="cms-split-media__file">
@@ -57,16 +55,10 @@
             {% endfor %}
         </div>
         <div class="cms-split-media__stage">
-            <h3 class="cms-card__subtitle">Podgląd{% if form.instance.pk %} / piny{% endif %}</h3>
-            {% if form.instance.pk %}
+            <h3 class="cms-card__subtitle">Podgląd / piny</h3>
             <p class="cms-pin-editor__help">
-                Kliknij podgląd, aby dodać pin. Przeciągnij, aby zmienić pozycję.
+                Wybierz zdjęcie, potem kliknij podgląd, aby dodać pin. Przeciągnij, aby zmienić pozycję.
             </p>
-            {% else %}
-            <p class="cms-pin-editor__help">
-                Zapisz produkt, aby edytować piny na tym zdjęciu.
-            </p>
-            {% endif %}
             <div class="cms-pin-editor__stage{% if not has_image %} cms-pin-editor__stage--empty{% endif %}" data-pin-stage>
                 <img
                     class="cms-pin-editor__image"
@@ -78,19 +70,15 @@
                 <p class="cms-pin-editor__placeholder" data-pin-placeholder {% if has_image %}hidden{% endif %}>
                     Podgląd pojawi się po wyborze pliku
                 </p>
-                {% if form.instance.pk %}
                 <div class="cms-pin-editor__overlay" data-pin-overlay aria-hidden="true"></div>
-                {% endif %}
             </div>
         </div>
-        {% if form.instance.pk %}
         <div class="cms-split-media__rows">
             <div class="cms-pin-editor__rows" data-pin-rows></div>
             <div class="cms-pin-editor__actions">
                 <button type="button" class="cms-btn cms-btn--ghost" data-pin-add>Dodaj pin</button>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endwith %}

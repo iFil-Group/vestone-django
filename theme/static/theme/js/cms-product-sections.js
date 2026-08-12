@@ -11,6 +11,11 @@
             toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
             toggle.setAttribute("aria-label", (collapsed ? "Rozwiń: " : "Zwiń: ") + label);
         }
+        if (!collapsed && typeof window.cmsRefreshPinEditors === "function") {
+            window.setTimeout(function () {
+                window.cmsRefreshPinEditors();
+            }, 0);
+        }
     }
 
     function cardHasErrors(card) {

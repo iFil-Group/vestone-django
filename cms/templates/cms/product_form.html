@@ -132,14 +132,14 @@
             {{ gallery_formset.management_form }}
             <div class="cms-media-tiles" data-gallery-tiles>
                 {% for gform in gallery_formset %}
-                {% include "cms/partials/gallery_tile.html" with form=gform tile_number=forloop.counter %}
+                {% include "cms/partials/gallery_tile.html" with form=gform tile_number=forloop.counter tile_index=forloop.counter0 %}
                 {% endfor %}
             </div>
             <div class="cms-packshot-editor__actions">
                 <button type="button" class="cms-btn cms-btn--ghost" data-gallery-add>Dodaj zdjęcie do galerii</button>
             </div>
             <template data-gallery-empty-template>
-                {% include "cms/partials/gallery_tile.html" with form=gallery_formset.empty_form tile_number="__num__" %}
+                {% include "cms/partials/gallery_tile.html" with form=gallery_formset.empty_form tile_number="__num__" tile_index="__prefix__" %}
             </template>
         </div>
     </section>
@@ -232,9 +232,9 @@
 {% endblock %}
 
 {% block panel_scripts %}
-<script src="{% static 'theme/js/cms-product-sections.js' %}?v=20260731g" defer></script>
-<script src="{% static 'theme/js/cms-product-pins.js' %}?v=20260728i" defer></script>
-<script src="{% static 'theme/js/cms-product-gallery.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-product-sections.js' %}?v=20260812a" defer></script>
+<script src="{% static 'theme/js/cms-product-pins.js' %}?v=20260812a" defer></script>
+<script src="{% static 'theme/js/cms-product-gallery.js' %}?v=20260812a" defer></script>
 <script src="{% static 'theme/js/cms-product-packshots.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/cms-product-card-type.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/cms-product-attributes.js' %}?v=20260728i" defer></script>

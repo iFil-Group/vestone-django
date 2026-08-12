@@ -27,6 +27,18 @@
         });
     }
 
+    function bindPinEditor(tile) {
+        var editor = tile && tile.querySelector("[data-pin-editor]");
+        if (!editor || typeof window.cmsBindPinEditor !== "function") return;
+        try {
+            window.cmsBindPinEditor(editor);
+        } catch (err) {
+            if (typeof console !== "undefined" && console.error) {
+                console.error("Gallery pin editor failed", err);
+            }
+        }
+    }
+
     function showPreview(tile, url) {
         if (!tile || !url) return;
         var image = tile.querySelector("[data-pin-image]");
@@ -40,6 +52,7 @@
         if (stage) stage.classList.remove("cms-pin-editor__stage--empty");
         var editor = tile.querySelector("[data-pin-editor]");
         if (editor) editor.setAttribute("data-pin-image-url", url);
+        bindPinEditor(tile);
     }
 
     function setPreviewFromFile(tile, file) {
@@ -83,22 +96,15 @@
                 window.cmsBindFileField(field);
             }
         });
+
+        bindPinEditor(tile);
     }
 
     tilesWrap.querySelectorAll("[data-gallery-tile]").forEach(bindTile);
     syncSortOrder();
 
     window.setTimeout(function () {
-        if (typeof window.cmsBindPinEditor !== "function") return;
-        tilesWrap.querySelectorAll("[data-pin-editor]").forEach(function (editor) {
-            try {
-                window.cmsBindPinEditor(editor);
-            } catch (err) {
-                if (typeof console !== "undefined" && console.error) {
-                    console.error("Gallery pin editor failed", err);
-                }
-            }
-        });
+        tilesWrap.querySelectorAll("[data-gallery-tile]").forEach(bindPinEditor);
     }, 0);
 
     if (addButton && template && totalFormsInput) {

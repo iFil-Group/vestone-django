@@ -449,6 +449,9 @@ ProductAttributeAssignmentFormSet = inlineformset_factory(
 )
 
 class ProductPinInlineForm(StyledModelForm):
+    # Client-side index of a not-yet-saved gallery tile ("pending:N" → N).
+    gallery_pending = forms.CharField(required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = ProductPin
         fields = ("gallery_image", "x", "y", "text", "sort_order")
@@ -483,6 +486,33 @@ class BaseProductPinFormSet(forms.BaseInlineFormSet):
             product_id=product_id
         )
         return form
+
+    def apply_pending_gallery_images(self, gallery_formset):
+        """Map pins targeting pending:N tiles onto gallery images saved in this POST."""
+        index_map = {}
+        for index, gform in enumerate(gallery_formset.forms):
+            cleaned = getattr(gform, "cleaned_data", None) or {}
+            if cleaned.get("DELETE"):
+                continue
+            if gform.instance.pk:
+                index_map[str(index)] = gform.instance
+
+        enabled_ids = set()
+        for form in self.forms:
+            cleaned = getattr(form, "cleaned_data", None) or {}
+            if not cleaned or cleaned.get("DELETE"):
+                continue
+            pending = str(cleaned.get("gallery_pending") or "").strip()
+            if not pending:
+                continue
+            gallery = index_map.get(pending)
+            if not gallery:
+                continue
+            cleaned["gallery_image"] = gallery
+            form.instance.gallery_image = gallery
+            enabled_ids.add(gallery.pk)
+        if enabled_ids:
+            ProductGalleryImage.objects.filter(pk__in=enabled_ids).update(pins_enabled=True)
 
     def save(self, commit=True):
         saved = []

@@ -33,6 +33,7 @@
             y: row.querySelector('input[name$="-y"]'),
             text: row.querySelector('textarea[name$="-text"], input[name$="-text"]'),
             galleryImage: row.querySelector('input[name$="-gallery_image"], select[name$="-gallery_image"]'),
+            galleryPending: row.querySelector('input[name$="-gallery_pending"]'),
             sort: row.querySelector('input[name$="-sort_order"]'),
             deleteInput: row.querySelector('input[name$="-DELETE"]'),
             idInput: row.querySelector('input[name$="-id"]'),
@@ -46,6 +47,9 @@
 
     function rowTargetId(row) {
         var fields = getRowFields(row);
+        if (fields.galleryPending && String(fields.galleryPending.value || "") !== "") {
+            return "pending:" + String(fields.galleryPending.value);
+        }
         return fields.galleryImage ? String(fields.galleryImage.value || "") : "";
     }
 
@@ -150,6 +154,31 @@
         field.value = value == null ? "" : String(value);
     }
 
+    function ensureHiddenField(row, fieldName, value) {
+        var selector = 'input[name$="-' + fieldName + '"]';
+        var input = row.querySelector(selector);
+        if (!input) {
+            var index = row.dataset.pinIndex || "0";
+            input = document.createElement("input");
+            input.type = "hidden";
+            input.name = prefix + "-" + index + "-" + fieldName;
+            row.insertBefore(input, row.firstChild);
+        }
+        setFieldValue(input, value);
+        return input;
+    }
+
+    function ensureTargetFields(row, targetId) {
+        var id = String(targetId || "");
+        if (id.indexOf("pending:") === 0) {
+            ensureHiddenField(row, "gallery_image", "");
+            ensureHiddenField(row, "gallery_pending", id.slice("pending:".length));
+            return;
+        }
+        ensureHiddenField(row, "gallery_image", id);
+        ensureHiddenField(row, "gallery_pending", "");
+    }
+
     function renderPins(editor) {
         var overlay = editor.querySelector("[data-pin-overlay]");
         if (!overlay) return;
@@ -200,22 +229,28 @@
         }
     }
 
-    function ensureGalleryImageField(row, targetId) {
-        var fields = getRowFields(row);
-        if (fields.galleryImage) {
-            setFieldValue(fields.galleryImage, targetId);
-            return;
+    function stageHasImage(editor) {
+        var stage = editor.querySelector("[data-pin-stage]");
+        var image = editor.querySelector("[data-pin-image]");
+        if (!stage || stage.classList.contains("cms-pin-editor__stage--empty")) return false;
+        if (!image || image.hidden) return false;
+        return !!(image.getAttribute("src") || image.currentSrc);
+    }
+
+    function enablePinsCheckbox(editor) {
+        var targetId = editor.getAttribute("data-pin-target-id") || "";
+        if (!targetId) return;
+        var tile = editor.closest("[data-gallery-tile]");
+        var enableInput = tile && tile.querySelector('input[type="checkbox"][name$="-pins_enabled"]');
+        if (enableInput && !enableInput.checked) {
+            enableInput.checked = true;
+            enableInput.dispatchEvent(new Event("change", { bubbles: true }));
         }
-        var index = row.dataset.pinIndex || "0";
-        var input = document.createElement("input");
-        input.type = "hidden";
-        input.name = prefix + "-" + index + "-gallery_image";
-        input.value = targetId == null ? "" : String(targetId);
-        row.insertBefore(input, row.firstChild);
     }
 
     function addRowAt(editor, x, y) {
         if (!template || !template.content || !totalFormsInput) return null;
+        if (!stageHasImage(editor)) return null;
 
         try {
             var targetId = editor.getAttribute("data-pin-target-id") || "";
@@ -238,7 +273,7 @@
             dest.appendChild(row);
 
             var fields = getRowFields(row);
-            ensureGalleryImageField(row, targetId);
+            ensureTargetFields(row, targetId);
             setFieldValue(fields.x, Number(x).toFixed(2));
             setFieldValue(fields.y, Number(y).toFixed(2));
             if (fields.text && !fields.text.value) {
@@ -250,16 +285,7 @@
             placeRows();
             selectRow(row, { focus: false });
             renderPins(editor);
-
-            // Gallery pins are gated by pins_enabled on the storefront — turn it on when adding.
-            if (targetId) {
-                var tile = editor.closest("[data-gallery-tile]");
-                var enableInput = tile && tile.querySelector('input[type="checkbox"][name$="-pins_enabled"]');
-                if (enableInput && !enableInput.checked) {
-                    enableInput.checked = true;
-                    enableInput.dispatchEvent(new Event("change", { bubbles: true }));
-                }
-            }
+            enablePinsCheckbox(editor);
             return row;
         } catch (err) {
             if (typeof console !== "undefined" && console.error) {
@@ -330,15 +356,17 @@
         var imageUrl = editor.getAttribute("data-pin-image-url");
         if (image && imageUrl) image.src = imageUrl;
 
-        if (overlay && stage) {
-            overlay.addEventListener("click", function (event) {
+        if (stage) {
+            // Click the stage (image/overlay) — more reliable than overlay-only hits.
+            stage.addEventListener("click", function (event) {
                 if (suppressNextClick) return;
                 if (event.target.closest("[data-editor-pin]")) return;
+                if (event.target.closest("a, button, input, textarea, label")) return;
                 var position = positionFromEvent(stage, event);
                 addRowAt(editor, position.x, position.y);
             });
 
-            overlay.addEventListener("mousedown", function (event) {
+            stage.addEventListener("mousedown", function (event) {
                 var pinButton = event.target.closest("[data-editor-pin]");
                 if (!pinButton) return;
                 event.preventDefault();
@@ -356,6 +384,10 @@
                 event.stopPropagation();
                 addRowAt(editor, 50, 50);
             });
+        }
+
+        if (overlay) {
+            overlay.style.pointerEvents = "auto";
         }
 
         placeRows();
@@ -417,6 +449,8 @@
                             if (pinObjectUrl) URL.revokeObjectURL(pinObjectUrl);
                             pinObjectUrl = URL.createObjectURL(blob);
                             image.src = pinObjectUrl;
+                            var stage = mainEditor.querySelector("[data-pin-stage]");
+                            if (stage) stage.classList.remove("cms-pin-editor__stage--empty");
                         }, "image/jpeg", 0.85);
                     })
                     .catch(function () {});
@@ -426,6 +460,8 @@
             if (pinObjectUrl) URL.revokeObjectURL(pinObjectUrl);
             pinObjectUrl = URL.createObjectURL(file);
             image.src = pinObjectUrl;
+            var stage = mainEditor.querySelector("[data-pin-stage]");
+            if (stage) stage.classList.remove("cms-pin-editor__stage--empty");
         }, 0);
     }
 
@@ -442,7 +478,7 @@
 
     allRows().forEach(bindRow);
 
-    // Bind only the main-image editor on load. Gallery editors are lazy-bound when opened.
+    // Bind main-image editor on load. Gallery editors are bound by cms-product-gallery.js.
     var mainEditor = editorForTarget("");
     if (mainEditor) {
         try {
