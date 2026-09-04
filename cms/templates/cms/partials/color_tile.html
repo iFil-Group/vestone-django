@@ -1,0 +1,46 @@
+{% load cms_extras %}
+<div
+    class="cms-media-tile cms-media-tile--packshot{% if form.errors %} cms-media-tile--error{% endif %}"
+    data-color-tile
+    data-cms-formset-row
+>
+    {% for field in form %}
+        {% if field.is_hidden or field.name == "sort_order" %}
+        {{ field }}
+        {% elif field|is_delete_field %}
+        <div class="visually-hidden" data-cms-delete-field>{{ field }}</div>
+        {% endif %}
+    {% endfor %}
+
+    <header class="cms-media-tile__head">
+        <h3 class="cms-media-tile__title" data-color-title>Kolor nr {{ tile_number|default:1 }}</h3>
+        <div class="cms-media-tile__actions">
+            <button type="button" class="cms-media-tile__move" data-color-move="up" aria-label="Przesuń w górę">↑</button>
+            <button type="button" class="cms-media-tile__move" data-color-move="down" aria-label="Przesuń w dół">↓</button>
+            {% if form.DELETE %}
+            <a href="#" class="cms-row-action cms-row-action--delete" data-cms-row-delete>
+                {% include "cms/partials/icon_trash.html" %}
+                <span>Usuń</span>
+            </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="cms-packshot-tile__body">
+        <div class="cms-packshot-tile__file">
+            {% for field in form %}
+                {% if field.name == "image" %}
+                {% include "cms/partials/field.html" with field=field %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="cms-packshot-tile__caption">
+            {% for field in form %}
+                {% if field.name == "caption" %}
+                {% include "cms/partials/field.html" with field=field %}
+                {% endif %}
+            {% endfor %}
+            <p class="cms-field__help">Zbliżenie nawierzchni: faktura i barwa. To nie packshot modelu.</p>
+        </div>
+    </div>
+</div>

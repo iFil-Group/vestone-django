@@ -7,6 +7,7 @@ urlpatterns = [
     path("dostep/", views.site_unlock, name="site_unlock"),
     path("", views.home, name="home"),
     path("formularz/<slug:slug>/", views.form_widget, name="form_widget"),
+    path("zamow-katalog/", views.form_widget, {"slug": "zamow-katalog"}, name="catalog_order"),
     path("produkty/", views.products_list, name="products_list"),
     path(
         "produkty/<slug:category_slug>/<slug:product_slug>/",

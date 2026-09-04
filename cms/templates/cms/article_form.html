@@ -7,9 +7,13 @@
     {% csrf_token %}
     {% for field in form %}{% include "cms/partials/field.html" with field=field %}{% endfor %}
 
-    <section class="cms-card__subsection" data-gallery-formset>
-        <h2 class="cms-section__title">Galeria</h2>
-        <p class="cms-section__help">Dodawaj zdjęcia, wybieraj ich szerokość i kolejność. Na stronie utworzą karuzelę.</p>
+    <section class="cms-card cms-card__subsection" data-gallery-formset>
+        <h2 class="cms-section__title">Zdjęcia / galeria</h2>
+        <p class="cms-section__help">
+            Tu dodajesz zdjęcia do artykułu (karuzela na stronie wpisu).
+            Zdjęcie główne (miniatura na liście) ustawiasz wyżej w polu „Zdjęcie główne”.
+            Kliknij „Dodaj zdjęcie”, wybierz plik, ewentualnie opis i szerokość, potem zapisz.
+        </p>
         {{ gallery_formset.management_form }}
         <div data-gallery-rows>
             {% for gallery_form in gallery_formset %}
@@ -26,5 +30,5 @@
 {% endblock %}
 
 {% block panel_scripts %}
-<script src="{% static 'theme/js/cms-gallery-formset.js' %}" defer></script>
+<script src="{% static 'theme/js/cms-gallery-formset.js' %}?v=20260904a" defer></script>
 {% endblock %}

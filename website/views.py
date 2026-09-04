@@ -160,15 +160,28 @@ def product_category(request, category_slug):
 def product_detail(request, category_slug, product_slug):
     from django.http import Http404
 
-    from cms.services import get_placeholder, get_product, get_product_group, get_related_products
+    from cms.services import get_placeholder, get_product_group, get_related_products, resolve_product
 
     category = get_product_group(category_slug)
     if category is None:
         raise Http404
 
-    product = get_product(category_slug, product_slug)
+    product, canonical_slug = resolve_product(category_slug, product_slug)
     if product is None:
         raise Http404
+    if canonical_slug:
+        return redirect(
+            "product_detail",
+            category_slug=category_slug,
+            product_slug=canonical_slug,
+            permanent=True,
+        )
+
+    related = []
+    if product.get("show_related_products", True):
+        related = get_related_products(
+            exclude_slug=product["slug"], category_slug=category_slug
+        )
 
     return render(
         request,
@@ -178,9 +191,7 @@ def product_detail(request, category_slug, product_slug):
             "page_heading": product["title"],
             "category": category,
             "product": product,
-            "related_products": get_related_products(
-                exclude_slug=product_slug, category_slug=category_slug
-            ),
+            "related_products": related,
             "placeholder_img": get_placeholder(),
         },
     )
@@ -202,15 +213,29 @@ def surfaces(request):
 
 
 def where_to_buy(request):
-    from cms.services import get_placeholder
+    from cms.models import SalesPoint
+    from cms.services import get_sales_points
 
+    points = get_sales_points()
+    voivodeships = sorted(
+        {
+            (point["voivodeship"], point["voivodeship_label"])
+            for point in points
+            if point["voivodeship"]
+        },
+        key=lambda item: item[1],
+    )
+    cities = sorted({point["city"] for point in points if point["city"]})
     return render(
         request,
         "website/where_to_buy.html",
         {
             "page_title": "Gdzie kupić",
             "page_heading": "Gdzie kupić",
-            "placeholder_img": get_placeholder(),
+            "sales_points": points,
+            "filter_voivodeships": voivodeships,
+            "filter_cities": cities,
+            "offer_choices": SalesPoint.OFFER_CHOICES,
         },
     )
 
@@ -232,12 +257,15 @@ def tips(request):
 
 def tip_detail(request, slug):
     from django.http import Http404
+    from django.shortcuts import redirect
 
-    from cms.services import get_tip
+    from cms.services import resolve_tip
 
-    tip = get_tip(slug)
+    tip, canonical_slug = resolve_tip(slug)
     if tip is None:
         raise Http404
+    if canonical_slug:
+        return redirect("tip_detail", slug=canonical_slug, permanent=True)
 
     return render(
         request,
@@ -271,13 +299,16 @@ def downloads(request):
 def about_company(request):
     from cms.services import get_content_block
 
-    content = get_content_block("page-about-company")
-    return _page(
+    content = get_content_block("page-about-company", image_fallback=False)
+    return render(
         request,
-        "O nas",
-        heading=content.get("title") or "O nas",
-        lead=content.get("subtitle"),
-        body=(content.get("body") or "") + (content.get("body_extra") or ""),
+        "website/about.html",
+        {
+            "page_title": "O nas",
+            "page_heading": content.get("title") or "O nas",
+            "page_lead": content.get("subtitle"),
+            "page_content": content,
+        },
     )
 
 
@@ -298,12 +329,15 @@ def news(request):
 
 def news_detail(request, slug):
     from django.http import Http404
+    from django.shortcuts import redirect
 
-    from cms.services import get_news_post
+    from cms.services import resolve_news_post
 
-    post = get_news_post(slug)
+    post, canonical_slug = resolve_news_post(slug)
     if post is None:
         raise Http404
+    if canonical_slug:
+        return redirect("news_detail", slug=canonical_slug, permanent=True)
 
     return render(
         request,

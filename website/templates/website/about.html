@@ -1,0 +1,22 @@
+{% extends "website/page.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}?v=20260904b">
+{% endblock %}
+
+{% block page_content %}
+<div class="split-page split-page--single">
+    <div class="split-page__content prose">
+        {% if page_content.body %}
+        {{ page_content.body|safe }}
+        {% endif %}
+        {% if page_content.body_extra %}
+        {{ page_content.body_extra|safe }}
+        {% endif %}
+        {% if page_content.image %}
+        <img class="about-static-image" src="{{ page_content.image }}" alt="">
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

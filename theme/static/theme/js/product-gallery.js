@@ -33,10 +33,11 @@
     }
 
     function visibleCount() {
-        if (!slides[0] || !root.clientWidth) return 1;
+        var viewport = root.querySelector(".product-gallery__viewport") || root;
+        if (!slides[0] || !viewport.clientWidth) return 1;
         var width = slides[0].getBoundingClientRect().width;
         if (!width) return 1;
-        return Math.max(1, Math.round(root.clientWidth / width));
+        return Math.max(1, Math.round(viewport.clientWidth / width));
     }
 
     function update(animate) {

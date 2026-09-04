@@ -6,10 +6,10 @@
     <a href="{{ back_url }}" class="cms-btn cms-btn--ghost">Wróć</a>
 </div>
 
-<form method="post" enctype="multipart/form-data" class="cms-product-form" id="product-form" data-product-card-type="{{ form.card_type.value|default:'standard' }}">
+<form method="post" enctype="multipart/form-data" class="cms-product-form" id="product-form" data-product-card-type="standard">
     {% csrf_token %}
 
-    {% if form.errors or attribute_formset.non_form_errors or pin_formset.non_form_errors or gallery_formset.non_form_errors or packshot_formset.non_form_errors or pin_formset.is_bound and not pin_formset.is_valid or gallery_formset.is_bound and not gallery_formset.is_valid or packshot_formset.is_bound and not packshot_formset.is_valid or attribute_formset.is_bound and not attribute_formset.is_valid %}
+    {% if form.errors or attribute_formset.non_form_errors or pin_formset.non_form_errors or gallery_formset.non_form_errors or packshot_formset.non_form_errors or color_formset.non_form_errors or pin_formset.is_bound and not pin_formset.is_valid or gallery_formset.is_bound and not gallery_formset.is_valid or packshot_formset.is_bound and not packshot_formset.is_valid or color_formset.is_bound and not color_formset.is_valid or attribute_formset.is_bound and not attribute_formset.is_valid %}
     <div class="cms-form-errors" role="alert">
         <p class="cms-form-errors__title">Formularz zawiera błędy — popraw zaznaczone pola i zapisz ponownie.</p>
         {% if form.non_field_errors %}
@@ -26,29 +26,17 @@
         {% endif %}
         {% for error in gallery_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
         {% for error in packshot_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% for error in color_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
     </div>
     {% endif %}
 
-    <section class="cms-card is-collapsed">
-        {% include "cms/partials/card_head.html" with title="Typ karty" intro="Wybierz układ strony produktu." %}
-        <div class="cms-card__body">
-            <div class="cms-card-type" data-card-type-switch>
-                {% for radio in form.card_type %}
-                <label class="cms-card-type__option">
-                    {{ radio.tag }}
-                    <span class="cms-card-type__label">{{ radio.choice_label }}</span>
-                </label>
-                {% endfor %}
-            </div>
-            {% for error in form.card_type.errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
-        </div>
-    </section>
+    <div class="visually-hidden">{{ form.card_type }}</div>
 
     <section class="cms-card is-collapsed">
         {% include "cms/partials/card_head.html" with title="Podstawowe informacje" intro="Nazwa, kategoria, opisy i ustawienia publikacji produktu." %}
         <div class="cms-card__body">
             {% for field in form %}
-                {% if field.name != "image" and field.name != "related_products" and field.name != "card_type" and field.name != "description_extra" and field.name != "show_main_image" and field.name != "show_packshot" and field.name != "packshot_columns" %}
+                {% if field.name != "image" and field.name != "related_products" and field.name != "show_related_products" and field.name != "card_type" and field.name != "description_extra" and field.name != "show_main_image" and field.name != "show_packshot" and field.name != "packshot_columns" %}
                 {% include "cms/partials/field.html" with field=field %}
                 {% endif %}
             {% endfor %}
@@ -87,6 +75,24 @@
             </div>
             <template data-packshot-empty-template>
                 {% include "cms/partials/packshot_tile.html" with form=packshot_formset.empty_form tile_number="__num__" %}
+            </template>
+        </div>
+    </section>
+
+    <section class="cms-card is-collapsed" data-standard-only data-color-editor>
+        {% include "cms/partials/card_head.html" with title="Kolory produktu" intro="Zbliżenia nawierzchni: faktura i barwa. Packshoty modelu dodajesz w sekcji Packshot." %}
+        <div class="cms-card__body">
+            {{ color_formset.management_form }}
+            <div class="cms-media-tiles" data-color-tiles>
+                {% for cform in color_formset %}
+                {% include "cms/partials/color_tile.html" with form=cform tile_number=forloop.counter %}
+                {% endfor %}
+            </div>
+            <div class="cms-packshot-editor__actions">
+                <button type="button" class="cms-btn cms-btn--ghost" data-color-add>Dodaj zdjęcie koloru</button>
+            </div>
+            <template data-color-empty-template>
+                {% include "cms/partials/color_tile.html" with form=color_formset.empty_form tile_number="__num__" %}
             </template>
         </div>
     </section>
@@ -159,8 +165,9 @@
     </section>
 
     <section class="cms-card is-collapsed" data-related-products data-search-url="{% url 'cms_product_search' %}" data-product-id="{{ product.pk|default:'' }}">
-        {% include "cms/partials/card_head.html" with title="Sprawdź inne produkty" intro="Wyszukaj i przypnij konkretne produkty wyświetlane na dole karty." %}
+        {% include "cms/partials/card_head.html" with title="Sprawdź inne produkty" intro="Sekcja pojawia się tylko wtedy, gdy włączysz ją poniżej i dodasz produkty. Pusta lista nic nie pokazuje." %}
         <div class="cms-card__body">
+            {% include "cms/partials/field.html" with field=form.show_related_products %}
             <input type="search" class="cms-input" placeholder="Wpisz nazwę produktu" data-related-search autocomplete="off">
             <div class="cms-related-results" data-related-results></div>
             <div class="cms-related-selected" data-related-selected>
@@ -236,8 +243,9 @@
 <script src="{% static 'theme/js/cms-product-pins.js' %}?v=20260812a" defer></script>
 <script src="{% static 'theme/js/cms-product-gallery.js' %}?v=20260812a" defer></script>
 <script src="{% static 'theme/js/cms-product-packshots.js' %}?v=20260728i" defer></script>
+<script src="{% static 'theme/js/cms-product-colors.js' %}?v=20260904a" defer></script>
 <script src="{% static 'theme/js/cms-product-card-type.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/cms-product-attributes.js' %}?v=20260728i" defer></script>
-<script src="{% static 'theme/js/cms-product-tech.js' %}?v=20260731e" defer></script>
+<script src="{% static 'theme/js/cms-product-tech.js' %}?v=20260904a" defer></script>
 <script src="{% static 'theme/js/cms-related-products.js' %}?v=20260728i" defer></script>
 {% endblock %}

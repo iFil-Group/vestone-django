@@ -19,6 +19,7 @@ class ProductGroupAssignmentTests(TestCase):
                 "description": "",
                 "description_extra": "",
                 "show_main_image": "on",
+                "show_related_products": "on",
                 "sort_order": 0,
                 "is_active": "on",
             },
@@ -28,6 +29,15 @@ class ProductGroupAssignmentTests(TestCase):
         form.save()
         product.refresh_from_db()
         self.assertEqual(product.group, second)
+
+    def test_slug_change_keeps_previous_address(self):
+        group = ProductGroup.objects.create(title="Grupa", slug="grupa-slug")
+        product = Product.objects.create(group=group, title="Nazwa", slug="stary-adres")
+        product.slug = "nowy-adres"
+        product.save()
+        product.refresh_from_db()
+        self.assertEqual(product.slug, "nowy-adres")
+        self.assertIn("stary-adres", product.legacy_slugs)
 
 
 class ProductGalleryPinFormSetTests(TestCase):

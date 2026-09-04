@@ -1606,11 +1606,49 @@ body.cms-body--panel {
     margin-bottom: 0.75rem;
 }
 
+.cms-tech-sources {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.cms-tech-sources__label {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #5c6b76;
+}
+
 .cms-tech-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.3fr) minmax(7.5rem, 0.7fr) auto;
     gap: 0.5rem;
-    align-items: center;
+    align-items: start;
+}
+
+.cms-tech-row__value {
+    display: grid;
+    gap: 0.3rem;
+}
+
+.cms-tech-row__format {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.cms-tech-row__format button {
+    min-height: 1.7rem;
+    padding: 0 0.45rem;
+    border: 1px solid #c8d0d5;
+    border-radius: 2px;
+    background: #fff;
+    color: #243746;
+    cursor: pointer;
+}
+
+.cms-tech-row__format button:hover {
+    border-color: #e11946;
+    color: #e11946;
 }
 
 .cms-tech-row__sep {

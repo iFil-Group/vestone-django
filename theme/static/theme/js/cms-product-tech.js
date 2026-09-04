@@ -11,6 +11,8 @@
     var addPackBtn = root.querySelector("[data-tech-add-pack]");
     var copySearch = root.querySelector("[data-tech-copy-search]");
     var copyResults = root.querySelector("[data-tech-copy-results]");
+    var sourcesWrap = root.querySelector("[data-tech-sources]");
+    var sourceList = root.querySelector("[data-tech-source-list]");
     var searchUrl = root.getAttribute("data-tech-search-url") || "";
     var copyUrlTemplate = root.getAttribute("data-tech-copy-url-template") || "";
     var productId = root.getAttribute("data-product-id") || "";
@@ -27,15 +29,31 @@
         }
     }
 
+    function wrapSelection(input, tag) {
+        if (!input) return;
+        var start = input.selectionStart;
+        var end = input.selectionEnd;
+        var value = input.value || "";
+        var selected = value.slice(start, end) || (tag === "sup" ? "2" : "");
+        if (!selected && tag !== "sup") return;
+        input.value = value.slice(0, start) + "<" + tag + ">" + selected + "</" + tag + ">" + value.slice(end);
+        input.focus();
+        var cursor = start + tag.length + 2 + selected.length + tag.length + 3;
+        input.setSelectionRange(cursor, cursor);
+        syncJson();
+    }
+
     function createRow(data) {
         data = data || {};
         var fragment = rowTemplate.content.cloneNode(true);
         var row = fragment.querySelector("[data-tech-row]");
         var label = row.querySelector("[data-tech-row-label]");
         var value = row.querySelector("[data-tech-row-value]");
+        var icon = row.querySelector("[data-tech-row-icon]");
         var remove = row.querySelector("[data-tech-row-remove]");
         if (label) label.value = data.label || "";
         if (value) value.value = data.value || "";
+        if (icon) icon.value = data.icon || "";
         if (remove) {
             remove.addEventListener("click", function (event) {
                 event.preventDefault();
@@ -43,8 +61,15 @@
                 syncJson();
             });
         }
-        [label, value].forEach(function (input) {
+        row.querySelectorAll("[data-tech-wrap]").forEach(function (button) {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();
+                wrapSelection(value, button.getAttribute("data-tech-wrap"));
+            });
+        });
+        [label, value, icon].forEach(function (input) {
             if (input) input.addEventListener("input", syncJson);
+            if (input) input.addEventListener("change", syncJson);
         });
         return row;
     }
@@ -59,18 +84,21 @@
         var copyBtn = pack.querySelector("[data-tech-pack-copy]");
         var removeBtn = pack.querySelector("[data-tech-pack-remove]");
 
+        if (data.sourceId) pack.dataset.sourceId = String(data.sourceId);
+        if (data.sourceName) pack.dataset.sourceName = data.sourceName;
+
         if (nameInput) {
             nameInput.value = data.name || "";
             nameInput.addEventListener("input", syncJson);
         }
 
-        (data.rows || [{ label: "", value: "" }]).forEach(function (rowData) {
+        (data.rows || [{ label: "", value: "", icon: "" }]).forEach(function (rowData) {
             rowsWrap.appendChild(createRow(rowData));
         });
 
         if (addRowBtn) {
             addRowBtn.addEventListener("click", function () {
-                rowsWrap.appendChild(createRow({ label: "", value: "" }));
+                rowsWrap.appendChild(createRow({ label: "", value: "", icon: "" }));
                 syncJson();
             });
         }
@@ -83,6 +111,7 @@
         if (removeBtn) {
             removeBtn.addEventListener("click", function () {
                 pack.remove();
+                renderSources();
                 syncJson();
             });
         }
@@ -96,18 +125,57 @@
             return {
                 label: (row.querySelector("[data-tech-row-label]") || {}).value || "",
                 value: (row.querySelector("[data-tech-row-value]") || {}).value || "",
+                icon: (row.querySelector("[data-tech-row-icon]") || {}).value || "",
             };
         });
         return {
             name: nameInput ? nameInput.value : "",
             rows: rows,
+            sourceId: pack.dataset.sourceId || "",
+            sourceName: pack.dataset.sourceName || "",
         };
     }
 
     function syncJson() {
         if (!jsonInput) return;
-        var packs = Array.prototype.slice.call(packsWrap.querySelectorAll("[data-tech-pack]")).map(serializePack);
+        var packs = Array.prototype.slice.call(packsWrap.querySelectorAll("[data-tech-pack]")).map(function (pack) {
+            var data = serializePack(pack);
+            return { name: data.name, rows: data.rows };
+        });
         jsonInput.value = JSON.stringify(packs);
+    }
+
+    function renderSources() {
+        if (!sourceList || !sourcesWrap) return;
+        var seen = {};
+        var items = [];
+        Array.prototype.slice.call(packsWrap.querySelectorAll("[data-tech-pack]")).forEach(function (pack) {
+            var id = pack.dataset.sourceId;
+            var name = pack.dataset.sourceName;
+            if (!id || seen[id]) return;
+            seen[id] = true;
+            items.push({ id: id, name: name || ("Produkt " + id) });
+        });
+        sourceList.innerHTML = "";
+        items.forEach(function (item) {
+            var chip = document.createElement("span");
+            chip.className = "cms-related-chip";
+            chip.textContent = item.name + " ";
+            var button = document.createElement("button");
+            button.type = "button";
+            button.setAttribute("aria-label", "Usuń dane z tego produktu");
+            button.textContent = "×";
+            button.addEventListener("click", function () {
+                Array.prototype.slice.call(packsWrap.querySelectorAll("[data-tech-pack]")).forEach(function (pack) {
+                    if (pack.dataset.sourceId === item.id) pack.remove();
+                });
+                renderSources();
+                syncJson();
+            });
+            chip.appendChild(button);
+            sourceList.appendChild(chip);
+        });
+        sourcesWrap.hidden = items.length === 0;
     }
 
     function renderPacks(packs) {
@@ -115,19 +183,27 @@
         (packs || []).forEach(function (pack) {
             packsWrap.appendChild(createPack(pack));
         });
+        renderSources();
         syncJson();
     }
 
-    function appendPacks(packs) {
+    function appendPacks(packs, source) {
         (packs || []).forEach(function (pack) {
-            packsWrap.appendChild(createPack(pack));
+            var data = {
+                name: pack.name,
+                rows: pack.rows || [],
+                sourceId: source && source.id ? String(source.id) : "",
+                sourceName: source && source.text ? source.text : "",
+            };
+            packsWrap.appendChild(createPack(data));
         });
+        renderSources();
         syncJson();
     }
 
     if (addPackBtn) {
         addPackBtn.addEventListener("click", function () {
-            packsWrap.appendChild(createPack({ name: "", rows: [{ label: "", value: "" }] }));
+            packsWrap.appendChild(createPack({ name: "", rows: [{ label: "", value: "", icon: "" }] }));
             syncJson();
         });
     }
@@ -164,7 +240,7 @@
                                         return response.json();
                                     })
                                     .then(function (data) {
-                                        appendPacks(data.packs || []);
+                                        appendPacks(data.packs || [], item);
                                         copyResults.innerHTML = "";
                                         copySearch.value = "";
                                     });

@@ -20,6 +20,7 @@ from .forms import (
     NewsGalleryFormSet,
     ProductForm,
     ProductGalleryFormSet,
+    ProductColorFormSet,
     ProductPackshotFormSet,
     ProductGroupForm,
     ProductPinFormSet,
@@ -195,6 +196,12 @@ def product_edit(request, pk=None):
             instance=product,
             prefix="packshots",
         )
+        color_formset = ProductColorFormSet(
+            request.POST,
+            request.FILES,
+            instance=product,
+            prefix="colors",
+        )
 
         tech_packs_ok, tech_packs_data = _parse_tech_packs_payload(
             request.POST.get("tech_packs_json")
@@ -206,6 +213,7 @@ def product_edit(request, pk=None):
             and pin_formset.is_valid()
             and gallery_formset.is_valid()
             and packshot_formset.is_valid()
+            and color_formset.is_valid()
             and tech_packs_ok
         ):
             from django.db import transaction
@@ -218,9 +226,11 @@ def product_edit(request, pk=None):
                 pin_formset.instance = product
                 gallery_formset.instance = product
                 packshot_formset.instance = product
+                color_formset.instance = product
                 attribute_formset.save()
                 gallery_formset.save()
                 packshot_formset.save()
+                color_formset.save()
                 # Resolve pins aimed at not-yet-saved gallery tiles (pending:N).
                 pin_formset.apply_pending_gallery_images(gallery_formset)
                 pin_formset.save()
@@ -237,6 +247,7 @@ def product_edit(request, pk=None):
         pin_formset = ProductPinFormSet(instance=instance, prefix="pins")
         gallery_formset = ProductGalleryFormSet(instance=instance, prefix="gallery")
         packshot_formset = ProductPackshotFormSet(instance=instance, prefix="packshots")
+        color_formset = ProductColorFormSet(instance=instance, prefix="colors")
 
     from cms.services import serialize_product_tech_packs
 
@@ -254,6 +265,7 @@ def product_edit(request, pk=None):
             pin_formset=pin_formset,
             gallery_formset=gallery_formset,
             packshot_formset=packshot_formset,
+            color_formset=color_formset,
             tech_packs=serialize_product_tech_packs(instance),
             back_url=reverse("cms_products"),
             product_image_url=_product_image_url(product),
@@ -909,11 +921,16 @@ def sales_point_list(request):
         "cms/list.html",
         _panel_context(
             "sales-points", "Punkty sprzedaży",
-            items=SalesPoint.objects.all(),
+            items=SalesPoint.objects.all().order_by("sort_name", "name"),
             add_url=reverse("cms_sales_point_add"),
             edit_url_name="cms_sales_point_edit",
             delete_model="sales-point",
-            columns=[("name", "Nazwa"), ("address", "Adres"), ("offer_type", "Oferta")],
+            columns=[
+                ("name", "Nazwa"),
+                ("city", "Miejscowość"),
+                ("voivodeship", "Województwo"),
+                ("offer_type", "Oferta"),
+            ],
         ),
     )
 

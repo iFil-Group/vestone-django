@@ -1,5 +1,20 @@
+import re
+
 from django.db import models
 from django.utils.text import slugify
+
+
+_SALES_POINT_PREFIX = re.compile(
+    r"^(?:p\.?\s*p\.?\s*h\.?\s*u\.?|p\.?\s*h\.?\s*u\.?|f\.?\s*h\.?\s*u\.?|"
+    r"p\.?\s*p\.?\s*h\.?|p\.?\s*u\.?\s*h\.?|firma)\s+",
+    re.IGNORECASE,
+)
+
+
+def _sales_point_sort_name(name):
+    cleaned = (name or "").strip()
+    cleaned = _SALES_POINT_PREFIX.sub("", cleaned).strip(" -–—,.")
+    return cleaned or (name or "").strip()
 
 
 class SiteSettings(models.Model):
@@ -8,6 +23,18 @@ class SiteSettings(models.Model):
     infoline = models.CharField("Infolinia", max_length=64, blank=True)
     address = models.TextField("Adres", blank=True)
     footer_tagline = models.CharField("Tagline stopki", max_length=255, blank=True)
+    commercial_label = models.CharField(
+        "Dział w stopce",
+        max_length=120,
+        blank=True,
+        default="Dział handlowy i księgowy",
+    )
+    commercial_phone = models.CharField(
+        "Telefon działu handlowego",
+        max_length=64,
+        blank=True,
+        default="+48 755 54 40",
+    )
 
     class Meta:
         verbose_name = "Ustawienia strony"
@@ -58,7 +85,7 @@ class HeroSlide(models.Model):
     MEDIA_VIDEO = "video"
     MEDIA_CHOICES = [(MEDIA_IMAGE, "Zdjęcie"), (MEDIA_VIDEO, "Film")]
 
-    title = models.CharField("Tytuł", max_length=255)
+    title = models.CharField("Tytuł", max_length=255, blank=True)
     lead = models.TextField("Lead", blank=True)
     media_type = models.CharField("Typ medium", max_length=10, choices=MEDIA_CHOICES, default=MEDIA_IMAGE)
     image = models.ImageField("Obraz desktop", upload_to="cms/hero/", blank=True)
@@ -76,11 +103,11 @@ class HeroSlide(models.Model):
         verbose_name_plural = "Slajdy hero"
 
     def __str__(self):
-        return self.title
+        return self.title or f"Slajd #{self.pk or 'nowy'}"
 
 
 class PromotionSlide(models.Model):
-    text = models.TextField("Treść")
+    text = models.TextField("Treść", blank=True)
     link_label = models.CharField("Etykieta linku", max_length=120, blank=True)
     link_url = models.CharField("Link", max_length=500, blank=True)
     active_from = models.DateTimeField("Aktywny od", blank=True, null=True)
@@ -151,23 +178,75 @@ class SalesPoint(models.Model):
         (OFFER_FULL, "Pełna oferta"),
         (OFFER_MUSSO, "Płyty dekoracyjne MUSSO"),
     ]
+    VOIVODESHIP_CHOICES = [
+        ("dolnoslaskie", "dolnośląskie"),
+        ("kujawsko-pomorskie", "kujawsko-pomorskie"),
+        ("lubelskie", "lubelskie"),
+        ("lubuskie", "lubuskie"),
+        ("lodzkie", "łódzkie"),
+        ("malopolskie", "małopolskie"),
+        ("mazowieckie", "mazowieckie"),
+        ("opolskie", "opolskie"),
+        ("podkarpackie", "podkarpackie"),
+        ("podlaskie", "podlaskie"),
+        ("pomorskie", "pomorskie"),
+        ("slaskie", "śląskie"),
+        ("swietokrzyskie", "świętokrzyskie"),
+        ("warminsko-mazurskie", "warmińsko-mazurskie"),
+        ("wielkopolskie", "wielkopolskie"),
+        ("zachodniopomorskie", "zachodniopomorskie"),
+    ]
 
     name = models.CharField("Nazwa", max_length=200)
+    sort_name = models.CharField(
+        "Nazwa do sortowania",
+        max_length=200,
+        blank=True,
+        help_text="Używana do sortowania A–Z. Wpisz nazwę bez PPHU, PHU itd.",
+    )
+    voivodeship = models.CharField(
+        "Województwo",
+        max_length=40,
+        blank=True,
+        choices=VOIVODESHIP_CHOICES,
+    )
+    city = models.CharField("Miejscowość", max_length=120, blank=True)
     address = models.CharField("Adres", max_length=300)
     phone = models.CharField("Telefon", max_length=80, blank=True)
     email = models.EmailField("E-mail", blank=True)
-    website_url = models.URLField("Link do strony", blank=True)
+    website_url = models.CharField("Adres strony", max_length=500, blank=True)
+    latitude = models.DecimalField(
+        "Szerokość geograficzna",
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        help_text="Np. 51.436519. Używana do mapy i przycisku „Wyznacz trasę”.",
+    )
+    longitude = models.DecimalField(
+        "Długość geograficzna",
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        help_text="Np. 19.225727.",
+    )
     offer_type = models.CharField("Oferta", max_length=10, choices=OFFER_CHOICES, default=OFFER_FULL)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywny", default=True)
 
     class Meta:
-        ordering = ["sort_order", "name"]
+        ordering = ["sort_name", "name"]
         verbose_name = "Punkt sprzedaży"
         verbose_name_plural = "Punkty sprzedaży"
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not (self.sort_name or "").strip():
+            self.sort_name = _sales_point_sort_name(self.name)
+        super().save(*args, **kwargs)
 
 
 class FloatingPromotion(models.Model):
@@ -243,6 +322,11 @@ class Product(models.Model):
         verbose_name="Grupa",
     )
     slug = models.SlugField("Slug", max_length=120)
+    legacy_slugs = models.TextField(
+        "Poprzednie adresy",
+        blank=True,
+        help_text="Stare adresy produktu, po jednym w linii.",
+    )
     title = models.CharField("Nazwa", max_length=200)
     subtitle = models.CharField("Podtytuł", max_length=255, blank=True)
     card_type = models.CharField(
@@ -274,6 +358,10 @@ class Product(models.Model):
         related_name="related_to_products",
         verbose_name="Polecane produkty",
     )
+    show_related_products = models.BooleanField(
+        "Pokaż „Sprawdź inne produkty”",
+        default=True,
+    )
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywny", default=True)
 
@@ -289,6 +377,21 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        if self.pk:
+            previous = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list("slug", "legacy_slugs")
+                .first()
+            )
+            if previous:
+                old_slug, legacy = previous
+                if old_slug and old_slug != self.slug:
+                    lines = [line.strip() for line in (legacy or "").splitlines() if line.strip()]
+                    if old_slug not in lines:
+                        lines.append(old_slug)
+                    lines = [line for line in lines if line != self.slug]
+                    self.legacy_slugs = "\n".join(lines[-30:])
         super().save(*args, **kwargs)
 
 
@@ -433,7 +536,13 @@ class ProductTechRow(models.Model):
         verbose_name="Paczka",
     )
     label = models.CharField("Etykieta", max_length=200)
-    value = models.CharField("Wartość", max_length=255)
+    value = models.TextField("Wartość", blank=True)
+    icon_preset = models.CharField(
+        "Ikona",
+        max_length=20,
+        blank=True,
+        choices=[("", "Brak"), ("load", "Nośność")],
+    )
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
 
     class Meta:
@@ -484,6 +593,26 @@ class ProductPackshotImage(models.Model):
 
     def __str__(self):
         return self.caption or f"Packshot #{self.pk}"
+
+
+class ProductColorImage(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="colors",
+        verbose_name="Produkt",
+    )
+    image = models.ImageField("Zdjęcie nawierzchni", upload_to="cms/products/colors/", blank=True)
+    caption = models.CharField("Nazwa koloru", max_length=255, blank=True)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Kolor produktu"
+        verbose_name_plural = "Kolory produktu"
+
+    def __str__(self):
+        return self.caption or f"Kolor #{self.pk}"
 
 
 class SurfaceType(models.Model):
@@ -571,6 +700,11 @@ class SurfaceCategory(models.Model):
 
 class Article(models.Model):
     slug = models.SlugField("Slug", max_length=120, unique=True)
+    legacy_slugs = models.TextField(
+        "Poprzednie adresy",
+        blank=True,
+        help_text="Wewnętrzna lista starych adresów (po jednym w linii) do przekierowań.",
+    )
     title = models.CharField("Tytuł", max_length=255)
     excerpt = models.TextField("Zajawka", blank=True)
     body = models.TextField("Treść", blank=True)
@@ -585,6 +719,22 @@ class Article(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        if self.pk:
+            previous = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list("slug", "legacy_slugs")
+                .first()
+            )
+            if previous:
+                old_slug, legacy = previous
+                if old_slug and old_slug != self.slug:
+                    lines = [line.strip() for line in (legacy or "").splitlines() if line.strip()]
+                    if old_slug not in lines:
+                        lines.append(old_slug)
+                    # Drop the new slug if it was previously legacy.
+                    lines = [line for line in lines if line != self.slug]
+                    self.legacy_slugs = "\n".join(lines[-30:])
         super().save(*args, **kwargs)
 
 

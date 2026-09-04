@@ -5,29 +5,16 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260731e">
-{% if product.card_type == "descriptive" %}
-<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
-{% endif %}
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260904a">
 {% endblock %}
 
 {% block main %}
-<div class="product-page product-page--detail{% if product.card_type == 'descriptive' %} product-page--descriptive{% endif %}">
+<div class="product-page product-page--detail">
     {% include "website/partials/page_hero.html" %}
 
-    {% if product.card_type == "descriptive" %}
-    <section class="page-body">
-        <div class="page-body__inner">
-            {% if product.description %}
-            <div class="prose">{{ product.description|safe }}</div>
-            {% endif %}
-        </div>
-    </section>
-    {% else %}
     <article class="product-detail" id="karta-produktu">
         <div class="product-detail__shell">
             {% if product.show_main_image %}
-            {# Dwie kolumny: lewa opis+atrybuty, prawa zdjęcie+opis dodatkowy #}
             <div class="product-detail__layout product-detail__layout--two-cols">
                 <div class="product-detail__col product-detail__col--copy">
                     {% if product.description %}
@@ -57,6 +44,83 @@
             {% endif %}
         </div>
 
+        {% if product.gallery %}
+        <section class="product-gallery" aria-label="Galeria zdjęć produktu" data-product-gallery>
+            <div class="product-gallery__inner">
+                <div class="product-gallery__viewport">
+                    <div class="product-gallery__track" data-product-gallery-track>
+                        {% for image in product.gallery %}
+                        <div class="product-gallery__slide">
+                            <div class="product-gallery__image-wrap" data-product-pins>
+                            <img
+                                class="product-gallery__img"
+                                src="{{ image.image|default:placeholder_img }}"
+                                alt="{{ image.alt }}"
+                                width="960"
+                                height="600"
+                                loading="lazy"
+                            >
+                            {% for pin in image.pins %}
+                            <button type="button" class="product-pin" style="--pin-x: {{ pin.x }}%; --pin-y: {{ pin.y }}%;" data-product-pin>
+                                <span class="product-pin__dot" aria-hidden="true"></span>
+                                <span class="product-pin__tooltip" role="tooltip">{{ pin.text }}</span>
+                            </button>
+                            {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button type="button" class="product-gallery__arrow product-gallery__arrow--prev" data-product-gallery-prev aria-label="Poprzednie zdjęcie">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.4 4.6 8 12l7.4 7.4 1.2-1.2L10.4 12l6.2-6.2z"/></svg>
+                </button>
+                <button type="button" class="product-gallery__arrow product-gallery__arrow--next" data-product-gallery-next aria-label="Następne zdjęcie">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8.6 4.6-1.2 1.2L13.6 12l-6.2 6.2 1.2 1.2L16 12z"/></svg>
+                </button>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if product.tech_table.names %}
+        <section class="product-tech" aria-labelledby="product-tech-heading">
+            <div class="product-tech__inner">
+                {% include "website/partials/section_heading.html" with title="Dane techniczne" id="product-tech-heading" %}
+                <div class="product-tech__scroll">
+                    <table class="product-tech__table">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="product-tech__label-col"><span class="visually-hidden">Cecha</span></th>
+                                {% for name in product.tech_table.names %}
+                                <th scope="col">{{ name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in product.tech_table.rows %}
+                            <tr>
+                                <th scope="row">
+                                    {% if row.icon == "load" %}
+                                    <span class="product-tech__icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" focusable="false">
+                                            <path d="M3 16.5V15h1.2l1.4-4.2A2 2 0 0 1 7.5 9.5h7.2a2 2 0 0 1 1.9 1.3L18 15h1.2a1.8 1.8 0 1 1 0 3.6H18a2.3 2.3 0 0 1-4.4 0H9.4a2.3 2.3 0 0 1-4.4 0H3v-2.1Zm4.1 2.1a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm9.8 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0ZM7.5 11l-1 3h10.2l-1.1-3H7.5Z"/>
+                                            <path d="M6.2 7.2h5.6l.9-1.8H8.4L6.2 7.2Z"/>
+                                        </svg>
+                                    </span>
+                                    {% endif %}
+                                    {{ row.label }}
+                                </th>
+                                {% for value in row.values %}
+                                <td>{% if value %}<div class="product-tech__value rich-text">{{ value|safe }}</div>{% endif %}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
         {% if product.show_packshot and product.packshots %}
         <section class="product-packshot" aria-label="Packshot" data-packshot-columns="{{ product.packshot_columns }}">
             <ul class="product-packshot__grid product-packshot__grid--cols-{{ product.packshot_columns }}">
@@ -77,57 +141,22 @@
         </section>
         {% endif %}
 
-        {% if product.gallery %}
-        <section class="product-gallery" aria-label="Galeria zdjęć produktu" data-product-gallery>
-            <div class="product-gallery__viewport">
-                <div class="product-gallery__track" data-product-gallery-track>
-                    {% for image in product.gallery %}
-                    <div class="product-gallery__slide">
-                        <div class="product-gallery__image-wrap" data-product-pins>
+        {% if product.colors %}
+        <section class="product-colors" aria-labelledby="product-colors-heading">
+            <div class="product-colors__inner">
+                {% include "website/partials/section_heading.html" with title="Kolory" id="product-colors-heading" %}
+                <ul class="product-colors__grid">
+                    {% for item in product.colors %}
+                    <li class="product-colors__item">
                         <img
-                            class="product-gallery__img"
-                            src="{{ image.image|default:placeholder_img }}"
-                            alt="{{ image.alt }}"
-                            width="640"
-                            height="480"
+                            class="product-colors__img"
+                            src="{{ item.image }}"
+                            alt="{% if item.caption %}{{ item.caption }}{% else %}{{ product.title }} — kolor{% endif %}"
                             loading="lazy"
                         >
-                        {% for pin in image.pins %}
-                        <button type="button" class="product-pin" style="--pin-x: {{ pin.x }}%; --pin-y: {{ pin.y }}%;" data-product-pin>
-                            <span class="product-pin__dot" aria-hidden="true"></span>
-                            <span class="product-pin__tooltip" role="tooltip">{{ pin.text }}</span>
-                        </button>
-                        {% endfor %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            <button type="button" class="product-gallery__arrow product-gallery__arrow--prev" data-product-gallery-prev aria-label="Poprzednie zdjęcie">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.4 4.6 8 12l7.4 7.4 1.2-1.2L10.4 12l6.2-6.2z"/></svg>
-            </button>
-            <button type="button" class="product-gallery__arrow product-gallery__arrow--next" data-product-gallery-next aria-label="Następne zdjęcie">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8.6 4.6-1.2 1.2L13.6 12l-6.2 6.2 1.2 1.2L16 12z"/></svg>
-            </button>
-        </section>
-        {% endif %}
-
-        {% if product.tech_packs %}
-        <section class="product-tech" aria-labelledby="product-tech-heading">
-            <div class="product-tech__inner">
-                {% include "website/partials/section_heading.html" with title="Dane techniczne" id="product-tech-heading" %}
-                <ul class="product-tech__grid">
-                    {% for pack in product.tech_packs %}
-                    <li class="product-tech__pack">
-                        <h3 class="product-tech__pack-name">{{ pack.name }}</h3>
-                        <dl class="product-tech__rows">
-                            {% for row in pack.rows %}
-                            <div class="product-tech__row">
-                                <dt>{{ row.label }}</dt>
-                                <dd>{{ row.value }}</dd>
-                            </div>
-                            {% endfor %}
-                        </dl>
+                        {% if item.caption %}
+                        <p class="product-colors__caption">{{ item.caption }}</p>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
@@ -135,8 +164,8 @@
         </section>
         {% endif %}
     </article>
-    {% endif %}
 
+    {% if related_products %}
     <section class="product-related" aria-labelledby="product-related-heading">
         <div class="product-related__inner">
             {% include "website/partials/section_heading.html" with title="Sprawdź inne produkty" id="product-related-heading" %}
@@ -149,6 +178,7 @@
             </ul>
         </div>
     </section>
+    {% endif %}
 
     {% include "website/partials/home_section_map.html" with placeholder_img=placeholder_img section_id="product-map-heading" %}
     {% include "website/partials/home_section_tips.html" with placeholder_img=placeholder_img section_id="product-tips-heading" %}
@@ -157,8 +187,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
-{% if product.card_type != "descriptive" %}
 <script src="{% static 'theme/js/product-pins.js' %}?v=20260728i" defer></script>
-<script src="{% static 'theme/js/product-gallery.js' %}?v=20260728i" defer></script>
-{% endif %}
+<script src="{% static 'theme/js/product-gallery.js' %}?v=20260904a" defer></script>
 {% endblock %}

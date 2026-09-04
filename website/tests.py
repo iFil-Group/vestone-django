@@ -10,10 +10,13 @@ from cms.models import (
     FormWidget,
     LegalDocument,
     Product,
+    ProductColorImage,
     ProductGalleryImage,
     ProductPackshotImage,
     ProductGroup,
     ProductPin,
+    ProductTechPack,
+    ProductTechRow,
     PromotionSlide,
     Tip,
     TipGalleryImage,
@@ -27,6 +30,7 @@ from cms.services import (
     get_product,
     get_promotion_slides,
     get_related_products,
+    resolve_product,
     get_surface_groups,
     get_tip,
 )
@@ -131,6 +135,51 @@ class ProductExtensionsTests(TestCase):
         self.product.related_products.add(related)
         result = get_related_products(product=self.product)
         self.assertEqual([item["slug"] for item in result], ["produkt-b"])
+
+    def test_related_products_stay_empty_without_selection(self):
+        Product.objects.create(
+            group=self.group, title="Produkt B", slug="produkt-b", image="products/b.jpg"
+        )
+        self.assertEqual(get_related_products(product=self.product), [])
+
+    def test_related_section_can_be_hidden(self):
+        related = Product.objects.create(
+            group=self.group, title="Produkt B", slug="produkt-b", image="products/b.jpg"
+        )
+        self.product.related_products.add(related)
+        self.product.show_related_products = False
+        self.product.save(update_fields=["show_related_products"])
+        self.assertEqual(get_related_products(product=self.product), [])
+
+    @override_settings(SITE_ACCESS_ENABLED=False)
+    def test_legacy_slug_resolves_to_new_address(self):
+        self.product.slug = "produkt-a-nowy"
+        self.product.save()
+        data, canonical = resolve_product("plyty", "produkt-a")
+        self.assertEqual(data["slug"], "produkt-a-nowy")
+        self.assertEqual(canonical, "produkt-a-nowy")
+        response = self.client.get("/produkty/plyty/produkt-a/")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response["Location"], "/produkty/plyty/produkt-a-nowy/")
+
+    def test_colors_and_aligned_tech_table(self):
+        ProductColorImage.objects.create(
+            product=self.product,
+            image="products/color.jpg",
+            caption="Grafit",
+            sort_order=0,
+        )
+        first = ProductTechPack.objects.create(product=self.product, name="Musso", sort_order=0)
+        ProductTechRow.objects.create(pack=first, label="Grubość", value="6 cm", sort_order=0)
+        ProductTechRow.objects.create(pack=first, label="Nośność", value="osobowe", icon_preset="load", sort_order=1)
+        second = ProductTechPack.objects.create(product=self.product, name="Vesio", sort_order=1)
+        ProductTechRow.objects.create(pack=second, label="Grubość", value="8 cm", sort_order=0)
+        data = get_product("plyty", "produkt-a")
+        self.assertEqual(data["colors"][0]["caption"], "Grafit")
+        self.assertEqual(data["tech_table"]["names"], ["Musso", "Vesio"])
+        load_row = next(row for row in data["tech_table"]["rows"] if row["label"] == "Nośność")
+        self.assertEqual(load_row["icon"], "load")
+        self.assertEqual(load_row["values"], ["osobowe", ""])
 
 
 class SurfaceCatalogTests(TestCase):

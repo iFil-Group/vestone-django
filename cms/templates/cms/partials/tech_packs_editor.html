@@ -15,6 +15,10 @@
             <input type="search" class="cms-input" placeholder="Szukaj produktu…" data-tech-copy-search autocomplete="off">
         </label>
         <div class="cms-related-results" data-tech-copy-results></div>
+        <div class="cms-tech-sources" data-tech-sources hidden>
+            <p class="cms-tech-sources__label">Dodane z produktów</p>
+            <div class="cms-related-selected" data-tech-source-list></div>
+        </div>
     </div>
 
     <div class="cms-tech-packs" data-tech-packs></div>
@@ -44,7 +48,18 @@
         <div class="cms-tech-row" data-tech-row>
             <input type="text" class="cms-input" data-tech-row-label placeholder="Etykieta">
             <span class="cms-tech-row__sep">:</span>
-            <input type="text" class="cms-input" data-tech-row-value placeholder="Wartość">
+            <div class="cms-tech-row__value">
+                <input type="text" class="cms-input" data-tech-row-value placeholder="Wartość, np. 20 m²">
+                <div class="cms-tech-row__format">
+                    <button type="button" data-tech-wrap="strong" title="Pogrubienie"><strong>B</strong></button>
+                    <button type="button" data-tech-wrap="em" title="Kursywa"><em>I</em></button>
+                    <button type="button" data-tech-wrap="sup" title="Indeks górny">x²</button>
+                </div>
+            </div>
+            <select class="cms-input cms-tech-row__icon" data-tech-row-icon aria-label="Ikona">
+                <option value="">Ikona: brak</option>
+                <option value="load">Ikona: nośność</option>
+            </select>
             <a href="#" class="cms-row-action cms-row-action--delete" data-tech-row-remove>
                 {% include "cms/partials/icon_trash.html" %}
                 <span>Usuń</span>

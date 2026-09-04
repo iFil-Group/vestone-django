@@ -18,6 +18,7 @@ from .models import (
     ProductAttribute,
     ProductAttributeAssignment,
     ProductAttributeOption,
+    ProductColorImage,
     ProductGalleryImage,
     ProductGroup,
     ProductPackshotImage,
@@ -98,7 +99,15 @@ class StyledModelForm(forms.ModelForm):
 class SiteSettingsForm(StyledModelForm):
     class Meta:
         model = SiteSettings
-        fields = ("phone", "email", "infoline", "address", "footer_tagline")
+        fields = (
+            "phone",
+            "email",
+            "infoline",
+            "address",
+            "footer_tagline",
+            "commercial_label",
+            "commercial_phone",
+        )
 
 
 class ContentBlockForm(StyledModelForm):
@@ -118,6 +127,14 @@ class ContentBlockForm(StyledModelForm):
             "is_active",
         )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].help_text = (
+            "Zdjęcie wyświetlane na podstronie (m.in. O nas, Dla mediów). "
+            "Po wgraniu zapisz blok, żeby pojawiło się na stronie."
+        )
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+
 
 class HeroSlideForm(StyledModelForm):
     class Meta:
@@ -131,7 +148,14 @@ class HeroSlideForm(StyledModelForm):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["mobile_image"].widget.attrs.setdefault("accept", "image/*")
-        self.fields["video"].widget.attrs.setdefault("accept", "video/*")
+        self.fields["video"].widget.attrs.setdefault("accept", "video/mp4,video/webm")
+        self.fields["video"].help_text = (
+            "MP4 (H.264) albo WebM, do 20 MB, najlepiej 1920×1080, dźwięk zbędny "
+            "(film odtwarza się wyciszony). Tytuł i lead mogą zostać puste, "
+            "jeśli ma być samo zdjęcie albo film."
+        )
+        self.fields["title"].required = False
+        self.fields["lead"].required = False
 
     def clean(self):
         cleaned = super().clean()
@@ -153,9 +177,30 @@ class PromotionSlideForm(StyledModelForm):
             "sort_order", "is_active",
         )
         widgets = {
-            "active_from": forms.DateTimeInput(attrs={"type": "datetime-local"}),
-            "active_until": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "active_from": forms.DateTimeInput(
+                format="%Y-%m-%dT%H:%M",
+                attrs={"type": "datetime-local", "class": "cms-input"},
+            ),
+            "active_until": forms.DateTimeInput(
+                format="%Y-%m-%dT%H:%M",
+                attrs={"type": "datetime-local", "class": "cms-input"},
+            ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["text"].required = False
+        self.fields["text"].help_text = (
+            "Może zostać puste (np. sama grafika świąteczna w innym slajdzie). "
+            "Na pasku kręcą się maksymalnie 3 komunikaty. Etykieta linku z pierwszego "
+            "wypełnionego komunikatu zostaje na stałe."
+        )
+        self.fields["active_from"].input_formats = [
+            "%Y-%m-%dT%H:%M",
+            "%Y-%m-%d %H:%M",
+            "%Y-%m-%dT%H:%M:%S",
+        ]
+        self.fields["active_until"].input_formats = list(self.fields["active_from"].input_formats)
 
     def clean(self):
         cleaned = super().clean()
@@ -174,14 +219,53 @@ class FormWidgetForm(StyledModelForm):
             "is_active",
         )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["slug"].help_text = (
+            "Dla zamówienia katalogu wpisz zamow-katalog. "
+            "Strona formularza: /formularz/ta-nazwa/ albo /zamow-katalog/."
+        )
+        self.fields["image"].help_text = "Grafika obok formularza, z opisem w polu powyżej."
+        self.fields["thanks_image"].help_text = "Grafika po poprawnym wysłaniu."
+        self.fields["recipient_email"].help_text = "Na ten adres przychodzą zgłoszenia."
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["thanks_image"].widget.attrs.setdefault("accept", "image/*")
+
 
 class SalesPointForm(StyledModelForm):
     class Meta:
         model = SalesPoint
         fields = (
-            "name", "address", "phone", "email", "website_url", "offer_type",
-            "sort_order", "is_active",
+            "name",
+            "sort_name",
+            "voivodeship",
+            "city",
+            "address",
+            "phone",
+            "email",
+            "website_url",
+            "latitude",
+            "longitude",
+            "offer_type",
+            "sort_order",
+            "is_active",
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["website_url"].help_text = (
+            "Możesz wpisać www.firma.pl albo pełny adres. "
+            "Nie trzeba dodawać https://."
+        )
+        self.fields["website_url"].widget.attrs.setdefault(
+            "placeholder", "www.przyklad.pl"
+        )
+        self.fields["sort_name"].help_text = (
+            "Do sortowania alfabetycznego. Zostaw puste, a uzupełni się samo "
+            "(bez PPHU, PHU itd.)."
+        )
+        self.fields["latitude"].widget.attrs.setdefault("placeholder", "51.436519")
+        self.fields["longitude"].widget.attrs.setdefault("placeholder", "19.225727")
 
 
 class FloatingPromotionForm(StyledModelForm):
@@ -239,6 +323,7 @@ class ProductForm(StyledModelForm):
             "show_packshot",
             "packshot_columns",
             "related_products",
+            "show_related_products",
             "sort_order",
             "is_active",
         )
@@ -255,7 +340,13 @@ class ProductForm(StyledModelForm):
             pk=self.instance.pk
         ).select_related("group").order_by("title")
         self.fields["related_products"].widget = forms.MultipleHiddenInput()
-        self.fields["card_type"].widget.attrs["class"] = "cms-card-type"
+        self.fields["show_related_products"].help_text = (
+            "Odznacz, jeśli sekcja „Sprawdź inne produkty” ma zniknąć ze strony."
+        )
+        self.fields["slug"].help_text = (
+            "Zmiana adresu zachowuje stary link i przekierowuje na nowy."
+        )
+        self.fields["card_type"].widget = forms.HiddenInput()
         self.fields["packshot_columns"].widget.attrs["class"] = "cms-card-type"
 
 
@@ -624,6 +715,41 @@ ProductPackshotFormSet = inlineformset_factory(
 )
 
 
+class ProductColorInlineForm(StyledModelForm):
+    class Meta:
+        model = ProductColorImage
+        fields = ("image", "caption", "sort_order")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["sort_order"].widget = forms.HiddenInput()
+        self.fields["caption"].widget.attrs.setdefault(
+            "placeholder", "Nazwa koloru, np. Grafit"
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("DELETE"):
+            return cleaned
+        image = cleaned.get("image")
+        clearing = image is False
+        has_existing = bool(self.instance.pk and self.instance.image)
+        if clearing or (not image and not has_existing):
+            cleaned["DELETE"] = True
+        return cleaned
+
+
+ProductColorFormSet = inlineformset_factory(
+    Product,
+    ProductColorImage,
+    form=ProductColorInlineForm,
+    fields=("image", "caption", "sort_order"),
+    extra=0,
+    can_delete=True,
+)
+
+
 class SurfaceItemForm(StyledModelForm):
     class Meta:
         model = SurfaceItem
@@ -673,7 +799,27 @@ class TipForm(StyledModelForm):
             "published_at",
             "is_published",
         )
-        widgets = {"published_at": forms.DateInput(attrs={"type": "date", "class": "cms-input"})}
+        widgets = {
+            "published_at": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "class": "cms-input"},
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["published_at"].input_formats = ["%Y-%m-%d", "%d.%m.%Y", "%d-%m-%Y"]
+        self.fields["slug"].label = "Adres w linku"
+        self.fields["slug"].help_text = (
+            "Fragment adresu strony, np. moja-porada. "
+            "Po zmianie stary link automatycznie przekieruje na nowy."
+        )
+        self.fields["image"].label = "Zdjęcie główne"
+        self.fields["image"].help_text = (
+            "Miniatura na liście i na stronie głównej. "
+            "Kolejne zdjęcia dodasz poniżej w sekcji „Zdjęcia / galeria”."
+        )
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
 
 
 class TipGalleryImageForm(StyledModelForm):
@@ -700,7 +846,27 @@ class NewsPostForm(StyledModelForm):
             "published_at",
             "is_published",
         )
-        widgets = {"published_at": forms.DateInput(attrs={"type": "date", "class": "cms-input"})}
+        widgets = {
+            "published_at": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "class": "cms-input"},
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["published_at"].input_formats = ["%Y-%m-%d", "%d.%m.%Y", "%d-%m-%Y"]
+        self.fields["slug"].label = "Adres w linku"
+        self.fields["slug"].help_text = (
+            "Fragment adresu strony, np. nowa-aktualnosc. "
+            "Po zmianie stary link automatycznie przekieruje na nowy."
+        )
+        self.fields["image"].label = "Zdjęcie główne"
+        self.fields["image"].help_text = (
+            "Miniatura na liście i na stronie głównej. "
+            "Kolejne zdjęcia dodasz poniżej w sekcji „Zdjęcia / galeria”."
+        )
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
 
 
 class NewsGalleryImageForm(StyledModelForm):

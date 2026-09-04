@@ -4,19 +4,103 @@
 {% block title %}Gdzie kupić — Vestone{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}?v=20260904c">
 {% endblock %}
 
 {% block main %}
 {% include "website/partials/page_hero.html" %}
 
-<div class="map-fullpage">
-    <img
-        class="map-fullpage__img"
-        src="{{ placeholder_img }}"
-        alt=""
-        width="1920"
-        height="1080"
-    >
-</div>
+<section class="where-buy" data-where-buy>
+    <div class="where-buy__inner">
+        <form class="where-buy__filters" data-where-filters>
+            <p class="where-buy__filters-intro">Wybierz punkt sprzedaży po ofercie, województwie i miejscowości.</p>
+            <div class="where-buy__filters-grid">
+                <label class="where-buy__field">
+                    <span class="where-buy__label">Oferta</span>
+                    <select class="where-buy__select" name="offer" data-where-filter="offer">
+                        <option value="">Wszystkie produkty</option>
+                        {% for value, label in offer_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="where-buy__field">
+                    <span class="where-buy__label">Województwo</span>
+                    <select class="where-buy__select" name="voivodeship" data-where-filter="voivodeship">
+                        <option value="">Wszystkie województwa</option>
+                        {% for value, label in filter_voivodeships %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="where-buy__field">
+                    <span class="where-buy__label">Miejscowość</span>
+                    <select class="where-buy__select" name="city" data-where-filter="city">
+                        <option value="">Wszystkie miejscowości</option>
+                        {% for city in filter_cities %}
+                        <option value="{{ city }}">{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <div class="where-buy__actions">
+                    <button type="submit" class="where-buy__submit">Pokaż punkty</button>
+                    <button type="reset" class="where-buy__reset" data-where-reset>Wyczyść</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="where-buy__legend">
+            <span><img src="{% static 'img/pin-grey.png' %}" alt=""> Pełna oferta produktów</span>
+            <span><img src="{% static 'img/pin-red.png' %}" alt=""> Wyłącznie płyty dekoracyjne MUSSO</span>
+        </div>
+
+        <div class="where-buy__layout">
+            <div class="where-buy__map" id="where-buy-map" data-where-map aria-label="Mapa punktów sprzedaży"></div>
+            <div class="where-buy__list" data-where-list>
+                {% for point in sales_points %}
+                <article
+                    class="where-buy-point"
+                    data-where-point
+                    data-id="{{ point.id }}"
+                    data-offer="{{ point.offer_type }}"
+                    data-voivodeship="{{ point.voivodeship }}"
+                    data-city="{{ point.city }}"
+                    data-lat="{{ point.lat|default_if_none:'' }}"
+                    data-lng="{{ point.lng|default_if_none:'' }}"
+                    data-pin="{% static point.pin %}"
+                    data-name="{{ point.name }}"
+                >
+                    <h2 class="where-buy-point__name">
+                        <img src="{% static point.pin %}" alt="">
+                        {{ point.name }}
+                    </h2>
+                    {% if point.voivodeship_label or point.city %}
+                    <p class="where-buy-point__region">
+                        {% if point.city %}{{ point.city }}{% endif %}{% if point.city and point.voivodeship_label %}, {% endif %}{% if point.voivodeship_label %}woj. {{ point.voivodeship_label }}{% endif %}
+                    </p>
+                    {% endif %}
+                    <address class="where-buy-point__address">{{ point.address }}</address>
+                    <div class="where-buy-point__contacts">
+                        {% if point.phone %}<a class="where-buy-point__plain" href="tel:{{ point.phone }}">{{ point.phone }}</a>{% endif %}
+                        {% if point.email %}<a class="where-buy-point__plain" href="mailto:{{ point.email }}">{{ point.email }}</a>{% endif %}
+                    </div>
+                    <div class="where-buy-point__links">
+                        {% if point.website_href %}<a href="{{ point.website_href }}" target="_blank" rel="noopener">Strona</a>{% endif %}
+                        {% if point.route_url %}<a href="{{ point.route_url }}" target="_blank" rel="noopener">Wyznacz trasę</a>{% endif %}
+                    </div>
+                </article>
+                {% empty %}
+                <p class="where-buy__empty">Brak punktów sprzedaży.</p>
+                {% endfor %}
+                <p class="where-buy__empty" data-where-empty hidden>Brak punktów dla wybranych filtrów.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="{% static 'theme/js/where-to-buy.js' %}?v=20260904c" defer></script>
 {% endblock %}

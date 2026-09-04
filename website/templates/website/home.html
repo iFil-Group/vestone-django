@@ -4,20 +4,24 @@
 {% block title %}Vestone — kostka brukowa, płyty tarasowe, mała architektura{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260904d">
 {% endblock %}
 
 {% block main %}
 <div class="home">
     <aside class="home-announce{% if not promotion_slides %} is-hidden{% endif %}" aria-label="Komunikaty promocyjne" data-slider>
-        {% for item in promotion_slides %}
-        <div class="home-announce__slide{% if forloop.first %} is-active{% endif %}" data-slide>
-            <div class="home-announce__inner">
-                <div class="home-announce__text">{{ item.text|safe }}</div>
-                {% if item.link_url %}<a href="{{ item.link_url }}" class="home-announce__btn">{{ item.link_label|default:"Sprawdź" }}</a>{% endif %}
+        <div class="home-announce__inner">
+            <div class="home-announce__rotator">
+                {% for item in promotion_slides %}
+                <div class="home-announce__slide{% if forloop.first %} is-active{% endif %}" data-slide>
+                    <div class="home-announce__text">{% if item.text %}{{ item.text|safe }}{% endif %}</div>
+                </div>
+                {% endfor %}
             </div>
+            {% if promo_bar_link and promo_bar_link.link_url %}
+            <a href="{{ promo_bar_link.link_url }}" class="home-announce__btn">{{ promo_bar_link.link_label|default:"Sprawdź" }}</a>
+            {% endif %}
         </div>
-        {% endfor %}
     </aside>
 
     <section class="home-hero" aria-label="Slider główny" data-slider>
@@ -37,8 +41,12 @@
                 <div class="home-hero__overlay">
                     <div class="home-hero__shell">
                         <div class="home-hero__content">
+                            {% if slide.title %}
                             {% if forloop.first %}<h1 class="home-hero__title">{{ slide.title }}</h1>{% else %}<h2 class="home-hero__title">{{ slide.title }}</h2>{% endif %}
+                            {% endif %}
+                            {% if slide.lead %}
                             <div class="home-hero__lead">{{ slide.lead|safe }}</div>
+                            {% endif %}
                             {% if slide.button_url %}<a class="home-hero__button" href="{{ slide.button_url }}">{{ slide.button_label|default:"Sprawdź" }}</a>{% endif %}
                         </div>
                     </div>
@@ -131,10 +139,13 @@
                     {% for point in sales_points %}
                     <article class="home-map-point">
                         <h3><img src="{% static point.pin %}" alt=""> {{ point.name }}</h3>
+                        {% if point.city or point.voivodeship_label %}
+                        <p class="home-map-point__region">{% if point.city %}{{ point.city }}{% endif %}{% if point.city and point.voivodeship_label %}, {% endif %}{% if point.voivodeship_label %}woj. {{ point.voivodeship_label }}{% endif %}</p>
+                        {% endif %}
                         <address>{{ point.address }}</address>
-                        {% if point.phone %}<a href="tel:{{ point.phone }}">{{ point.phone }}</a>{% endif %}
-                        {% if point.email %}<a href="mailto:{{ point.email }}">{{ point.email }}</a>{% endif %}
-                        <div>{% if point.website_url %}<a href="{{ point.website_url }}" target="_blank" rel="noopener">Strona</a>{% endif %} <a href="{{ point.route_url }}" target="_blank" rel="noopener">Wyznacz trasę</a></div>
+                        {% if point.phone %}<a class="home-map-point__plain" href="tel:{{ point.phone }}">{{ point.phone }}</a>{% endif %}
+                        {% if point.email %}<a class="home-map-point__plain" href="mailto:{{ point.email }}">{{ point.email }}</a>{% endif %}
+                        <div>{% if point.website_href %}<a href="{{ point.website_href }}" target="_blank" rel="noopener">Strona</a>{% endif %} {% if point.route_url %}<a href="{{ point.route_url }}" target="_blank" rel="noopener">Wyznacz trasę</a>{% endif %}</div>
                     </article>
                     {% empty %}<p>Brak punktów sprzedaży.</p>{% endfor %}
                 </div>

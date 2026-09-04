@@ -35,12 +35,21 @@
                         <span class="site-footer__label">Infolinia</span>
                         <a href="{{ site_settings.infoline_href }}">{{ site_settings.infoline }}</a>
                     </li>
+                    {% if site_settings.commercial_phone %}
+                    <li>
+                        <span class="site-footer__label">{{ site_settings.commercial_label|default:"Dział handlowy i księgowy" }}</span>
+                        <a href="{{ site_settings.commercial_phone_href }}">{{ site_settings.commercial_phone }}</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
 
             <div class="site-footer__col">
                 <h2 class="site-footer__heading">Nasza oferta</h2>
-                <ul class="site-footer__links site-footer__links--empty">
+                <ul class="site-footer__links">
+                    {% for group in footer_product_groups %}
+                    <li><a href="/produkty/{{ group.slug }}/">{{ group.title }}</a></li>
+                    {% endfor %}
                 </ul>
             </div>
 

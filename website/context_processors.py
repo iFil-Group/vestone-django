@@ -1,3 +1,9 @@
+def _footer_product_groups():
+    from cms.services import get_product_groups
+
+    return get_product_groups()
+
+
 def _normalize_path(path):
     if path != "/" and path.endswith("/"):
         return path.rstrip("/")
@@ -43,6 +49,7 @@ def site_navigation(request):
         ],
         "nav_home_active": "is-active" if path == "/" else "",
         "about_footer_links": ABOUT_LINKS,
+        "footer_product_groups": _footer_product_groups(),
     }
 
 
@@ -88,7 +95,7 @@ def page_breadcrumbs(request):
         return {"breadcrumbs": static_trails[path]}
 
     if path.startswith("/produkty/") and path != "/produkty":
-        from .content_data import TEST_PRODUCT, get_product_group
+        from cms.services import get_product, get_product_group
 
         parts = [part for part in path.split("/") if part]
         # parts: ["produkty", category_slug] or ["produkty", category_slug, product_slug]
@@ -108,12 +115,14 @@ def page_breadcrumbs(request):
                 ]
             }
 
+        product = get_product(parts[1], parts[2])
+        product_label = product["title"] if product else parts[2]
         return {
             "breadcrumbs": [
                 home,
                 {"label": "Produkty", "url": "/produkty/"},
                 {"label": category_label, "url": category_url},
-                {"label": TEST_PRODUCT["title"], "url": None},
+                {"label": product_label, "url": None},
             ]
         }
 

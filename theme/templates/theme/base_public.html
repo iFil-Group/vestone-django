@@ -8,14 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'theme/css/public.css' %}">
+    <link rel="stylesheet" href="{% static 'theme/css/public.css' %}?v=20260904d">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <a class="skip-link" href="#main">Przejdź do treści</a>
     {% block body %}{% endblock %}
     <script src="{% static 'theme/js/nav.js' %}" defer></script>
-    <script src="{% static 'theme/js/promotions.js' %}" defer></script>
+    <script src="{% static 'theme/js/promotions.js' %}?v=20260904d" defer></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

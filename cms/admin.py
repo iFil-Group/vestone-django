@@ -12,6 +12,7 @@ from .models import (
     NewsGalleryImage,
     Product,
     ProductGalleryImage,
+    ProductColorImage,
     ProductPackshotImage,
     ProductTechPack,
     ProductTechRow,
@@ -49,6 +50,7 @@ admin.site.register(ProductSpec)
 admin.site.register(ProductPin)
 admin.site.register(ProductGalleryImage)
 admin.site.register(ProductPackshotImage)
+admin.site.register(ProductColorImage)
 admin.site.register(ProductTechPack)
 admin.site.register(ProductTechRow)
 admin.site.register(SurfaceItem)

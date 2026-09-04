@@ -780,3 +780,211 @@
     font-size: 0.78rem;
     color: var(--vestone-gray-muted);
 }
+
+
+/* Strip pasted Word fonts — site typography wins */
+.prose [style*="font-family"],
+.prose [style*="font-size"],
+.rich-text [style*="font-family"],
+.rich-text [style*="font-size"] {
+    font-family: inherit !important;
+    font-size: inherit !important;
+}
+
+/* —— Gdzie kupić —— */
+
+.where-buy {
+    background: var(--vestone-white);
+}
+
+.where-buy__inner {
+    width: var(--wrap);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 0 4rem;
+}
+
+.where-buy__filters {
+    margin-top: -1.5rem;
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: #2a343c;
+    color: #fff;
+}
+
+.where-buy__filters-intro {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.88);
+    text-shadow: none;
+    -webkit-text-stroke: 0;
+}
+
+.where-buy__filters-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+@media (min-width: 800px) {
+    .where-buy__filters-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+        align-items: end;
+    }
+}
+
+.where-buy__label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.where-buy__select {
+    width: 100%;
+    min-height: 2.6rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    background: #fff;
+    color: var(--vestone-gray-deep);
+    font: inherit;
+}
+
+.where-buy__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.where-buy__submit,
+.where-buy__reset {
+    min-height: 2.6rem;
+    padding: 0.5rem 1rem;
+    border: 0;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.where-buy__submit {
+    background: #e11946;
+    color: #fff;
+}
+
+.where-buy__reset {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.where-buy__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin: 1.1rem 0 1.4rem;
+    font-size: 0.82rem;
+    color: var(--vestone-gray);
+}
+
+.where-buy__legend img {
+    width: 1rem;
+    height: 1rem;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 0.3rem;
+}
+
+.where-buy__layout {
+    display: grid;
+    gap: 1.5rem;
+}
+
+@media (min-width: 960px) {
+    .where-buy__layout {
+        grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.9fr);
+        align-items: start;
+    }
+}
+
+.where-buy__map {
+    min-height: 28rem;
+    height: min(70vh, 42rem);
+    background: #d8dee6;
+    border: 1px solid var(--vestone-line);
+}
+
+.where-buy__list {
+    display: grid;
+    gap: 0;
+    max-height: min(70vh, 42rem);
+    overflow: auto;
+    border: 1px solid var(--vestone-line);
+    background: #fff;
+}
+
+.where-buy-point {
+    padding: 1.1rem 1.15rem;
+    border-bottom: 1px solid var(--vestone-line);
+    color: var(--vestone-gray);
+    text-shadow: none;
+    -webkit-text-stroke: 0;
+}
+
+.where-buy-point__name {
+    margin: 0 0 0.35rem;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--vestone-gray-deep);
+    text-shadow: none;
+    -webkit-text-stroke: 0;
+}
+
+.where-buy-point__name img {
+    width: 1.05rem;
+    height: 1.05rem;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+.where-buy-point__region,
+.where-buy-point__address {
+    margin: 0 0 0.25rem;
+    font-style: normal;
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.where-buy-point__contacts,
+.where-buy-point__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.9rem;
+    margin-top: 0.35rem;
+}
+
+.where-buy-point a {
+    color: var(--vestone-gray-deep);
+}
+
+.where-buy-point__plain {
+    text-decoration: none;
+}
+
+.where-buy-point__links a {
+    font-weight: 600;
+}
+
+.where-buy__empty {
+    margin: 0;
+    padding: 1.25rem 1.15rem;
+    color: var(--vestone-gray-muted);
+}

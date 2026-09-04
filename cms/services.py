@@ -39,6 +39,8 @@ def get_site_settings():
         "footer_tagline": (
             "Kostka brukowa, płyty tarasowe i rozwiązania do przestrzeni na zewnątrz."
         ),
+        "commercial_label": "Dział handlowy i księgowy",
+        "commercial_phone": "+48 755 54 40",
     }
     if not SiteSettings.objects.exists():
         return _site_settings_payload(defaults)
@@ -50,6 +52,8 @@ def get_site_settings():
         "infoline": settings_obj.infoline or defaults["infoline"],
         "address": settings_obj.address or defaults["address"],
         "footer_tagline": settings_obj.footer_tagline or defaults["footer_tagline"],
+        "commercial_label": settings_obj.commercial_label or defaults["commercial_label"],
+        "commercial_phone": settings_obj.commercial_phone or defaults["commercial_phone"],
     }
     return _site_settings_payload(data)
 
@@ -65,6 +69,7 @@ def _site_settings_payload(data):
         **data,
         "phone_href": _contact_href(data["phone"]),
         "infoline_href": _contact_href(data["infoline"]),
+        "commercial_phone_href": _contact_href(data.get("commercial_phone")),
         "email_href": f"mailto:{email}" if email else "",
     }
 
@@ -77,20 +82,21 @@ def _merge_content_block(blocks, key, defaults):
     return data
 
 
-def get_content_block(key, fallback=None):
+def get_content_block(key, fallback=None, image_fallback=True):
     from cms.models import ContentBlock
 
     block = ContentBlock.objects.filter(key=key, is_active=True).first()
     if block is None:
         return fallback or {}
     placeholder = get_placeholder()
+    image = _image_url(block.image, placeholder) if image_fallback else _media_url(block.image)
     return {
         "key": block.key,
         "title": block.title,
         "subtitle": block.subtitle,
         "body": block.body,
         "body_extra": block.body_extra,
-        "image": _image_url(block.image, placeholder),
+        "image": image,
         "button_label": block.button_label,
         "button_url": block.button_url,
     }
@@ -157,26 +163,54 @@ def get_promotion_slides():
     )
     return [
         {"text": item.text, "link_label": item.link_label, "link_url": item.link_url}
-        for item in slides
+        for item in slides[:3]
     ]
 
 
-def get_sales_points():
+def _website_href(value):
+    url = (value or "").strip()
+    if not url:
+        return ""
+    if url.startswith(("http://", "https://", "/", "mailto:", "tel:")):
+        return url
+    return f"https://{url}"
+
+
+def _sales_point_route_url(point):
     from urllib.parse import quote_plus
+
+    if point.latitude is not None and point.longitude is not None:
+        dest = f"{point.latitude},{point.longitude}"
+        return f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(dest)}"
+    if point.address:
+        return f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(point.address)}"
+    return ""
+
+
+def get_sales_points():
     from cms.models import SalesPoint
 
+    points = SalesPoint.objects.filter(is_active=True).order_by("sort_name", "name")
     return [
         {
+            "id": point.pk,
             "name": point.name,
+            "sort_name": point.sort_name or point.name,
+            "voivodeship": point.voivodeship,
+            "voivodeship_label": point.get_voivodeship_display() if point.voivodeship else "",
+            "city": point.city,
             "address": point.address,
             "phone": point.phone,
             "email": point.email,
             "website_url": point.website_url,
+            "website_href": _website_href(point.website_url),
             "offer_type": point.offer_type,
+            "lat": float(point.latitude) if point.latitude is not None else None,
+            "lng": float(point.longitude) if point.longitude is not None else None,
             "pin": "img/pin-red.png" if point.offer_type == SalesPoint.OFFER_MUSSO else "img/pin-grey.png",
-            "route_url": f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(point.address)}",
+            "route_url": _sales_point_route_url(point),
         }
-        for point in SalesPoint.objects.filter(is_active=True)
+        for point in points
     ]
 
 
@@ -185,6 +219,7 @@ def get_floating_promotions():
 
     return [
         {
+            "id": item.pk,
             "placement": item.placement,
             "image": _media_url(item.image),
             "link_url": item.link_url,
@@ -257,6 +292,26 @@ def _product_dict(product, placeholder):
         if attribute["value"] not in specs_by_slug[attribute["slug"]]["values"]:
             specs_by_slug[attribute["slug"]]["values"].append(attribute["value"])
 
+    tech_packs = [
+        pack_data
+        for pack_data in (
+            {
+                "name": pack.name,
+                "rows": [
+                    {
+                        "label": row.label,
+                        "value": row.value,
+                        "icon": getattr(row, "icon_preset", "") or "",
+                    }
+                    for row in pack.rows.all()
+                    if (row.label or "").strip() or (row.value or "").strip()
+                ],
+            }
+            for pack in product.tech_packs.all()
+        )
+        if (pack_data["name"] or "").strip() and pack_data["rows"]
+    ]
+
     return {
         "slug": product.slug,
         "title": product.title,
@@ -268,6 +323,7 @@ def _product_dict(product, placeholder):
         "image": _image_url(product.image, placeholder),
         "show_main_image": product.show_main_image,
         "show_packshot": product.show_packshot,
+        "show_related_products": product.show_related_products,
         "packshot_columns": product.packshot_columns,
         "packshots": [
             {
@@ -275,6 +331,14 @@ def _product_dict(product, placeholder):
                 "caption": (item.caption or "").strip(),
             }
             for item in product.packshots.all()
+            if item.image and getattr(item.image, "name", None)
+        ],
+        "colors": [
+            {
+                "image": _media_url(item.image),
+                "caption": (item.caption or "").strip(),
+            }
+            for item in product.colors.all()
             if item.image and getattr(item.image, "name", None)
         ],
         "attributes": attributes,
@@ -298,20 +362,51 @@ def _product_dict(product, placeholder):
             for image in product.gallery.all()
             if image.image
         ],
-        "tech_packs": [
-            pack_data
-            for pack_data in (
-                {
-                    "name": pack.name,
-                    "rows": [
-                        {"label": row.label, "value": row.value}
-                        for row in pack.rows.all()
-                        if (row.label or "").strip() or (row.value or "").strip()
-                    ],
-                }
-                for pack in product.tech_packs.prefetch_related("rows").all()
-            )
-            if (pack_data["name"] or "").strip() and pack_data["rows"]
+        "tech_packs": tech_packs,
+        "tech_table": _tech_table(tech_packs),
+    }
+
+
+def _tech_row_icon(label, icon_preset):
+    preset = (icon_preset or "").strip()
+    if preset:
+        return preset
+    if "nośność" in (label or "").lower() or "noscnosc" in (label or "").lower():
+        return "load"
+    return ""
+
+
+def _tech_table(packs):
+    labels = []
+    seen = set()
+    icon_by_label = {}
+    pack_maps = []
+    names = []
+    for pack in packs:
+        names.append(pack["name"])
+        row_map = {}
+        for row in pack.get("rows") or []:
+            label = (row.get("label") or "").strip()
+            value = (row.get("value") or "").strip()
+            if not label and not value:
+                continue
+            if label not in seen:
+                seen.add(label)
+                labels.append(label)
+            icon = _tech_row_icon(label, row.get("icon"))
+            if icon and label not in icon_by_label:
+                icon_by_label[label] = icon
+            row_map[label] = value
+        pack_maps.append(row_map)
+    return {
+        "names": names,
+        "rows": [
+            {
+                "label": label,
+                "icon": icon_by_label.get(label, ""),
+                "values": [row_map.get(label, "") for row_map in pack_maps],
+            }
+            for label in labels
         ],
     }
 
@@ -323,7 +418,11 @@ def serialize_product_tech_packs(product):
         {
             "name": pack.name,
             "rows": [
-                {"label": row.label, "value": row.value}
+                {
+                    "label": row.label,
+                    "value": row.value,
+                    "icon": getattr(row, "icon_preset", "") or "",
+                }
                 for row in pack.rows.all()
             ],
         }
@@ -356,12 +455,14 @@ def save_product_tech_packs(product, packs_data):
                 continue
             label = str(row_data.get("label") or "").strip()
             value = str(row_data.get("value") or "").strip()
+            icon = str(row_data.get("icon") or "").strip()
             if not label and not value:
                 continue
             ProductTechRow.objects.create(
                 pack=pack,
                 label=label,
                 value=value,
+                icon_preset=icon,
                 sort_order=row_index,
             )
             row_index += 1
@@ -419,7 +520,7 @@ def category_products(category_slug):
     ]
 
 
-def get_product(category_slug, product_slug):
+def resolve_product(category_slug, product_slug):
     from cms.models import Product
 
     placeholder = get_placeholder()
@@ -435,19 +536,45 @@ def get_product(category_slug, product_slug):
             "pins",
             "gallery",
             "gallery__pins",
+            "packshots",
+            "colors",
+            "tech_packs__rows",
         )
         .first()
     )
     if product:
         data = _product_dict(product, placeholder)
         data["category_slug"] = category_slug
-        return data
+        return data, None
+
+    for candidate in (
+        Product.objects.filter(group__slug=category_slug, is_active=True)
+        .select_related("group")
+        .prefetch_related(
+            "attribute_assignments__option__attribute",
+            "pins",
+            "gallery",
+            "gallery__pins",
+            "packshots",
+            "colors",
+            "tech_packs__rows",
+        )
+    ):
+        if product_slug in _legacy_slug_lines(candidate.legacy_slugs):
+            data = _product_dict(candidate, placeholder)
+            data["category_slug"] = category_slug
+            return data, candidate.slug
 
     from website.content_data import TEST_PRODUCT, TEST_PRODUCT_SLUG
 
     if product_slug == TEST_PRODUCT_SLUG:
-        return {**TEST_PRODUCT, "category_slug": category_slug}
-    return None
+        return {**TEST_PRODUCT, "category_slug": category_slug}, None
+    return None, None
+
+
+def get_product(category_slug, product_slug):
+    data, _canonical = resolve_product(category_slug, product_slug)
+    return data
 
 
 def get_related_products(product=None, exclude_slug=None, category_slug=None, limit=4):
@@ -459,21 +586,20 @@ def get_related_products(product=None, exclude_slug=None, category_slug=None, li
             slug=exclude_slug,
             group__slug=category_slug,
         ).first()
-    if product and product.pk and product.related_products.filter(is_active=True).exists():
-        qs = product.related_products.filter(is_active=True, group__is_active=True).select_related("group")
-    else:
-        qs = Product.objects.filter(is_active=True).select_related("group")
-    if exclude_slug:
-        qs = qs.exclude(slug=exclude_slug)
-    if qs.exists():
+    if product and product.pk:
+        if not getattr(product, "show_related_products", True):
+            return []
+        qs = product.related_products.filter(
+            is_active=True, group__is_active=True
+        ).select_related("group")
         return [
             {
-                "slug": product.slug,
-                "title": product.title,
-                "category_slug": product.group.slug,
-                "image": _image_url(product.image, placeholder),
+                "slug": item.slug,
+                "title": item.title,
+                "category_slug": item.group.slug,
+                "image": _image_url(item.image, placeholder),
             }
-            for product in qs[:limit]
+            for item in qs[:limit]
         ]
     from website.content_data import RELATED_PRODUCTS
 
@@ -545,6 +671,26 @@ def _article_dict(article, placeholder):
     }
 
 
+def _legacy_slug_lines(value):
+    return [line.strip() for line in (value or "").splitlines() if line.strip()]
+
+
+def _resolve_article(model, slug, fallback_posts):
+    """Return (article_dict, canonical_slug_or_None)."""
+    placeholder = get_placeholder()
+    qs = model.objects.filter(is_published=True).prefetch_related("gallery")
+    current = qs.filter(slug=slug).first()
+    if current:
+        return _article_dict(current, placeholder), None
+    for article in qs:
+        if slug in _legacy_slug_lines(article.legacy_slugs):
+            return _article_dict(article, placeholder), article.slug
+    for post in fallback_posts:
+        if post.get("slug") == slug:
+            return post, None
+    return None, None
+
+
 def get_tips():
     from cms.models import Tip
 
@@ -558,10 +704,15 @@ def get_tips():
 
 
 def get_tip(slug):
-    for tip in get_tips():
-        if tip["slug"] == slug:
-            return tip
-    return None
+    article, _canonical = resolve_tip(slug)
+    return article
+
+
+def resolve_tip(slug):
+    from cms.models import Tip
+    from website.content_data import TIPS_POSTS
+
+    return _resolve_article(Tip, slug, TIPS_POSTS)
 
 
 def get_news():
@@ -577,10 +728,15 @@ def get_news():
 
 
 def get_news_post(slug):
-    for post in get_news():
-        if post["slug"] == slug:
-            return post
-    return None
+    article, _canonical = resolve_news_post(slug)
+    return article
+
+
+def resolve_news_post(slug):
+    from cms.models import NewsPost
+    from website.content_data import NEWS_POSTS
+
+    return _resolve_article(NewsPost, slug, NEWS_POSTS)
 
 
 def get_job_openings():
@@ -701,11 +857,16 @@ def get_home_context():
     placeholder = get_placeholder()
     blocks = get_content_blocks_by_group("home")
     about_blocks = get_content_blocks_by_group("about")
+    promotion_slides = get_promotion_slides()
     return {
         "placeholder_img": placeholder,
         "product_groups": get_product_groups(),
         "hero_slides": get_hero_slides(),
-        "promotion_slides": get_promotion_slides(),
+        "promotion_slides": promotion_slides,
+        "promo_bar_link": next(
+            (item for item in promotion_slides if item.get("link_url")),
+            None,
+        ),
         "floating_promotions": get_floating_promotions(),
         "sales_points": get_sales_points(),
         "products_section": _merge_content_block(

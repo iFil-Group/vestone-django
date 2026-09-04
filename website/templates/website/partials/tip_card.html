@@ -1,7 +1,7 @@
 <article class="tip-card">
     <a href="{{ detail_url_prefix|default:'/porady' }}/{{ tip.slug }}/" class="tip-card__link">
         <span class="tip-card__media">
-            <img src="{{ placeholder_img }}" alt="" loading="lazy" width="400" height="260">
+            <img src="{{ tip.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="260">
         </span>
         <span class="tip-card__body">
             <time class="tip-card__date" datetime="{{ tip.date }}">{{ tip.date_display }}</time>

@@ -2,6 +2,9 @@
     <div class="cms-richtext__toolbar" role="toolbar" aria-label="Formatowanie tekstu">
         <button type="button" data-command="bold" title="Pogrubienie"><strong>B</strong></button>
         <button type="button" data-command="italic" title="Kursywa"><em>I</em></button>
+        <button type="button" data-command="superscript" title="Indeks górny">x²</button>
+        <button type="button" data-command="formatBlock" data-value="h2" title="Nagłówek 2">H2</button>
+        <button type="button" data-command="formatBlock" data-value="h3" title="Nagłówek 3">H3</button>
         <button type="button" data-command="underline" title="Podkreślenie"><u>U</u></button>
         <button type="button" data-command="insertUnorderedList" title="Lista punktowana">• Lista</button>
         <button type="button" data-command="insertOrderedList" title="Lista numerowana">1. Lista</button>
@@ -11,5 +14,6 @@
         <button type="button" data-command="removeFormat" title="Wyczyść formatowanie">Wyczyść</button>
     </div>
     <div class="cms-richtext__editor" contenteditable="true" role="textbox" aria-multiline="true"></div>
+    <p class="cms-field__help">Pogrubienie, kursywa, indeks górny i nagłówki. Pole może zostać puste. Tekst z Worda przejmuje styl strony.</p>
     {% include "django/forms/widgets/textarea.html" %}
 </div>

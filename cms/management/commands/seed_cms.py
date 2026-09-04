@@ -5,6 +5,7 @@ from django.utils.text import slugify
 
 from cms.models import (
     ContentBlock,
+    FormWidget,
     HeroSlide,
     NewsPost,
     Product,
@@ -56,6 +57,7 @@ class Command(BaseCommand):
         self._seed_test_product()
         self._seed_tips()
         self._seed_news()
+        self._seed_catalog_form()
         self.stdout.write(self.style.SUCCESS("CMS seed completed (minimal demo data)."))
 
     def _seed_content_blocks(self):
@@ -215,4 +217,18 @@ class Command(BaseCommand):
             body=LOREM_LONG,
             published_at=date.today(),
             is_published=True,
+        )
+
+    def _seed_catalog_form(self):
+        FormWidget.objects.update_or_create(
+            slug="zamow-katalog",
+            defaults={
+                "title": "Zamów katalog",
+                "description": "<p>Wypełnij formularz, a wyślemy katalog.</p>",
+                "recipient_email": "informacja@vestone.pl",
+                "required_fields_text": "<p>Pola oznaczone gwiazdką są obowiązkowe.</p>",
+                "consent_text": "Wyrażam zgodę na przetwarzanie danych osobowych w celu realizacji zamówienia katalogu.",
+                "thanks_text": "<p>Dziękujemy. Skontaktujemy się w sprawie wysyłki katalogu.</p>",
+                "is_active": True,
+            },
         )
