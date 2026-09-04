@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -8,6 +9,8 @@ from django.utils import timezone
 from cms.models import (
     FormSubmission,
     FormWidget,
+    JobApplication,
+    JobOpening,
     LegalDocument,
     Product,
     ProductColorImage,
@@ -225,3 +228,43 @@ class ContentModuleTests(TestCase):
         document.save()
         response = self.client.get("/dokumenty/polityka-prywatnosci/")
         self.assertContains(response, "Treść dokumentu")
+
+
+@override_settings(SITE_ACCESS_ENABLED=False)
+class ProductContactSectionTests(TestCase):
+    def test_product_page_has_no_dummy_contact_form(self):
+        group = ProductGroup.objects.create(title="Płyty", slug="plyty-e2e")
+        Product.objects.create(group=group, title="E2E", slug="e2e", is_active=True)
+        response = self.client.get("/produkty/plyty-e2e/e2e/")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'action="#"')
+        self.assertNotContains(response, "Wyślij wiadomość")
+        self.assertContains(response, "Kontakt")
+
+
+@override_settings(
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    SITE_ACCESS_ENABLED=False,
+)
+class JobApplicationTests(TestCase):
+    def test_valid_application_is_saved(self):
+        job = JobOpening.objects.create(
+            slug="e2e-job",
+            title="Tester",
+            is_active=True,
+        )
+        cv = SimpleUploadedFile("cv.pdf", b"%PDF-1.4 test", content_type="application/pdf")
+        response = self.client.post(
+            "/o-nas/praca-i-kariera/",
+            {
+                "job": str(job.pk),
+                "name": "Jan Testowy",
+                "email": "e2e@example.com",
+                "phone": "500000000",
+                "cv": cv,
+                "consent": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(JobApplication.objects.filter(email="e2e@example.com").exists())
+        self.assertEqual(len(mail.outbox), 1)

@@ -160,7 +160,13 @@ def product_category(request, category_slug):
 def product_detail(request, category_slug, product_slug):
     from django.http import Http404
 
-    from cms.services import get_placeholder, get_product_group, get_related_products, resolve_product
+    from cms.services import (
+        get_content_block,
+        get_placeholder,
+        get_product_group,
+        get_related_products,
+        resolve_product,
+    )
 
     category = get_product_group(category_slug)
     if category is None:
@@ -193,6 +199,18 @@ def product_detail(request, category_slug, product_slug):
             "product": product,
             "related_products": related,
             "placeholder_img": get_placeholder(),
+            "contact_section": get_content_block(
+                "home-contact",
+                {
+                    "title": "Kontakt",
+                    "body": (
+                        "<p><strong>DZIAŁ HANDLOWY i DZIAŁ KSIĘGOWY</strong><br>"
+                        '<a href="tel:+48227555440">48 755 54 40</a><br>'
+                        '<a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a></p>'
+                    ),
+                    "image": get_placeholder(),
+                },
+            ),
         },
     )
 

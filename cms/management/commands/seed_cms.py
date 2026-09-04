@@ -10,11 +10,10 @@ from cms.models import (
     NewsPost,
     Product,
     ProductGroup,
-    ProductGalleryImage,
-    ProductPin,
     ProductAttribute,
     ProductAttributeAssignment,
     ProductAttributeOption,
+    ProductPin,
     Review,
     SiteSettings,
     Tip,
@@ -30,25 +29,24 @@ LOREM_LONG = (
 
 
 class Command(BaseCommand):
-    help = "Minimalny seed CMS: bloki strony (Lorem ipsum) + 1 produkt, 1 porada, 1 aktualność"
+    help = "Uzupełnia brakujące dane startowe. Nie kasuje i nie nadpisuje treści z CMS."
 
     def handle(self, *args, **options):
-        SiteSettings.objects.update_or_create(
-            pk=1,
-            defaults={
-                "phone": "+48 22 755 50 44",
-                "email": "informacja@vestone.pl",
-                "infoline": "518 518 518",
-                "address": (
+        if not SiteSettings.objects.exists():
+            SiteSettings.objects.create(
+                pk=1,
+                phone="+48 22 755 50 44",
+                email="informacja@vestone.pl",
+                infoline="518 518 518",
+                address=(
                     "Budokrusz S.A. Odrano Wola\n"
                     "ul. Osowiecka 47\n"
                     "05-825 Grodzisk Mazowiecki"
                 ),
-                "footer_tagline": (
+                footer_tagline=(
                     "Kostka brukowa, płyty tarasowe i rozwiązania do przestrzeni na zewnątrz."
                 ),
-            },
-        )
+            )
 
         self._seed_content_blocks()
         self._seed_hero_slides()
@@ -58,7 +56,7 @@ class Command(BaseCommand):
         self._seed_tips()
         self._seed_news()
         self._seed_catalog_form()
-        self.stdout.write(self.style.SUCCESS("CMS seed completed (minimal demo data)."))
+        self.stdout.write(self.style.SUCCESS("CMS seed completed (missing defaults only)."))
 
     def _seed_content_blocks(self):
         blocks = [
@@ -93,7 +91,7 @@ class Command(BaseCommand):
             ("page-about-company", ContentBlock.GROUP_ABOUT, "O nas — pełna treść", "O nas", "VESTONE - TWOJA PRZESTRZEŃ", LOREM_LONG, LOREM, "", ""),
         ]
         for key, group, label, title, subtitle, body, body_extra, button_label, button_url in blocks:
-            ContentBlock.objects.update_or_create(
+            ContentBlock.objects.get_or_create(
                 key=key,
                 defaults={
                     "group": group,
@@ -109,7 +107,8 @@ class Command(BaseCommand):
             )
 
     def _seed_hero_slides(self):
-        HeroSlide.objects.all().delete()
+        if HeroSlide.objects.exists():
+            return
         HeroSlide.objects.create(
             title=LOREM.capitalize(),
             lead=LOREM_LONG,
@@ -118,7 +117,8 @@ class Command(BaseCommand):
         )
 
     def _seed_reviews(self):
-        Review.objects.all().delete()
+        if Review.objects.exists():
+            return
         Review.objects.bulk_create(
             [
                 Review(quote=LOREM_LONG, author="Jan Kowalski", sort_order=0, is_active=True),
@@ -128,7 +128,7 @@ class Command(BaseCommand):
 
     def _seed_product_groups(self):
         for index, group in enumerate(content_data.PRODUCT_GROUPS):
-            ProductGroup.objects.update_or_create(
+            ProductGroup.objects.get_or_create(
                 slug=group["slug"],
                 defaults={
                     "title": group["title"],
@@ -138,13 +138,13 @@ class Command(BaseCommand):
             )
 
     def _seed_test_product(self):
+        if Product.objects.exists():
+            return
         group = ProductGroup.objects.filter(slug="plyty-tarasowe").first()
         if group is None:
             return
 
-        Product.objects.exclude(group=group).delete()
-
-        product, _ = Product.objects.update_or_create(
+        product, _ = Product.objects.get_or_create(
             group=group,
             slug=content_data.TEST_PRODUCT_SLUG,
             defaults={
@@ -156,7 +156,9 @@ class Command(BaseCommand):
             },
         )
 
-        ProductAttributeAssignment.objects.filter(product=product).delete()
+        if product.attribute_assignments.exists():
+            return
+
         filter_slugs = {"format", "grubosc", "kolor", "powierzchnia"}
         for index, spec in enumerate(content_data.TEST_PRODUCT["specs"]):
             slug = slugify(spec["label"])
@@ -173,32 +175,25 @@ class Command(BaseCommand):
                 value=spec["value"],
                 defaults={"sort_order": 0},
             )
-            ProductAttributeAssignment.objects.create(
+            ProductAttributeAssignment.objects.get_or_create(
                 product=product,
                 option=option,
-                sort_order=index,
+                defaults={"sort_order": index},
             )
 
-        ProductPin.objects.filter(product=product).delete()
-        for index, pin in enumerate(content_data.TEST_PRODUCT["pins"]):
-            ProductPin.objects.create(
-                product=product,
-                x=pin["x"],
-                y=pin["y"],
-                text=pin["text"],
-                sort_order=index,
-            )
-
-        ProductGalleryImage.objects.filter(product=product).delete()
-        for index, image in enumerate(content_data.TEST_PRODUCT.get("gallery", [])):
-            ProductGalleryImage.objects.create(
-                product=product,
-                alt=image.get("alt", product.title),
-                sort_order=index,
-            )
+        if not product.pins.exists():
+            for index, pin in enumerate(content_data.TEST_PRODUCT["pins"]):
+                ProductPin.objects.create(
+                    product=product,
+                    x=pin["x"],
+                    y=pin["y"],
+                    text=pin["text"],
+                    sort_order=index,
+                )
 
     def _seed_tips(self):
-        Tip.objects.all().delete()
+        if Tip.objects.exists():
+            return
         Tip.objects.create(
             slug="testowa-porada",
             title="Testowa porada",
@@ -209,7 +204,8 @@ class Command(BaseCommand):
         )
 
     def _seed_news(self):
-        NewsPost.objects.all().delete()
+        if NewsPost.objects.exists():
+            return
         NewsPost.objects.create(
             slug="testowa-aktualnosc",
             title="Testowa aktualność",
@@ -220,7 +216,7 @@ class Command(BaseCommand):
         )
 
     def _seed_catalog_form(self):
-        FormWidget.objects.update_or_create(
+        FormWidget.objects.get_or_create(
             slug="zamow-katalog",
             defaults={
                 "title": "Zamów katalog",
