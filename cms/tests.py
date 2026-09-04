@@ -19,6 +19,8 @@ class ProductGroupAssignmentTests(TestCase):
                 "description": "",
                 "description_extra": "",
                 "show_main_image": "on",
+                "show_packshot": "",
+                "packshot_columns": "2",
                 "show_related_products": "on",
                 "sort_order": 0,
                 "is_active": "on",
