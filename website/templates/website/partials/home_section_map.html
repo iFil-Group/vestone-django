@@ -9,7 +9,7 @@
             {% if map_section.body %}
             <div class="home-map__text rich-text">{{ map_section.body|safe }}</div>
             {% endif %}
-            <div class="home-map__points">
+            <div class="home-map__points scroll-glass scroll-glass--dark">
                 {% for point in sales_points %}
                 <article class="home-map-point">
                     <h3><img src="{% static point.pin %}" alt=""> {{ point.name }}</h3>
