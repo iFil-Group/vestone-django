@@ -852,6 +852,10 @@
 }
 
 .where-buy__map {
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+    overflow: hidden;
     min-height: 28rem;
     height: min(70vh, 42rem);
     background: #d8dee6;

@@ -248,7 +248,7 @@ body {
 .site-header {
     position: sticky;
     top: 0;
-    z-index: 200;
+    z-index: 1200;
 }
 
 .site-header__bar {
