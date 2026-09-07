@@ -1,6 +1,10 @@
+import re
+
 from django.conf import settings
 from django.utils.formats import date_format
 from django.utils.html import strip_tags
+
+_WRAPPING_P = re.compile(r"^<p>(.*)</p>$", re.IGNORECASE | re.DOTALL)
 
 
 def _media_url(file_field):
@@ -20,6 +24,17 @@ def _richtext_or_empty(value):
     if not strip_tags(value).strip():
         return ""
     return value
+
+
+def _inline_richtext(value):
+    html = _richtext_or_empty(value)
+    if not html:
+        return ""
+    stripped = html.strip()
+    match = _WRAPPING_P.fullmatch(stripped)
+    if match and "<p>" not in match.group(1).lower():
+        return match.group(1)
+    return html
 
 
 def get_placeholder():
@@ -134,21 +149,27 @@ def get_hero_slides():
                 "image": placeholder,
                 "mobile_image": placeholder,
                 "media_type": "image",
+                "has_copy": True,
             }
         ]
-    return [
-        {
-            "title": slide.title,
-            "lead": slide.lead,
-            "image": _image_url(slide.image, placeholder),
-            "mobile_image": _image_url(slide.mobile_image, _image_url(slide.image, placeholder)),
-            "media_type": slide.media_type,
-            "video": _media_url(slide.video) or slide.video_url,
-            "button_label": slide.button_label,
-            "button_url": slide.button_url,
-        }
-        for slide in slides
-    ]
+    payload = []
+    for slide in slides:
+        title = _inline_richtext(slide.title)
+        lead = _richtext_or_empty(slide.lead)
+        payload.append(
+            {
+                "title": title,
+                "lead": lead,
+                "image": _image_url(slide.image, placeholder),
+                "mobile_image": _image_url(slide.mobile_image, _image_url(slide.image, placeholder)),
+                "media_type": slide.media_type,
+                "video": _media_url(slide.video) or slide.video_url,
+                "button_label": slide.button_label,
+                "button_url": slide.button_url,
+                "has_copy": bool(title or lead or slide.button_url),
+            }
+        )
+    return payload
 
 
 def get_promotion_slides():

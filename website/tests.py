@@ -9,6 +9,7 @@ from django.utils import timezone
 from cms.models import (
     FormSubmission,
     FormWidget,
+    HeroSlide,
     JobApplication,
     JobOpening,
     LegalDocument,
@@ -228,6 +229,22 @@ class ContentModuleTests(TestCase):
         document.save()
         response = self.client.get("/dokumenty/polityka-prywatnosci/")
         self.assertContains(response, "Treść dokumentu")
+
+
+@override_settings(SITE_ACCESS_ENABLED=False)
+class HomePageDisplayTests(TestCase):
+    def test_home_has_no_hero_arrows(self):
+        HeroSlide.objects.create(title="Slajd", lead="Lead", is_active=True)
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "home-hero__arrow")
+        self.assertContains(response, "home-hero__dots")
+        self.assertNotContains(response, "home-contact__bg")
+
+    def test_image_only_slide_hides_overlay(self):
+        HeroSlide.objects.create(title="", lead="", is_active=True)
+        response = self.client.get("/")
+        self.assertNotContains(response, "home-hero__overlay")
 
 
 @override_settings(SITE_ACCESS_ENABLED=False)

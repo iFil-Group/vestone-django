@@ -192,16 +192,24 @@ class Command(BaseCommand):
                 )
 
     def _seed_tips(self):
-        if Tip.objects.exists():
-            return
-        Tip.objects.create(
-            slug="testowa-porada",
-            title="Testowa porada",
-            excerpt=LOREM,
-            body=LOREM_LONG,
-            published_at=date.today(),
-            is_published=True,
+        samples = (
+            ("testowa-porada", "Testowa porada"),
+            ("testowa-porada-2", "Układanie kostki na podjeździe"),
+            ("testowa-porada-3", "Pielęgnacja płyt tarasowych"),
         )
+        for slug, title in samples:
+            if Tip.objects.filter(is_published=True).count() >= 3:
+                return
+            Tip.objects.get_or_create(
+                slug=slug,
+                defaults={
+                    "title": title,
+                    "excerpt": LOREM,
+                    "body": LOREM_LONG,
+                    "published_at": date.today(),
+                    "is_published": True,
+                },
+            )
 
     def _seed_news(self):
         if NewsPost.objects.exists():

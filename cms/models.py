@@ -1,6 +1,7 @@
 import re
 
 from django.db import models
+from django.utils.html import strip_tags
 from django.utils.text import slugify
 
 
@@ -85,7 +86,11 @@ class HeroSlide(models.Model):
     MEDIA_VIDEO = "video"
     MEDIA_CHOICES = [(MEDIA_IMAGE, "Zdjęcie"), (MEDIA_VIDEO, "Film")]
 
-    title = models.CharField("Tytuł", max_length=255, blank=True)
+    title = models.TextField(
+        "Tytuł",
+        blank=True,
+        help_text="Opcjonalny. Pogrubienie i kursywa w pasku narzędzi. Zostaw pusty razem z leadem, jeśli slajd ma być samym zdjęciem.",
+    )
     lead = models.TextField("Lead", blank=True)
     media_type = models.CharField("Typ medium", max_length=10, choices=MEDIA_CHOICES, default=MEDIA_IMAGE)
     image = models.ImageField("Obraz desktop", upload_to="cms/hero/", blank=True)
@@ -103,7 +108,7 @@ class HeroSlide(models.Model):
         verbose_name_plural = "Slajdy hero"
 
     def __str__(self):
-        return self.title or f"Slajd #{self.pk or 'nowy'}"
+        return strip_tags(self.title).strip() or f"Slajd #{self.pk or 'nowy'}"
 
 
 class PromotionSlide(models.Model):

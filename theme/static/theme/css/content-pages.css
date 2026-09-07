@@ -413,7 +413,19 @@
     align-items: start;
 }
 .split-page--single { grid-template-columns: minmax(0, 58rem); }
-.about-static-image { display:block; width:100%; height:auto; margin-top:2rem; }
+.about-static-figure {
+    margin: 2rem 0 0;
+    max-height: 22rem;
+    overflow: hidden;
+}
+
+.about-static-image {
+    display: block;
+    width: 100%;
+    height: 22rem;
+    object-fit: cover;
+    object-position: center;
+}
 
 @media (min-width: 900px) {
     .split-page {

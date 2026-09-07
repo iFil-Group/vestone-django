@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}?v=20260904b">
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}?v=20260907a">
 {% endblock %}
 
 {% block page_content %}
@@ -15,7 +15,9 @@
         {{ page_content.body_extra|safe }}
         {% endif %}
         {% if page_content.image %}
-        <img class="about-static-image" src="{{ page_content.image }}" alt="">
+        <figure class="about-static-figure">
+            <img class="about-static-image" src="{{ page_content.image }}" alt="">
+        </figure>
         {% endif %}
     </div>
 </div>

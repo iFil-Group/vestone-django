@@ -12,7 +12,7 @@
             <tbody>
                 {% for slide in hero_slides %}
                 <tr>
-                    <td>{{ slide.title }}</td>
+                    <td>{{ slide.title|striptags }}</td>
                     <td>{{ slide.sort_order }}</td>
                     <td class="cms-table__actions">
                         {% url 'cms_hero_edit' slide.pk as row_edit_url %}

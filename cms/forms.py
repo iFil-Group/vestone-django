@@ -155,7 +155,15 @@ class HeroSlideForm(StyledModelForm):
             "jeśli ma być samo zdjęcie albo film."
         )
         self.fields["title"].required = False
+        self.fields["title"].widget = RichTextWidget(compact=True)
+        self.fields["title"].help_text = (
+            "Opcjonalny. Pogrubienie i kursywa. Zostaw pusty razem z leadem, "
+            "jeśli slajd ma być samym zdjęciem."
+        )
         self.fields["lead"].required = False
+        self.fields["lead"].help_text = (
+            "Opcjonalny. Razem z tytułem może zostać pusty."
+        )
 
     def clean(self):
         cleaned = super().clean()

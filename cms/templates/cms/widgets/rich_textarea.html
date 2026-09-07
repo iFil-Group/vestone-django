@@ -1,7 +1,8 @@
-<div class="cms-richtext" data-richtext>
+<div class="cms-richtext{% if widget.compact %} cms-richtext--compact{% endif %}" data-richtext>
     <div class="cms-richtext__toolbar" role="toolbar" aria-label="Formatowanie tekstu">
         <button type="button" data-command="bold" title="Pogrubienie"><strong>B</strong></button>
         <button type="button" data-command="italic" title="Kursywa"><em>I</em></button>
+        {% if not widget.compact %}
         <button type="button" data-command="superscript" title="Indeks górny">x²</button>
         <button type="button" data-command="formatBlock" data-value="h2" title="Nagłówek 2">H2</button>
         <button type="button" data-command="formatBlock" data-value="h3" title="Nagłówek 3">H3</button>
@@ -11,9 +12,14 @@
         <button type="button" data-command="createLink" title="Dodaj link">Link</button>
         <button type="button" data-command="unlink" title="Usuń link">Usuń link</button>
         <button type="button" data-command="nbsp" title="Wstaw twardą spację">Twarda spacja</button>
+        {% endif %}
         <button type="button" data-command="removeFormat" title="Wyczyść formatowanie">Wyczyść</button>
     </div>
     <div class="cms-richtext__editor" contenteditable="true" role="textbox" aria-multiline="true"></div>
+    {% if widget.compact %}
+    <p class="cms-field__help">Pogrubienie i kursywa. Pole może zostać puste.</p>
+    {% else %}
     <p class="cms-field__help">Pogrubienie, kursywa, indeks górny i nagłówki. Pole może zostać puste. Tekst z Worda przejmuje styl strony.</p>
+    {% endif %}
     {% include "django/forms/widgets/textarea.html" %}
 </div>

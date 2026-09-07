@@ -1,10 +1,7 @@
 <section class="home-contact" aria-labelledby="{{ section_id|default:'home-contact-heading' }}">
-    <div class="home-contact__bg" aria-hidden="true">
-        <img src="{{ contact_section.image|default:placeholder_img }}" alt="" width="1920" height="900">
-    </div>
     <div class="home-contact__inner">
         <div class="home-contact__intro">
-            {% include "website/partials/section_heading.html" with title=contact_section.title|default:"Kontakt" id=section_id|default:'home-contact-heading' modifier="light" %}
+            {% include "website/partials/section_heading.html" with title=contact_section.title|default:"Kontakt" id=section_id|default:'home-contact-heading' %}
             {% if contact_section.body %}
             <div class="home-contact__lead rich-text">{{ contact_section.body|safe }}</div>
             {% endif %}

@@ -1,7 +1,12 @@
+from datetime import date
+
+from django.core.management import call_command
 from django.test import TestCase
 
-from .forms import ProductForm, ProductPinFormSet
-from .models import Product, ProductGalleryImage, ProductGroup, ProductPin
+from .forms import HeroSlideForm, ProductForm, ProductPinFormSet
+from .models import HeroSlide, Product, ProductGalleryImage, ProductGroup, ProductPin, Tip
+from .services import get_hero_slides
+from .widgets import RichTextWidget
 
 
 class ProductGroupAssignmentTests(TestCase):
@@ -142,3 +147,42 @@ class ProductGalleryPinFormSetTests(TestCase):
         self.assertEqual(pin.gallery_image_id, self.gallery.pk)
         self.gallery.refresh_from_db()
         self.assertTrue(self.gallery.pins_enabled)
+
+
+class HeroSlideDisplayTests(TestCase):
+    def test_form_title_uses_compact_rich_text(self):
+        form = HeroSlideForm()
+        widget = form.fields["title"].widget
+        self.assertIsInstance(widget, RichTextWidget)
+        self.assertTrue(widget.compact)
+
+    def test_empty_title_and_lead_are_image_only(self):
+        HeroSlide.objects.create(title="", lead="", is_active=True)
+        slide = get_hero_slides()[0]
+        self.assertEqual(slide["title"], "")
+        self.assertEqual(slide["lead"], "")
+        self.assertFalse(slide["has_copy"])
+
+    def test_title_keeps_inline_markup(self):
+        HeroSlide.objects.create(
+            title="<p>Kostka <strong>brukowa</strong></p>",
+            lead="",
+            is_active=True,
+        )
+        slide = get_hero_slides()[0]
+        self.assertEqual(slide["title"], "Kostka <strong>brukowa</strong>")
+        self.assertTrue(slide["has_copy"])
+
+
+class SeedTipsTests(TestCase):
+    def test_seed_fills_up_to_three_tips(self):
+        Tip.objects.create(
+            slug="testowa-porada",
+            title="Testowa porada",
+            excerpt="x",
+            body="x",
+            published_at=date.today(),
+            is_published=True,
+        )
+        call_command("seed_cms")
+        self.assertGreaterEqual(Tip.objects.filter(is_published=True).count(), 3)
