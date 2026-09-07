@@ -32,8 +32,8 @@
 
     <div class="visually-hidden">{{ form.card_type }}</div>
 
-    <section class="cms-card is-collapsed">
-        {% include "cms/partials/card_head.html" with title="Podstawowe informacje" intro="Nazwa, kategoria, opisy i ustawienia publikacji produktu." %}
+    <section class="cms-card">
+        {% include "cms/partials/card_head.html" with title="Podstawowe informacje" intro="Nazwa, kategoria, opisy i ustawienia publikacji produktu. Kategorię ustawiasz polem Kategoria." %}
         <div class="cms-card__body">
             {% for field in form %}
                 {% if field.name != "image" and field.name != "related_products" and field.name != "show_related_products" and field.name != "card_type" and field.name != "description_extra" and field.name != "show_main_image" and field.name != "show_packshot" and field.name != "packshot_columns" %}

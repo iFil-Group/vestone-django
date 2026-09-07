@@ -324,7 +324,7 @@ class Product(models.Model):
         ProductGroup,
         on_delete=models.CASCADE,
         related_name="products",
-        verbose_name="Grupa",
+        verbose_name="Kategoria",
     )
     slug = models.SlugField("Slug", max_length=120)
     legacy_slugs = models.TextField(

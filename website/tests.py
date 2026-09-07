@@ -30,6 +30,7 @@ from cms.models import (
     SurfaceType,
 )
 from cms.services import (
+    category_products,
     get_download_items,
     get_product,
     get_promotion_slides,
@@ -184,6 +185,13 @@ class ProductExtensionsTests(TestCase):
         load_row = next(row for row in data["tech_table"]["rows"] if row["label"] == "Nośność")
         self.assertEqual(load_row["icon"], "load")
         self.assertEqual(load_row["values"], ["osobowe", ""])
+
+
+class CategoryAssignmentTests(TestCase):
+    def test_empty_category_does_not_show_dummy_test_product(self):
+        ProductGroup.objects.create(title="Beton towarowy", slug="beton-towarowy", is_active=True)
+        self.assertEqual(category_products("beton-towarowy"), [])
+        self.assertIsNone(get_product("beton-towarowy", "testowy-produkt"))
 
 
 class SurfaceCatalogTests(TestCase):

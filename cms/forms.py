@@ -343,6 +343,9 @@ class ProductForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["group"].queryset = ProductGroup.objects.all().order_by("sort_order", "title")
+        self.fields["group"].help_text = (
+            "Produkt należy do jednej kategorii. Tu zmieniasz, gdzie widać go na stronie."
+        )
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["related_products"].queryset = Product.objects.exclude(
             pk=self.instance.pk

@@ -517,27 +517,16 @@ def category_products(category_slug):
         "pins",
         "gallery",
     )
-    if products.exists():
-        return [
-            {
-                "slug": product.slug,
-                "title": product.title,
-                "category_slug": category_slug,
-                "search_text": _product_list_search_text(product),
-                "filter_values": _product_filter_values(product),
-                "image": _image_url(product.image, get_placeholder()),
-            }
-            for product in products
-        ]
-    from website.content_data import category_products as static_products
-
     return [
         {
-            **item,
-            "search_text": item.get("search_text") or item.get("title", "").lower(),
-            "filter_values": item.get("filter_values") or {},
+            "slug": product.slug,
+            "title": product.title,
+            "category_slug": category_slug,
+            "search_text": _product_list_search_text(product),
+            "filter_values": _product_filter_values(product),
+            "image": _image_url(product.image, get_placeholder()),
         }
-        for item in static_products(category_slug)
+        for product in products
     ]
 
 
@@ -586,10 +575,6 @@ def resolve_product(category_slug, product_slug):
             data["category_slug"] = category_slug
             return data, candidate.slug
 
-    from website.content_data import TEST_PRODUCT, TEST_PRODUCT_SLUG
-
-    if product_slug == TEST_PRODUCT_SLUG:
-        return {**TEST_PRODUCT, "category_slug": category_slug}, None
     return None, None
 
 
