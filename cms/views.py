@@ -4,6 +4,8 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .forms import (
     ContentBlockForm,
@@ -912,6 +914,20 @@ def floating_promotion_edit(request, pk=None):
         "Edycja widgetu promocyjnego" if pk else "Nowy widget promocyjny",
         "cms_promotions", "Widget promocyjny został zapisany.",
     )
+
+
+@login_required
+@require_POST
+def floating_promotion_clear(request, pk):
+    item = get_object_or_404(FloatingPromotion, pk=pk)
+    item.seen_reset_at = timezone.now()
+    item.save(update_fields=["seen_reset_at"])
+    messages.success(
+        request,
+        "Widoczność wyczyszczona. Okno albo widget pokaże się znowu wszystkim, "
+        "a trzy dni liczą się od nowa.",
+    )
+    return redirect("cms_promotions")
 
 
 @login_required

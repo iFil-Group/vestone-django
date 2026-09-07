@@ -590,12 +590,23 @@ body.cms-body--panel {
     fill: currentColor;
 }
 
-.cms-row-action--edit {
+button.cms-row-action {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.cms-row-action--edit,
+.cms-row-action--clear {
     color: #374650;
 }
 
 .cms-row-action--edit:hover,
-.cms-row-action--edit:focus-visible {
+.cms-row-action--edit:focus-visible,
+.cms-row-action--clear:hover,
+.cms-row-action--clear:focus-visible {
     color: #2a343c;
     text-decoration: underline;
 }

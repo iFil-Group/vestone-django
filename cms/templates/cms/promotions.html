@@ -51,7 +51,7 @@
 <section class="cms-section">
     <div class="cms-toolbar">
         <h2 class="cms-section__title">Okno dialogowe i widget boczny</h2>
-        <p class="cms-section__help">Widget boczny wysuwa się przy otwarciu i chowa sam. Okno zamyka się krzyżykiem X. Oba pokazują się danemu IP raz na trzy dni.</p>
+        <p class="cms-section__help">Widget boczny wysuwa się przy otwarciu i chowa sam. Okno zamyka się krzyżykiem X. Oba pokazują się danemu IP raz na trzy dni. Wyczyść pokazuje je znowu wszystkim i zaczyna liczyć od nowa.</p>
         <a href="{% url 'cms_floating_promotion_add' %}" class="cms-btn cms-btn--primary">Dodaj widget</a>
     </div>
     <div class="cms-table-wrap"><table class="cms-table">
@@ -60,8 +60,9 @@
             <td>{{ item.get_placement_display }}</td><td>{{ item.link_url }}</td>
             <td class="cms-table__actions">
                 {% url 'cms_floating_promotion_edit' item.pk as row_edit_url %}
+                {% url 'cms_floating_promotion_clear' item.pk as row_clear_url %}
                 {% url 'cms_delete' 'floating-promotion' item.pk as row_delete_url %}
-                {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url %}
+                {% include "cms/partials/row_actions.html" with edit_url=row_edit_url clear_url=row_clear_url delete_url=row_delete_url %}
             </td>
         </tr>{% empty %}<tr><td colspan="3" class="cms-table__empty">Brak widgetów.</td></tr>{% endfor %}</tbody>
     </table></div>

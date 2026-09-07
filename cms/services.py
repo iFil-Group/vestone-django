@@ -221,10 +221,16 @@ def client_ip(request):
     return request.META.get("REMOTE_ADDR") or ""
 
 
-def promo_seen_cache_key(kind, pk, ip):
+def promo_reset_token(value):
+    if not value:
+        return "0"
+    return str(int(value.timestamp()))
+
+
+def promo_seen_cache_key(kind, pk, ip, reset_token="0"):
     import hashlib
 
-    digest = hashlib.sha256(f"{kind}:{pk}:{ip}".encode()).hexdigest()[:40]
+    digest = hashlib.sha256(f"{kind}:{pk}:{reset_token}:{ip}".encode()).hexdigest()[:40]
     return f"promo-seen:{digest}"
 
 
@@ -234,7 +240,9 @@ def unseen_floating_promotions(request):
     visible = []
     ip = client_ip(request)
     for promo in get_floating_promotions():
-        key = promo_seen_cache_key(promo["placement"], promo["id"], ip)
+        key = promo_seen_cache_key(
+            promo["placement"], promo["id"], ip, promo.get("reset_token") or "0"
+        )
         if cache.get(key):
             continue
         visible.append(promo)
@@ -298,6 +306,7 @@ def get_floating_promotions():
             "placement": item.placement,
             "image": _media_url(item.image),
             "link_url": item.link_url,
+            "reset_token": promo_reset_token(item.seen_reset_at),
         }
         for item in FloatingPromotion.objects.filter(is_active=True)
         if item.image

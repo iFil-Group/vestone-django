@@ -4,6 +4,14 @@
     </svg>
     <span>Edytuj</span>
 </a>
+{% if clear_url %}
+<form method="post" action="{{ clear_url }}" class="cms-row-action-form">
+    {% csrf_token %}
+    <button type="submit" class="cms-row-action cms-row-action--clear" onclick="return confirm('{{ clear_confirm|default:"Pokazać znowu wszystkim i zacząć liczyć trzy dni od nowa?"|escapejs }}')">
+        <span>Wyczyść</span>
+    </button>
+</form>
+{% endif %}
 {% if delete_url %}
 <form method="post" action="{{ delete_url }}" class="cms-row-action-form">
     {% csrf_token %}

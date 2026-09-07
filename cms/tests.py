@@ -1,12 +1,25 @@
 from datetime import date, datetime
 
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from .forms import HeroSlideForm, ProductForm, ProductPinFormSet, PromotionSlideForm
-from .models import HeroSlide, Product, ProductGalleryImage, ProductGroup, ProductPin, PromotionSlide, Tip
-from .services import get_hero_slides, get_promotion_slides, promotion_text_lines
+from .models import (
+    FloatingPromotion,
+    HeroSlide,
+    Product,
+    ProductGalleryImage,
+    ProductGroup,
+    ProductPin,
+    PromotionSlide,
+    Tip,
+)
+from .services import get_hero_slides, get_promotion_slides, promotion_text_lines, unseen_floating_promotions
 from .widgets import RichTextWidget
 
 
@@ -234,6 +247,54 @@ class PromotionSlideFormTests(TestCase):
             promotion_text_lines("<p>Raz</p><p>Dwa</p><p>Trzy</p><p>Cztery</p>"),
             ["Raz", "Dwa", "Trzy"],
         )
+
+
+class FloatingPromotionClearTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        gif = (
+            b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00"
+            b"\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00"
+            b"\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+        )
+        self.promo = FloatingPromotion.objects.create(
+            placement=FloatingPromotion.PLACEMENT_MODAL,
+            image=SimpleUploadedFile("promo.gif", gif, content_type="image/gif"),
+            link_url="/zamow-katalog/",
+            is_active=True,
+        )
+        self.factory = RequestFactory()
+
+    def test_reset_shows_promo_again(self):
+        request = self.factory.get("/")
+        request.META["REMOTE_ADDR"] = "203.0.113.10"
+        first = unseen_floating_promotions(request)
+        self.assertEqual(len(first), 1)
+        second = unseen_floating_promotions(request)
+        self.assertEqual(second, [])
+
+        self.promo.seen_reset_at = timezone.now()
+        self.promo.save(update_fields=["seen_reset_at"])
+        again = unseen_floating_promotions(request)
+        self.assertEqual(len(again), 1)
+        self.assertNotEqual(again[0]["reset_token"], "0")
+
+    def test_clear_button_updates_reset_time(self):
+        user = get_user_model().objects.create_user("cms", "cms@example.com", "pass")
+        self.client.force_login(user)
+        response = self.client.post(
+            reverse("cms_floating_promotion_clear", args=[self.promo.pk])
+        )
+        self.assertEqual(response.status_code, 302)
+        self.promo.refresh_from_db()
+        self.assertIsNotNone(self.promo.seen_reset_at)
+
+    def test_promotions_page_has_clear_action(self):
+        user = get_user_model().objects.create_user("cms2", "cms2@example.com", "pass")
+        self.client.force_login(user)
+        response = self.client.get(reverse("cms_promotions"))
+        self.assertContains(response, "Wyczyść")
+        self.assertContains(response, reverse("cms_floating_promotion_clear", args=[self.promo.pk]))
 
 
 class SeedTipsTests(TestCase):

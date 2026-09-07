@@ -5,10 +5,11 @@
         class="floating-promo floating-promo--side"
         data-promo-side
         data-promo-id="{{ promo.id }}"
+        data-promo-reset="{{ promo.reset_token }}"
         hidden
     ><img src="{{ promo.image }}" alt=""></a>
     {% else %}
-    <dialog class="floating-promo-modal" data-promo-modal data-promo-id="{{ promo.id }}">
+    <dialog class="floating-promo-modal" data-promo-modal data-promo-id="{{ promo.id }}" data-promo-reset="{{ promo.reset_token }}">
         <button type="button" data-promo-close aria-label="Zamknij">X</button>
         <a href="{{ promo.link_url }}"><img src="{{ promo.image }}" alt=""></a>
     </dialog>

@@ -266,6 +266,7 @@ class FloatingPromotion(models.Model):
     image = models.ImageField("Zdjęcie", upload_to="cms/promotions/")
     link_url = models.CharField("Link", max_length=500)
     is_active = models.BooleanField("Aktywny", default=True)
+    seen_reset_at = models.DateTimeField("Wyczyszczono widoczność", blank=True, null=True)
 
     class Meta:
         ordering = ["placement", "id"]

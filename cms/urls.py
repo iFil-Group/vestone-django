@@ -66,6 +66,7 @@ urlpatterns = [
     path("ifil-log/panel/promocje/formularz/<int:pk>/eksport/", views.submissions_export, name="cms_form_submissions_export"),
     path("ifil-log/panel/promocje/widget/dodaj/", views.floating_promotion_edit, name="cms_floating_promotion_add"),
     path("ifil-log/panel/promocje/widget/<int:pk>/", views.floating_promotion_edit, name="cms_floating_promotion_edit"),
+    path("ifil-log/panel/promocje/widget/<int:pk>/wyczysc/", views.floating_promotion_clear, name="cms_floating_promotion_clear"),
     path("ifil-log/panel/punkty-sprzedazy/", views.sales_point_list, name="cms_sales_points"),
     path("ifil-log/panel/punkty-sprzedazy/dodaj/", views.sales_point_edit, name="cms_sales_point_add"),
     path("ifil-log/panel/punkty-sprzedazy/<int:pk>/", views.sales_point_edit, name="cms_sales_point_edit"),
