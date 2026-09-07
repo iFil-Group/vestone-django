@@ -53,6 +53,7 @@ class Command(BaseCommand):
         self._seed_reviews()
         self._seed_product_groups()
         self._seed_test_product()
+        self._seed_catalog_products()
         self._seed_tips()
         self._seed_news()
         self._seed_catalog_form()
@@ -190,6 +191,143 @@ class Command(BaseCommand):
                     text=pin["text"],
                     sort_order=index,
                 )
+
+    def _seed_catalog_products(self):
+        samples = (
+            (
+                "mala-architektura",
+                "cento",
+                "Cento",
+                "Palisada dekoracyjna",
+                (
+                    "<p>Smukła, wysoka palisada uzupełnia ofertę produktów do aranżacji "
+                    "przestrzeni wokół domu. Sprawdzi się przy wykończeniu tarasów, schodów "
+                    "oraz w miejscach, gdzie trzeba zniwelować różnice wysokości terenu.</p>"
+                    "<p>Minimalistyczna forma i praktyczne barwy komponują się z kostkami "
+                    "i płytami dekoracyjnymi Vestone.</p>"
+                ),
+                "<p>Format 100 × 30 cm, grubość 8 cm. Powierzchnia One Color i Gładka.</p>",
+                Product.CARD_STANDARD,
+                0,
+            ),
+            (
+                "mala-architektura",
+                "mersano",
+                "Mersano",
+                "Obrzeże dekoracyjne",
+                (
+                    "<p>Proste obrzeże z pozorną fugą, które nadaje formie lekkości. "
+                    "Służy do wykańczania ścieżek, podjazdów, parkingów i tarasów, "
+                    "a także do wytyczania rabat i niskich kwietników.</p>"
+                    "<p>Odstępnik z jednej strony ułatwia montaż i równe fugi "
+                    "między elementami.</p>"
+                ),
+                "<p>Format 50 × 28 cm, grubość 8 cm. Powierzchnia One Color i Gładka.</p>",
+                Product.CARD_STANDARD,
+                1,
+            ),
+            (
+                "mala-architektura",
+                "mersano-grande",
+                "Mersano Grande",
+                "Obrzeże dekoracyjne",
+                (
+                    "<p>Większe obrzeże z pozorną fugą do wykańczania ścieżek, podjazdów, "
+                    "parkingów i tarasów. Nadaje się też do rabat i niskich kwietników.</p>"
+                    "<p>Odstępnik z jednej strony ułatwia montaż i trzyma równą fugę.</p>"
+                ),
+                "<p>Format 45 × 40 cm, grubość 8 cm. Powierzchnia One Color i Gładka.</p>",
+                Product.CARD_STANDARD,
+                2,
+            ),
+            (
+                "mala-architektura",
+                "obrzeze-palisadowe-gladkie",
+                "Obrzeże palisadowe gładkie",
+                "Wykończenie nawierzchni",
+                (
+                    "<p>Praktyczny element do wykańczania nawierzchni z płyt i kostek, "
+                    "ścieżek, podjazdów, parkingów i tarasów. Można nim też wyznaczyć "
+                    "granicę zieleni albo wykończyć schody.</p>"
+                ),
+                "<p>Format 50 × 28 cm, grubość 6 cm. Powierzchnia One Color i Gładka.</p>",
+                Product.CARD_STANDARD,
+                3,
+            ),
+            (
+                "mala-architektura",
+                "stopien-schodowy",
+                "Stopień schodowy",
+                "Wejścia i tarasy",
+                (
+                    "<p>Duży, praktyczny stopień do wygodnych wejść. Nadaje się też "
+                    "do wytyczenia granic zieleni i przestrzeni wypoczynkowej.</p>"
+                    "<p>Komponuje się z kostkami i płytami w barwach melanżowych "
+                    "i jednolitych.</p>"
+                ),
+                "<p>Format 100 × 35 cm, grubość 15 cm. Powierzchnia Gładka, Coloratto i One Color.</p>",
+                Product.CARD_STANDARD,
+                4,
+            ),
+            (
+                "piasek-fugowy",
+                "piasek-fugowy",
+                "Piasek fugowy",
+                "Naturalne piaski do fug",
+                (
+                    "<p>Naturalne piaski fugowe to ostatni element wpływający na wygląd "
+                    "nawierzchni. Kolorem można podkreślić wzór ułożenia albo zbliżyć "
+                    "całość do jednej tonacji. Barwa może się zmieniać pod wpływem pogody.</p>"
+                    "<p>Piaski są wodoprzepuszczalne, jednoskładnikowe i w 100% naturalne. "
+                    "Nie barwią powierzchni i ograniczają przerost traw i chwastów.</p>"
+                    "<p>Rekomendowane do kostek Cortina, Grado, Lappare, Larino, Monte Carlo, "
+                    "Wenecja oraz płyt Alicante, Desio, Ferrara i Lamezia. Piasek nie jest "
+                    "materiałem konstrukcyjnym i stosuje się go na podbudowie wodoprzepuszczalnej. "
+                    "Minimalna szerokość fugi to 3 mm.</p>"
+                ),
+                (
+                    "<p>Dostępne frakcje: 0,1–0,5 mm kremowy, 0–2 mm pustynny, "
+                    "0–2 mm bazaltowy, 0–2 mm stalowy. Worek 25 kg, 48 worków na palecie.</p>"
+                ),
+                Product.CARD_DESCRIPTIVE,
+                0,
+            ),
+            (
+                "beton-towarowy",
+                "beton-towarowy",
+                "Beton towarowy",
+                "Beton od Budokrusz S.A.",
+                (
+                    "<p>Vestone to marka produktów nawierzchniowych Budokrusz S.A., "
+                    "producenta betonu towarowego. W ofercie są między innymi beton "
+                    "na płyty fundamentowe, beton drogowy nawierzchniowy oraz betony "
+                    "specjalne: kontraktor, architektoniczny, SCC, ASCC, jamisty "
+                    "i ekspansywny.</p>"
+                    "<p>Szczegóły i ofertę cenową można dostać po zapytaniu.</p>"
+                ),
+                "",
+                Product.CARD_DESCRIPTIVE,
+                0,
+            ),
+        )
+        for group_slug, slug, title, subtitle, description, extra, card_type, sort_order in samples:
+            group = ProductGroup.objects.filter(slug=group_slug).first()
+            if group is None:
+                continue
+            Product.objects.get_or_create(
+                group=group,
+                slug=slug,
+                defaults={
+                    "title": title,
+                    "subtitle": subtitle,
+                    "description": description,
+                    "description_extra": extra,
+                    "card_type": card_type,
+                    "sort_order": sort_order,
+                    "is_active": True,
+                    "show_main_image": False,
+                },
+            )
 
     def _seed_tips(self):
         samples = (

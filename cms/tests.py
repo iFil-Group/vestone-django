@@ -174,6 +174,20 @@ class HeroSlideDisplayTests(TestCase):
         self.assertTrue(slide["has_copy"])
 
 
+class SeedCatalogProductsTests(TestCase):
+    def test_seed_adds_vestone_core_products_to_empty_groups(self):
+        call_command("seed_cms")
+        self.assertTrue(
+            Product.objects.filter(group__slug="mala-architektura", slug="cento").exists()
+        )
+        self.assertTrue(
+            Product.objects.filter(group__slug="piasek-fugowy", slug="piasek-fugowy").exists()
+        )
+        self.assertTrue(
+            Product.objects.filter(group__slug="beton-towarowy", slug="beton-towarowy").exists()
+        )
+
+
 class SeedTipsTests(TestCase):
     def test_seed_fills_up_to_three_tips(self):
         Tip.objects.create(
