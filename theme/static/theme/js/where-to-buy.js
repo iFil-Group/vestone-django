@@ -11,6 +11,9 @@
     if (!form || !list || !mapEl) return;
 
     var points = Array.prototype.slice.call(root.querySelectorAll("[data-where-point]"));
+    var search = form.querySelector("[data-where-search]");
+    var reset = root.querySelector("[data-where-reset]");
+    var selects = form.querySelectorAll("[data-where-filter]");
     var markers = [];
     var map = null;
     if (typeof window.L !== "undefined") {
@@ -26,6 +29,7 @@
             offer: (form.querySelector('[data-where-filter="offer"]') || {}).value || "",
             voivodeship: (form.querySelector('[data-where-filter="voivodeship"]') || {}).value || "",
             city: (form.querySelector('[data-where-filter="city"]') || {}).value || "",
+            query: ((search && search.value) || "").toLowerCase().trim(),
         };
     }
 
@@ -35,7 +39,28 @@
             return false;
         }
         if (current.city && point.getAttribute("data-city") !== current.city) return false;
+        if (current.query) {
+            var haystack = (point.getAttribute("data-search") || point.getAttribute("data-name") || "").toLowerCase();
+            if (haystack.indexOf(current.query) === -1) return false;
+        }
         return true;
+    }
+
+    function hasActiveFilters() {
+        var current = filters();
+        return Boolean(current.offer || current.voivodeship || current.city || current.query);
+    }
+
+    function syncFieldStates() {
+        Array.prototype.forEach.call(selects, function (select) {
+            var field = select.closest(".product-filters__field");
+            if (field) {
+                field.classList.toggle("is-active", select.selectedIndex > 0);
+            }
+        });
+        if (reset) {
+            reset.hidden = !hasActiveFilters();
+        }
     }
 
     function clearMarkers() {
@@ -82,6 +107,7 @@
         });
 
         if (empty) empty.hidden = visible.length > 0;
+        syncFieldStates();
         if (!map) return;
         if (bounds.length === 1) {
             map.setView(bounds[0], 12);
@@ -100,10 +126,22 @@
         apply();
     });
 
-    var reset = root.querySelector("[data-where-reset]");
+    Array.prototype.forEach.call(selects, function (select) {
+        select.addEventListener("change", apply);
+    });
+
+    if (search) {
+        search.addEventListener("input", apply);
+    }
+
     if (reset) {
         reset.addEventListener("click", function () {
-            window.setTimeout(apply, 0);
+            if (search) search.value = "";
+            Array.prototype.forEach.call(selects, function (select) {
+                select.selectedIndex = 0;
+            });
+            apply();
+            if (search) search.focus();
         });
     }
 

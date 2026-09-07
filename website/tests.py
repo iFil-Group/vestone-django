@@ -248,6 +248,17 @@ class HomePageDisplayTests(TestCase):
 
 
 @override_settings(SITE_ACCESS_ENABLED=False)
+class WhereToBuyFiltersTests(TestCase):
+    def test_filters_match_product_category_look(self):
+        response = self.client.get("/gdzie-kupic/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "product-filters")
+        self.assertContains(response, "product-filters__select")
+        self.assertNotContains(response, "where-buy__filters")
+        self.assertNotContains(response, "page-hero")
+
+
+@override_settings(SITE_ACCESS_ENABLED=False)
 class ProductContactSectionTests(TestCase):
     def test_product_page_has_no_dummy_contact_form(self):
         group = ProductGroup.objects.create(title="Płyty", slug="plyty-e2e")
