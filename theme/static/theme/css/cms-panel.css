@@ -623,6 +623,10 @@ body.cms-body--panel {
     border-radius: 8px;
 }
 
+.cms-form > .cms-btn--primary {
+    margin-top: 1.5rem;
+}
+
 .cms-formset-row {
     display: flex;
     flex-direction: column;
