@@ -9,21 +9,6 @@
 
 {% block main %}
 <div class="home">
-    <aside class="home-announce{% if not promotion_slides %} is-hidden{% endif %}" aria-label="Komunikaty promocyjne" data-slider>
-        <div class="home-announce__inner">
-            <div class="home-announce__rotator">
-                {% for item in promotion_slides %}
-                <div class="home-announce__slide{% if forloop.first %} is-active{% endif %}" data-slide>
-                    <div class="home-announce__text">{% if item.text %}{{ item.text|safe }}{% endif %}</div>
-                </div>
-                {% endfor %}
-            </div>
-            {% if promo_bar_link and promo_bar_link.link_url %}
-            <a href="{{ promo_bar_link.link_url }}" class="home-announce__btn">{{ promo_bar_link.link_label|default:"Sprawdź" }}</a>
-            {% endif %}
-        </div>
-    </aside>
-
     <section class="home-hero" aria-label="Slider główny" data-slider>
         <div class="home-hero__track">
             {% for slide in hero_slides %}

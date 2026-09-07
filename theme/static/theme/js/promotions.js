@@ -2,28 +2,59 @@
     "use strict";
 
     var THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+    var THREE_DAYS_SEC = 3 * 24 * 60 * 60;
 
     function storageKey(kind, id) {
         return "vestone-promo-" + kind + "-" + (id || "0");
     }
 
+    function cookieName(kind, id) {
+        return "vestone_promo_" + kind + "_" + (id || "0");
+    }
+
+    function readCookie(name) {
+        var parts = ("; " + document.cookie).split("; " + name + "=");
+        if (parts.length < 2) return "";
+        return parts.pop().split(";").shift();
+    }
+
     function wasSeenRecently(kind, id) {
         try {
             var raw = window.localStorage.getItem(storageKey(kind, id));
-            if (!raw) return false;
-            var seen = parseInt(raw, 10);
-            if (isNaN(seen)) return false;
-            return Date.now() - seen < THREE_DAYS;
+            if (raw) {
+                var seen = parseInt(raw, 10);
+                if (!isNaN(seen) && Date.now() - seen < THREE_DAYS) return true;
+            }
         } catch (err) {
-            return false;
+            /* ignore */
         }
+        var cookie = readCookie(cookieName(kind, id));
+        if (!cookie) return false;
+        var cookieSeen = parseInt(cookie, 10);
+        return !isNaN(cookieSeen) && Date.now() - cookieSeen < THREE_DAYS;
     }
 
     function markSeen(kind, id) {
+        var now = String(Date.now());
         try {
-            window.localStorage.setItem(storageKey(kind, id), String(Date.now()));
+            window.localStorage.setItem(storageKey(kind, id), now);
         } catch (err) {
             /* ignore */
+        }
+        document.cookie = cookieName(kind, id) + "=" + now +
+            "; max-age=" + THREE_DAYS_SEC + "; path=/; SameSite=Lax";
+    }
+
+    var bar = document.querySelector("[data-promo-bar]");
+    if (bar) {
+        var lines = bar.querySelectorAll("[data-promo-line]");
+        var lineIndex = 0;
+        if (lines.length > 1) {
+            window.setInterval(function () {
+                lines[lineIndex].classList.remove("is-active");
+                lineIndex = (lineIndex + 1) % lines.length;
+                lines[lineIndex].classList.add("is-active");
+            }, 3500);
         }
     }
 
@@ -36,6 +67,7 @@
         window.setTimeout(function () {
             if (typeof dialog.showModal === "function") dialog.showModal();
             else dialog.setAttribute("open", "");
+            markSeen("modal", id);
         }, 2000);
         if (close) {
             close.addEventListener("click", function () {
@@ -55,13 +87,13 @@
             return;
         }
         widget.hidden = false;
-        window.requestAnimationFrame(function () {
+        window.setTimeout(function () {
             widget.classList.add("is-visible");
-        });
+            markSeen("side", id);
+        }, 400);
         window.setTimeout(function () {
             widget.classList.remove("is-visible");
             widget.classList.add("is-hiding");
-            markSeen("side", id);
-        }, 8000);
+        }, 10400);
     });
 })();

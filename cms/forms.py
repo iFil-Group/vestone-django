@@ -178,6 +178,15 @@ class HeroSlideForm(StyledModelForm):
 
 
 class PromotionSlideForm(StyledModelForm):
+    line_1 = forms.CharField(
+        label="Linia 1",
+        required=False,
+        max_length=200,
+        help_text="Na pasku przesuwają się maksymalnie 3 linijki. Etykieta linku zostaje w miejscu.",
+    )
+    line_2 = forms.CharField(label="Linia 2", required=False, max_length=200)
+    line_3 = forms.CharField(label="Linia 3", required=False, max_length=200)
+
     class Meta:
         model = PromotionSlide
         fields = (
@@ -185,33 +194,77 @@ class PromotionSlideForm(StyledModelForm):
             "sort_order", "is_active",
         )
         widgets = {
-            "active_from": forms.DateTimeInput(
-                format="%Y-%m-%dT%H:%M",
-                attrs={"type": "datetime-local", "class": "cms-input"},
+            "active_from": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "class": "cms-input"},
             ),
-            "active_until": forms.DateTimeInput(
-                format="%Y-%m-%dT%H:%M",
-                attrs={"type": "datetime-local", "class": "cms-input"},
+            "active_until": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "class": "cms-input"},
             ),
         }
 
     def __init__(self, *args, **kwargs):
+        from django.utils import timezone
+
+        from cms.services import promotion_text_lines
+
         super().__init__(*args, **kwargs)
         self.fields["text"].required = False
-        self.fields["text"].help_text = (
-            "Może zostać puste (np. sama grafika świąteczna w innym slajdzie). "
-            "Na pasku kręcą się maksymalnie 3 komunikaty. Etykieta linku z pierwszego "
-            "wypełnionego komunikatu zostaje na stałe."
+        self.fields["text"].widget = forms.HiddenInput()
+        self.fields["link_label"].help_text = (
+            "Przycisk zostaje na stałe obok przesuwających się linijek."
         )
         self.fields["active_from"].input_formats = [
+            "%Y-%m-%d",
             "%Y-%m-%dT%H:%M",
             "%Y-%m-%d %H:%M",
-            "%Y-%m-%dT%H:%M:%S",
+            "%d.%m.%Y",
         ]
         self.fields["active_until"].input_formats = list(self.fields["active_from"].input_formats)
+        self.fields["active_from"].help_text = "Po zapisie data zostaje w formularzu."
+        self.fields["active_until"].help_text = "Po zapisie data zostaje w formularzu."
+
+        lines = promotion_text_lines(self.instance.text) if self.instance.pk else []
+        self.fields["line_1"].initial = lines[0] if len(lines) > 0 else ""
+        self.fields["line_2"].initial = lines[1] if len(lines) > 1 else ""
+        self.fields["line_3"].initial = lines[2] if len(lines) > 2 else ""
+
+        for name in ("active_from", "active_until"):
+            value = getattr(self.instance, name, None) if self.instance.pk else None
+            if not value:
+                continue
+            if timezone.is_aware(value):
+                value = timezone.localtime(value)
+            formatted = value.strftime("%Y-%m-%d")
+            self.initial[name] = formatted
+            self.fields[name].initial = formatted
 
     def clean(self):
+        from django.utils import timezone
+
         cleaned = super().clean()
+        lines = [
+            (cleaned.get("line_1") or "").strip(),
+            (cleaned.get("line_2") or "").strip(),
+            (cleaned.get("line_3") or "").strip(),
+        ]
+        cleaned["text"] = "\n".join(line for line in lines if line)
+
+        for name, hour, minute, second in (
+            ("active_from", 0, 0, 0),
+            ("active_until", 23, 59, 59),
+        ):
+            value = cleaned.get(name)
+            if not value:
+                continue
+            if timezone.is_aware(value):
+                value = timezone.localtime(value)
+            value = value.replace(hour=hour, minute=minute, second=second, microsecond=0)
+            if timezone.is_naive(value):
+                value = timezone.make_aware(value, timezone.get_current_timezone())
+            cleaned[name] = value
+
         if cleaned.get("active_from") and cleaned.get("active_until"):
             if cleaned["active_from"] >= cleaned["active_until"]:
                 self.add_error("active_until", "Data końcowa musi być późniejsza od początkowej.")
@@ -280,6 +333,14 @@ class FloatingPromotionForm(StyledModelForm):
     class Meta:
         model = FloatingPromotion
         fields = ("placement", "image", "link_url", "is_active")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["placement"].help_text = (
+            "Widget boczny wysuwa się przy otwarciu strony i chowa sam. "
+            "Okno dialogowe zamyka się krzyżykiem X. "
+            "Oba pokazują się danemu odwiedzającemu raz na trzy dni."
+        )
 
 
 class ReviewForm(StyledModelForm):

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}{{ widget.title }} — Vestone{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'theme/css/form-widget.css' %}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'theme/css/form-widget.css' %}?v=20260907g">{% endblock %}
 
 {% block main %}
 <main class="widget-page">
@@ -17,29 +17,64 @@
         {% if submitted %}
         <div class="widget-page__thanks">
             <h1>Dziękujemy</h1>
-            <div class="rich-text">{{ widget.thanks_text|safe }}</div>
+            <div class="widget-page__lead rich-text">{{ widget.thanks_text|safe }}</div>
         </div>
         {% else %}
         <h1>{{ widget.title }}</h1>
-        <div class="rich-text">{{ widget.description|safe }}</div>
+        <div class="widget-page__lead rich-text">{{ widget.description|safe }}</div>
         <form method="post" class="widget-form" novalidate>
             {% csrf_token %}
-            {% for field in form %}
-                {% if field.name != "consent" %}
-                <div class="widget-form__field{% if field.errors %} has-error{% endif %}">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
-                    {{ field }}
-                    {% for error in field.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
-                </div>
+            <p class="widget-form__heading">Zamawiam katalog</p>
+            <div class="widget-form__field{% if form.first_name.errors %} has-error{% endif %}">
+                <label for="{{ form.first_name.id_for_label }}">Imię*</label>
+                {{ form.first_name }}
+                {% for error in form.first_name.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="widget-form__field{% if form.last_name.errors %} has-error{% endif %}">
+                <label for="{{ form.last_name.id_for_label }}">Nazwisko*</label>
+                {{ form.last_name }}
+                {% for error in form.last_name.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="widget-form__field{% if form.street.errors %} has-error{% endif %}">
+                <label for="{{ form.street.id_for_label }}">Ulica*</label>
+                {{ form.street }}
+                {% for error in form.street.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="widget-form__field widget-form__house{% if form.house_number.errors %} has-error{% endif %}">
+                <label for="{{ form.house_number.id_for_label }}">Nr domu/mieszkania*</label>
+                {{ form.house_number }}
+                {% for error in form.house_number.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="widget-form__field{% if form.postal_code.errors %} has-error{% endif %}">
+                <label for="{{ form.postal_code.id_for_label }}">Kod pocztowy*</label>
+                {{ form.postal_code }}
+                {% for error in form.postal_code.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="widget-form__field{% if form.city.errors %} has-error{% endif %}">
+                <label for="{{ form.city.id_for_label }}">Miejscowość*</label>
+                {{ form.city }}
+                {% for error in form.city.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="widget-form__field widget-form__company{% if form.company.errors %} has-error{% endif %}">
+                <label for="{{ form.company.id_for_label }}">Firma</label>
+                {{ form.company }}
+                {% for error in form.company.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="widget-form__required rich-text">
+                {% if widget.required_fields_text %}
+                {{ widget.required_fields_text|safe }}
+                {% else %}
+                <p>Pola oznaczone* są obowiązkowe.</p>
                 {% endif %}
-            {% endfor %}
-            <div class="widget-form__required rich-text">{{ widget.required_fields_text|safe }}</div>
+            </div>
             <div class="widget-form__consent{% if form.consent.errors %} has-error{% endif %}">
                 {{ form.consent }}
-                <label for="{{ form.consent.id_for_label }}">{{ widget.consent_text|safe }}</label>
+                <label for="{{ form.consent.id_for_label }}">
+                    {% if widget.consent_text %}{{ widget.consent_text|safe }}{% else %}Wyrażam zgodę na przetwarzanie moich danych osobowych.{% endif %}
+                </label>
                 {% for error in form.consent.errors %}<p class="widget-form__error">{{ error }}</p>{% endfor %}
             </div>
-            <button type="submit" data-order-button disabled>ZAMÓW</button>
+            <button type="submit" data-order-button disabled>Zamów</button>
         </form>
         {% endif %}
     </div>

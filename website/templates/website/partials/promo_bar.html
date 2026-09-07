@@ -1,0 +1,14 @@
+<aside class="home-announce{% if not promotion_slides %} is-hidden{% endif %}" aria-label="Komunikaty promocyjne" data-promo-bar>
+    <div class="home-announce__inner">
+        <div class="home-announce__rotator">
+            {% for item in promotion_slides %}
+            <div class="home-announce__slide{% if forloop.first %} is-active{% endif %}" data-promo-line>
+                <p class="home-announce__text">{{ item.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% if promo_bar_link and promo_bar_link.link_url %}
+        <a href="{{ promo_bar_link.link_url }}" class="home-announce__btn">{{ promo_bar_link.link_label|default:"Sprawdź" }}</a>
+        {% endif %}
+    </div>
+</aside>

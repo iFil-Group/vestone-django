@@ -53,6 +53,13 @@ class PromotionSlideTests(TestCase):
         )
         self.assertEqual([item["text"] for item in get_promotion_slides()], ["Aktywny"])
 
+    def test_three_lines_from_one_slide(self):
+        PromotionSlide.objects.create(text="Raz\nDwa\nTrzy\nCztery", is_active=True)
+        self.assertEqual(
+            [item["text"] for item in get_promotion_slides()],
+            ["Raz", "Dwa", "Trzy"],
+        )
+
 
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
@@ -89,6 +96,26 @@ class FormWidgetTests(TestCase):
         self.assertEqual(FormSubmission.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["test@example.com"])
+
+    def test_missing_fields_show_warnings(self):
+        response = self.client.post(self.url, {"consent": "on"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Podaj imię.")
+        self.assertContains(response, "Podaj nazwisko.")
+        self.assertEqual(FormSubmission.objects.count(), 0)
+
+    def test_catalog_page_is_available(self):
+        FormWidget.objects.create(
+            slug="zamow-katalog",
+            title="Zamów katalog",
+            recipient_email="katalog@example.com",
+            consent_text="Wyrażam zgodę.",
+            is_active=True,
+        )
+        response = self.client.get("/zamow-katalog/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Imię*")
+        self.assertContains(response, "Zamów")
 
 
 class ProductExtensionsTests(TestCase):

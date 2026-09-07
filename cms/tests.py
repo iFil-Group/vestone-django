@@ -1,11 +1,12 @@
-from datetime import date
+from datetime import date, datetime
 
 from django.core.management import call_command
 from django.test import TestCase
+from django.utils import timezone
 
-from .forms import HeroSlideForm, ProductForm, ProductPinFormSet
-from .models import HeroSlide, Product, ProductGalleryImage, ProductGroup, ProductPin, Tip
-from .services import get_hero_slides
+from .forms import HeroSlideForm, ProductForm, ProductPinFormSet, PromotionSlideForm
+from .models import HeroSlide, Product, ProductGalleryImage, ProductGroup, ProductPin, PromotionSlide, Tip
+from .services import get_hero_slides, get_promotion_slides, promotion_text_lines
 from .widgets import RichTextWidget
 
 
@@ -185,6 +186,53 @@ class SeedCatalogProductsTests(TestCase):
         )
         self.assertTrue(
             Product.objects.filter(group__slug="beton-towarowy", slug="beton-towarowy").exists()
+        )
+
+
+class PromotionSlideFormTests(TestCase):
+    def test_dates_stay_visible_when_editing(self):
+        start = timezone.make_aware(datetime(2026, 9, 1, 10, 30))
+        end = timezone.make_aware(datetime(2026, 9, 30, 18, 0))
+        slide = PromotionSlide.objects.create(
+            text="Linia A\nLinia B",
+            link_label="Zamów",
+            link_url="/zamow-katalog/",
+            active_from=start,
+            active_until=end,
+        )
+        form = PromotionSlideForm(instance=slide)
+        self.assertEqual(form.fields["line_1"].initial, "Linia A")
+        self.assertEqual(form.fields["line_2"].initial, "Linia B")
+        html = form.as_p()
+        self.assertIn('value="2026-09-01"', html)
+        self.assertIn('value="2026-09-30"', html)
+
+    def test_three_lines_are_saved_and_rotated(self):
+        form = PromotionSlideForm(
+            data={
+                "line_1": "Pierwsza",
+                "line_2": "Druga",
+                "line_3": "Trzecia",
+                "link_label": "Sprawdź",
+                "link_url": "/zamow-katalog/",
+                "active_from": "2026-09-01",
+                "active_until": "2026-12-31",
+                "sort_order": 0,
+                "is_active": "on",
+            }
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        slide = form.save()
+        self.assertEqual(slide.text, "Pierwsza\nDruga\nTrzecia")
+        self.assertEqual(
+            [item["text"] for item in get_promotion_slides()],
+            ["Pierwsza", "Druga", "Trzecia"],
+        )
+
+    def test_html_text_splits_into_plain_lines(self):
+        self.assertEqual(
+            promotion_text_lines("<p>Raz</p><p>Dwa</p><p>Trzy</p><p>Cztery</p>"),
+            ["Raz", "Dwa", "Trzy"],
         )
 
 

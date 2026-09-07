@@ -172,6 +172,20 @@ def get_hero_slides():
     return payload
 
 
+def promotion_text_lines(value, limit=3):
+    import html
+    import re
+
+    from django.utils.html import strip_tags
+
+    raw = value or ""
+    raw = re.sub(r"<br\s*/?>", "\n", raw, flags=re.I)
+    raw = re.sub(r"</(?:p|div|li)\s*>", "\n", raw, flags=re.I)
+    raw = html.unescape(strip_tags(raw))
+    lines = [part.strip() for part in re.split(r"[\r\n]+", raw)]
+    return [line for line in lines if line][:limit]
+
+
 def get_promotion_slides():
     from django.db.models import Q
     from django.utils import timezone
@@ -182,10 +196,50 @@ def get_promotion_slides():
         Q(active_from__isnull=True) | Q(active_from__lte=now),
         Q(active_until__isnull=True) | Q(active_until__gte=now),
     )
-    return [
-        {"text": item.text, "link_label": item.link_label, "link_url": item.link_url}
-        for item in slides[:3]
-    ]
+    lines = []
+    for item in slides:
+        for line in promotion_text_lines(item.text):
+            lines.append(
+                {
+                    "text": line,
+                    "link_label": item.link_label,
+                    "link_url": item.link_url,
+                }
+            )
+            if len(lines) >= 3:
+                return lines
+    return lines
+
+
+PROMO_SEEN_TTL = 3 * 24 * 60 * 60
+
+
+def client_ip(request):
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR") or ""
+
+
+def promo_seen_cache_key(kind, pk, ip):
+    import hashlib
+
+    digest = hashlib.sha256(f"{kind}:{pk}:{ip}".encode()).hexdigest()[:40]
+    return f"promo-seen:{digest}"
+
+
+def unseen_floating_promotions(request):
+    from django.core.cache import cache
+
+    visible = []
+    ip = client_ip(request)
+    for promo in get_floating_promotions():
+        key = promo_seen_cache_key(promo["placement"], promo["id"], ip)
+        if cache.get(key):
+            continue
+        visible.append(promo)
+        cache.set(key, 1, PROMO_SEEN_TTL)
+    return visible
 
 
 def _website_href(value):

@@ -1146,7 +1146,7 @@
     top:50%;
     transform:translate(110%, -50%);
     max-width:min(12rem, 30vw);
-    transition: transform 0.55s ease;
+    transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .floating-promo--side.is-visible { transform:translate(0, -50%); }
 .floating-promo--side.is-hiding { transform:translate(110%, -50%); }

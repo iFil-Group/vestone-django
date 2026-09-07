@@ -366,11 +366,19 @@ class Command(BaseCommand):
             slug="zamow-katalog",
             defaults={
                 "title": "Zamów katalog",
-                "description": "<p>Wypełnij formularz, a wyślemy katalog.</p>",
+                "description": (
+                    "<p>Wyjątkowe, dekoracyjne płyty MUSSO uszlachetnione SILCO Elite "
+                    "doskonale sprawdzają się na tarasach, patio czy na ścieżkach wokół domu "
+                    "i w ogrodzie. Zapraszamy do zamówienia bezpłatnego katalogu.</p>"
+                ),
                 "recipient_email": "informacja@vestone.pl",
-                "required_fields_text": "<p>Pola oznaczone gwiazdką są obowiązkowe.</p>",
-                "consent_text": "Wyrażam zgodę na przetwarzanie danych osobowych w celu realizacji zamówienia katalogu.",
-                "thanks_text": "<p>Dziękujemy. Skontaktujemy się w sprawie wysyłki katalogu.</p>",
+                "required_fields_text": "<p>Pola oznaczone* są obowiązkowe.</p>",
+                "consent_text": (
+                    "Wyrażam zgodę na przetwarzanie moich danych osobowych w celu otrzymania "
+                    "informacji handlowej dotyczącej dekoracyjnych płyt Musso (katalog). "
+                    "Wysyłka katalogu jest bezpłatna."
+                ),
+                "thanks_text": "<p>Dziękujemy za zamówienie. Skontaktujemy się w sprawie wysyłki katalogu.</p>",
                 "is_active": True,
             },
         )

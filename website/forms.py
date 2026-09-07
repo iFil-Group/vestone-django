@@ -6,7 +6,11 @@ from cms.models import FormSubmission, JobApplication
 
 
 class WidgetSubmissionForm(forms.ModelForm):
-    consent = forms.BooleanField(required=True, label="Zgoda")
+    consent = forms.BooleanField(
+        required=True,
+        label="Zgoda",
+        error_messages={"required": "Zaznacz zgodę, aby zamówić katalog."},
+    )
 
     class Meta:
         model = FormSubmission
@@ -23,12 +27,23 @@ class WidgetSubmissionForm(forms.ModelForm):
             "city": forms.TextInput(attrs={"autocomplete": "address-level2"}),
             "company": forms.TextInput(attrs={"autocomplete": "organization"}),
         }
+        error_messages = {
+            "first_name": {"required": "Podaj imię."},
+            "last_name": {"required": "Podaj nazwisko."},
+            "street": {"required": "Podaj ulicę."},
+            "house_number": {"required": "Podaj numer domu lub mieszkania."},
+            "postal_code": {"required": "Podaj kod pocztowy."},
+            "city": {"required": "Podaj miejscowość."},
+        }
 
     def __init__(self, *args, widget, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance.widget = widget
-        for field in self.fields.values():
-            field.widget.attrs["class"] = "widget-form__input"
+        for name, field in self.fields.items():
+            if name != "consent":
+                field.widget.attrs["class"] = "widget-form__input"
+            if field.required:
+                field.widget.attrs["aria-required"] = "true"
 
 
 class JobApplicationForm(forms.ModelForm):

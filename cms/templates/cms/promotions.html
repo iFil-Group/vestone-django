@@ -4,6 +4,7 @@
 <section class="cms-section">
     <div class="cms-toolbar">
         <h2 class="cms-section__title">Pasek promocyjny</h2>
+        <p class="cms-section__help">Do 3 linijek, które przesuwają się na pasku. Etykieta linku zostaje w miejscu. Daty emisji zostają po ponownym otwarciu edycji.</p>
         <a href="{% url 'cms_promotion_slide_add' %}" class="cms-btn cms-btn--primary">Dodaj komunikat</a>
     </div>
     <div class="cms-table-wrap"><table class="cms-table">
@@ -28,7 +29,15 @@
     <div class="cms-table-wrap"><table class="cms-table">
         <thead><tr><th>Nazwa</th><th>Adres strony</th><th>Zgłoszenia</th><th></th></tr></thead>
         <tbody>{% for item in form_widgets %}<tr>
-            <td>{{ item.title }}</td><td><a href="/formularz/{{ item.slug }}/" target="_blank">/formularz/{{ item.slug }}/</a></td><td>{{ item.submissions.count }}</td>
+            <td>{{ item.title }}</td>
+            <td>
+                {% if item.slug == "zamow-katalog" %}
+                <a href="/zamow-katalog/" target="_blank">/zamow-katalog/</a>
+                {% else %}
+                <a href="/formularz/{{ item.slug }}/" target="_blank">/formularz/{{ item.slug }}/</a>
+                {% endif %}
+            </td>
+            <td>{{ item.submissions.count }}</td>
             <td class="cms-table__actions">
                 <a href="{% url 'cms_form_submissions_export' item.pk %}" class="cms-row-action cms-row-action--edit">Pobierz CSV</a>
                 {% url 'cms_form_widget_edit' item.pk as row_edit_url %}
@@ -42,6 +51,7 @@
 <section class="cms-section">
     <div class="cms-toolbar">
         <h2 class="cms-section__title">Okno dialogowe i widget boczny</h2>
+        <p class="cms-section__help">Widget boczny wysuwa się przy otwarciu i chowa sam. Okno zamyka się krzyżykiem X. Oba pokazują się danemu IP raz na trzy dni.</p>
         <a href="{% url 'cms_floating_promotion_add' %}" class="cms-btn cms-btn--primary">Dodaj widget</a>
     </div>
     <div class="cms-table-wrap"><table class="cms-table">

@@ -66,6 +66,7 @@ def page_breadcrumbs(request):
         "/produkty": [home, {"label": "Produkty", "url": None}],
         "/barwy-i-powierzchnie": [home, {"label": "Barwy i powierzchnie", "url": None}],
         "/gdzie-kupic": [home, {"label": "Gdzie kupić", "url": None}],
+        "/zamow-katalog": [home, {"label": "Zamów katalog", "url": None}],
         "/porady": [home, {"label": "Porady", "url": None}],
         "/do-pobrania": [home, {"label": "Do pobrania", "url": None}],
         "/o-nas/o-firmie": [home, about_parent, {"label": "O firmie", "url": None}],
@@ -165,6 +166,14 @@ def site_settings(request):
 
 
 def site_promotions(request):
-    from cms.services import get_floating_promotions
+    from cms.services import get_promotion_slides, unseen_floating_promotions
 
-    return {"floating_promotions": get_floating_promotions()}
+    promotion_slides = get_promotion_slides()
+    return {
+        "floating_promotions": unseen_floating_promotions(request),
+        "promotion_slides": promotion_slides,
+        "promo_bar_link": next(
+            (item for item in promotion_slides if item.get("link_url")),
+            None,
+        ),
+    }
