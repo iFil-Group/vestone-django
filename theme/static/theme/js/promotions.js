@@ -47,14 +47,37 @@
 
     var bar = document.querySelector("[data-promo-bar]");
     if (bar) {
-        var lines = bar.querySelectorAll("[data-promo-line]");
+        var lines = Array.prototype.slice.call(bar.querySelectorAll("[data-promo-line]"));
         var lineIndex = 0;
+        var animating = false;
+
+        function resetSlide(slide) {
+            slide.classList.add("is-reset");
+            slide.classList.remove("is-leaving", "is-active");
+            void slide.offsetWidth;
+            slide.classList.remove("is-reset");
+        }
+
+        function goTo(nextIndex) {
+            if (animating || nextIndex === lineIndex) return;
+            animating = true;
+            var outgoing = lines[lineIndex];
+            var incoming = lines[nextIndex];
+            resetSlide(incoming);
+            outgoing.classList.remove("is-active");
+            outgoing.classList.add("is-leaving");
+            incoming.classList.add("is-active");
+            lineIndex = nextIndex;
+            window.setTimeout(function () {
+                resetSlide(outgoing);
+                animating = false;
+            }, 820);
+        }
+
         if (lines.length > 1) {
             window.setInterval(function () {
-                lines[lineIndex].classList.remove("is-active");
-                lineIndex = (lineIndex + 1) % lines.length;
-                lines[lineIndex].classList.add("is-active");
-            }, 3500);
+                goTo((lineIndex + 1) % lines.length);
+            }, 3800);
         }
     }
 

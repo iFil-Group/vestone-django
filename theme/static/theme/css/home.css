@@ -41,7 +41,7 @@
 
 .home-announce__inner {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
     gap: 0.65rem 1.25rem;
@@ -53,7 +53,10 @@
 
 .home-announce__text {
     margin: 0;
-    flex: 0 1 auto;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 0.92rem;
     line-height: 1.45;
 }
@@ -1028,9 +1031,6 @@
 
 /* —— Extended homepage modules —— */
 .home-announce.is-hidden { display:none; }
-.home-announce__rotator { min-width: min(28rem, 100%); }
-.home-announce__slide { display:none; }
-.home-announce__slide.is-active { display:block; }
 .home-announce__text > :first-child,
 .rich-text > :first-child { margin-top:0; }
 .home-announce__text > :last-child,
