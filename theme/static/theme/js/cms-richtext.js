@@ -13,9 +13,12 @@
         UL: true,
         OL: true,
         LI: true,
+        H1: true,
         H2: true,
         H3: true,
         H4: true,
+        H5: true,
+        H6: true,
         BLOCKQUOTE: true,
         DIV: true,
         SPAN: true,
@@ -152,7 +155,17 @@
             sync();
         });
 
+        function applyBlock(tag) {
+            editor.focus();
+            var applied = document.execCommand("formatBlock", false, tag);
+            if (!applied) {
+                document.execCommand("formatBlock", false, "<" + tag + ">");
+            }
+            sync();
+        }
+
         toolbar.addEventListener("mousedown", function (event) {
+            if (event.target.closest("select")) return;
             var button = event.target.closest("[data-command]");
             if (!button) return;
             event.preventDefault();
@@ -162,7 +175,7 @@
             if (command === "nbsp") {
                 document.execCommand("insertHTML", false, "&nbsp;");
             } else if (command === "formatBlock") {
-                document.execCommand("formatBlock", false, button.dataset.value || "h2");
+                applyBlock(button.dataset.value || "p");
             } else if (command === "createLink") {
                 var url = window.prompt("Adres linku:");
                 if (url) document.execCommand("createLink", false, url);
@@ -171,5 +184,12 @@
             }
             sync();
         });
+
+        var headingSelect = toolbar.querySelector("[data-heading-select]");
+        if (headingSelect) {
+            headingSelect.addEventListener("change", function () {
+                applyBlock(headingSelect.value || "p");
+            });
+        }
     });
 })();

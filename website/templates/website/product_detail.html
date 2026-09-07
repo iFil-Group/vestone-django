@@ -4,8 +4,8 @@
 {% block title %}{{ product.title }} — Vestone{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260904a">
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260907d">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260907d">
 {% endblock %}
 
 {% block main %}
@@ -56,8 +56,6 @@
                                 class="product-gallery__img"
                                 src="{{ image.image|default:placeholder_img }}"
                                 alt="{{ image.alt }}"
-                                width="960"
-                                height="600"
                                 loading="lazy"
                             >
                             {% for pin in image.pins %}
@@ -182,7 +180,6 @@
 
     {% include "website/partials/home_section_map.html" with placeholder_img=placeholder_img section_id="product-map-heading" %}
     {% include "website/partials/home_section_tips.html" with placeholder_img=placeholder_img section_id="product-tips-heading" %}
-    {% include "website/partials/home_section_contact.html" with placeholder_img=placeholder_img section_id="product-contact-heading" contact_section=contact_section %}
 </div>
 {% endblock %}
 

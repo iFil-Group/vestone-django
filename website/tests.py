@@ -240,6 +240,7 @@ class HomePageDisplayTests(TestCase):
         self.assertNotContains(response, "home-hero__arrow")
         self.assertContains(response, "home-hero__dots")
         self.assertNotContains(response, "home-contact__bg")
+        self.assertNotContains(response, 'class="home-contact"')
 
     def test_image_only_slide_hides_overlay(self):
         HeroSlide.objects.create(title="", lead="", is_active=True)
@@ -260,13 +261,16 @@ class WhereToBuyFiltersTests(TestCase):
 
 @override_settings(SITE_ACCESS_ENABLED=False)
 class ProductContactSectionTests(TestCase):
-    def test_product_page_has_no_dummy_contact_form(self):
+    def test_product_page_has_homepage_map_and_footer_contact(self):
         group = ProductGroup.objects.create(title="Płyty", slug="plyty-e2e")
         Product.objects.create(group=group, title="E2E", slug="e2e", is_active=True)
         response = self.client.get("/produkty/plyty-e2e/e2e/")
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'action="#"')
         self.assertNotContains(response, "Wyślij wiadomość")
+        self.assertNotContains(response, 'class="home-contact"')
+        self.assertContains(response, "Gdzie kupić")
+        self.assertContains(response, "home-map")
         self.assertContains(response, "Kontakt")
 
 

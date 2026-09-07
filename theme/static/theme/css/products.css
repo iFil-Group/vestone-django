@@ -668,6 +668,16 @@
     color: var(--vestone-gray);
 }
 
+.product-detail__text h1,
+.product-detail__extra h1,
+.product-tech__value h1 {
+    margin: 1.5rem 0 0.6rem;
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--vestone-gray-deep, #374650);
+}
+
 .product-detail__text h2,
 .product-detail__extra h2,
 .product-tech__value h2 {
@@ -688,10 +698,34 @@
     color: var(--vestone-gray-deep, #374650);
 }
 
+.product-detail__text h4,
+.product-detail__extra h4,
+.product-tech__value h4,
+.product-detail__text h5,
+.product-detail__extra h5,
+.product-tech__value h5,
+.product-detail__text h6,
+.product-detail__extra h6,
+.product-tech__value h6 {
+    margin: 1rem 0 0.35rem;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--vestone-gray-deep, #374650);
+}
+
+.product-detail__text h1:first-child,
+.product-detail__extra h1:first-child,
 .product-detail__text h2:first-child,
 .product-detail__extra h2:first-child,
 .product-detail__text h3:first-child,
-.product-detail__extra h3:first-child {
+.product-detail__extra h3:first-child,
+.product-detail__text h4:first-child,
+.product-detail__extra h4:first-child,
+.product-detail__text h5:first-child,
+.product-detail__extra h5:first-child,
+.product-detail__text h6:first-child,
+.product-detail__extra h6:first-child {
     margin-top: 0;
 }
 
@@ -898,6 +932,7 @@
 
 .product-gallery__track {
     display: flex;
+    align-items: flex-start;
     gap: var(--product-gallery-gap);
     will-change: transform;
 }
@@ -910,8 +945,8 @@
 .product-gallery__img {
     display: block;
     width: 100%;
-    aspect-ratio: 16 / 10;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
     object-position: center;
     border-radius: 3px;
     background: #f0f2f4;
@@ -1131,9 +1166,12 @@
 }
 
 /* Home sections on product page */
+.product-detail {
+    padding-bottom: 3.5rem;
+}
+
 .product-page .home-map,
-.product-page .home-tips,
-.product-page .home-contact {
+.product-page .home-tips {
     margin-top: 0;
 }
 

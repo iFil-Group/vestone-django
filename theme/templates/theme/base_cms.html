@@ -8,12 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'theme/css/cms.css' %}">
+    <link rel="stylesheet" href="{% static 'theme/css/cms.css' %}?v=20260907d">
     {% block extra_head %}{% endblock %}
 </head>
 <body class="cms-body {% block body_class %}{% endblock %}">
     {% block body %}{% endblock %}
-    <script src="{% static 'theme/js/cms-richtext.js' %}?v=20260904e" defer></script>
+    <script src="{% static 'theme/js/cms-richtext.js' %}?v=20260907d" defer></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

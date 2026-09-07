@@ -4,7 +4,7 @@
 {% block title %}Vestone — kostka brukowa, płyty tarasowe, mała architektura{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260907a">
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260907d">
 {% endblock %}
 
 {% block main %}
@@ -123,35 +123,7 @@
         </div>
     </section>
 
-    <section class="home-map" aria-labelledby="home-map-heading">
-        <div class="home-map__media-wrap">
-            <img class="home-map__media" src="{{ map_section.image|default:placeholder_img }}" alt="" width="1600" height="700">
-        </div>
-        <div class="home-map__panel">
-            <div class="home-map__box">
-                <h2 class="home-map__title" id="home-map-heading">{{ map_section.title|default:"Gdzie kupić" }}</h2>
-                <div class="home-map__text rich-text">{{ map_section.body|safe }}</div>
-                <div class="home-map__points">
-                    {% for point in sales_points %}
-                    <article class="home-map-point">
-                        <h3><img src="{% static point.pin %}" alt=""> {{ point.name }}</h3>
-                        {% if point.city or point.voivodeship_label %}
-                        <p class="home-map-point__region">{% if point.city %}{{ point.city }}{% endif %}{% if point.city and point.voivodeship_label %}, {% endif %}{% if point.voivodeship_label %}woj. {{ point.voivodeship_label }}{% endif %}</p>
-                        {% endif %}
-                        <address>{{ point.address }}</address>
-                        {% if point.phone %}<a class="home-map-point__plain" href="tel:{{ point.phone }}">{{ point.phone }}</a>{% endif %}
-                        {% if point.email %}<a class="home-map-point__plain" href="mailto:{{ point.email }}">{{ point.email }}</a>{% endif %}
-                        <div>{% if point.website_href %}<a href="{{ point.website_href }}" target="_blank" rel="noopener">Strona</a>{% endif %} {% if point.route_url %}<a href="{{ point.route_url }}" target="_blank" rel="noopener">Wyznacz trasę</a>{% endif %}</div>
-                    </article>
-                    {% empty %}<p>Brak punktów sprzedaży.</p>{% endfor %}
-                </div>
-                <div class="home-map__legend">
-                    <span><img src="{% static 'img/pin-grey.png' %}" alt=""> Punkty sprzedające pełną ofertę produktów</span>
-                    <span><img src="{% static 'img/pin-red.png' %}" alt=""> Punkty sprzedające wyłącznie płyty dekoracyjne MUSSO</span>
-                </div>
-            </div>
-        </div>
-    </section>
+    {% include "website/partials/home_section_map.html" %}
 
     <section class="home-tips" aria-labelledby="home-tips-heading" data-card-carousel>
         <div class="home-tips__inner">
@@ -174,14 +146,6 @@
         </div>
     </section>
 
-    <section class="home-contact" id="kontakt" aria-labelledby="home-contact-heading">
-        <div class="home-contact__inner">
-            <div class="home-contact__intro">
-                {% include "website/partials/section_heading.html" with title=contact_section.title id="home-contact-heading" %}
-                <div class="home-contact__lead rich-text">{{ contact_section.body|safe }}</div>
-            </div>
-        </div>
-    </section>
 </div>
 {% endblock %}
 

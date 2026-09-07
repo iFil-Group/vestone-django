@@ -3,9 +3,19 @@
         <button type="button" data-command="bold" title="Pogrubienie"><strong>B</strong></button>
         <button type="button" data-command="italic" title="Kursywa"><em>I</em></button>
         {% if not widget.compact %}
+        <label class="cms-richtext__block">
+            <span class="visually-hidden">Styl akapitu</span>
+            <select data-heading-select aria-label="Styl akapitu">
+                <option value="p">Paragraf</option>
+                <option value="h1">Nagłówek 1</option>
+                <option value="h2">Nagłówek 2</option>
+                <option value="h3">Nagłówek 3</option>
+                <option value="h4">Nagłówek 4</option>
+                <option value="h5">Nagłówek 5</option>
+                <option value="h6">Nagłówek 6</option>
+            </select>
+        </label>
         <button type="button" data-command="superscript" title="Indeks górny">x²</button>
-        <button type="button" data-command="formatBlock" data-value="h2" title="Nagłówek 2">H2</button>
-        <button type="button" data-command="formatBlock" data-value="h3" title="Nagłówek 3">H3</button>
         <button type="button" data-command="underline" title="Podkreślenie"><u>U</u></button>
         <button type="button" data-command="insertUnorderedList" title="Lista punktowana">• Lista</button>
         <button type="button" data-command="insertOrderedList" title="Lista numerowana">1. Lista</button>

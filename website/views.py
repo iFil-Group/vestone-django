@@ -165,6 +165,7 @@ def product_detail(request, category_slug, product_slug):
         get_placeholder,
         get_product_group,
         get_related_products,
+        get_sales_points,
         resolve_product,
     )
 
@@ -199,15 +200,14 @@ def product_detail(request, category_slug, product_slug):
             "product": product,
             "related_products": related,
             "placeholder_img": get_placeholder(),
-            "contact_section": get_content_block(
-                "home-contact",
+            "sales_points": get_sales_points(),
+            "map_section": get_content_block(
+                "home-map",
                 {
-                    "title": "Kontakt",
-                    "body": (
-                        "<p><strong>DZIAŁ HANDLOWY i DZIAŁ KSIĘGOWY</strong><br>"
-                        '<a href="tel:+48227555440">48 755 54 40</a><br>'
-                        '<a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a></p>'
-                    ),
+                    "title": "Gdzie kupić",
+                    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                    "button_label": "Sprawdź",
+                    "button_url": "/gdzie-kupic/",
                     "image": get_placeholder(),
                 },
             ),
