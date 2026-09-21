@@ -287,8 +287,23 @@ body.cms-body--panel {
     border-bottom: none;
 }
 
+.cms-card.is-collapsed {
+    position: relative;
+}
+
 .cms-card.is-collapsed .cms-card__body {
-    display: none;
+    /* Keep inputs in the form. display:none drops file fields and checkboxes in WebKit. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
 }
 
 .cms-card.is-collapsed .cms-card__chevron {

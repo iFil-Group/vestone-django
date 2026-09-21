@@ -8,7 +8,13 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .forms import HeroSlideForm, ProductForm, ProductPinFormSet, PromotionSlideForm
+from .forms import (
+    HeroSlideForm,
+    ProductForm,
+    ProductGalleryFormSet,
+    ProductPinFormSet,
+    PromotionSlideForm,
+)
 from .models import (
     FloatingPromotion,
     HeroSlide,
@@ -161,6 +167,33 @@ class ProductGalleryPinFormSetTests(TestCase):
         self.assertEqual(pin.gallery_image_id, self.gallery.pk)
         self.gallery.refresh_from_db()
         self.assertTrue(self.gallery.pins_enabled)
+
+
+class ProductGallerySaveTests(TestCase):
+    def test_new_gallery_file_is_kept(self):
+        group = ProductGroup.objects.create(title="Grupa", slug="grupa-galeria")
+        product = Product.objects.create(group=group, title="Cento", slug="cento-galeria")
+        gif = (
+            b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00"
+            b"\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00"
+            b"\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+        )
+        data = {
+            "gallery-TOTAL_FORMS": "1",
+            "gallery-INITIAL_FORMS": "0",
+            "gallery-MIN_NUM_FORMS": "0",
+            "gallery-MAX_NUM_FORMS": "1000",
+            "gallery-0-alt": "Cento taras",
+            "gallery-0-sort_order": "0",
+        }
+        files = {
+            "gallery-0-image": SimpleUploadedFile("cento.gif", gif, content_type="image/gif"),
+        }
+        formset = ProductGalleryFormSet(data, files, instance=product, prefix="gallery")
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        self.assertEqual(product.gallery.count(), 1)
+        self.assertTrue(product.gallery.first().image)
 
 
 class HeroSlideDisplayTests(TestCase):

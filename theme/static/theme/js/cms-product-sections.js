@@ -22,6 +22,14 @@
         return Boolean(card.querySelector(".cms-field__error, .cms-form-errors, .cms-pin-row--error"));
     }
 
+    function cardHasMedia(card) {
+        return Boolean(
+            card.querySelector(
+                ".cms-file--has-file, [data-cms-file-existing-preview], [data-gallery-tile], [data-packshot-tile], [data-color-tile]"
+            )
+        );
+    }
+
     function initCard(card) {
         if (card.dataset.cmsCollapseReady === "1") {
             return;
@@ -33,8 +41,8 @@
             return;
         }
 
-        // Default: collapsed, unless the card contains validation errors.
-        setCollapsed(card, !cardHasErrors(card));
+        var wantsCollapsed = card.classList.contains("is-collapsed");
+        setCollapsed(card, wantsCollapsed && !cardHasErrors(card) && !cardHasMedia(card));
 
         head.addEventListener("click", function (event) {
             if (event.target.closest("a, input, select, textarea, label")) {
@@ -47,6 +55,19 @@
 
     function init(root) {
         (root || document).querySelectorAll(".cms-product-form .cms-card").forEach(initCard);
+    }
+
+    var form = document.getElementById("product-form");
+    if (form) {
+        form.addEventListener(
+            "submit",
+            function () {
+                form.querySelectorAll(".cms-card.is-collapsed").forEach(function (card) {
+                    setCollapsed(card, false);
+                });
+            },
+            true
+        );
     }
 
     if (document.readyState === "loading") {
