@@ -195,6 +195,71 @@ class ProductGallerySaveTests(TestCase):
         self.assertEqual(product.gallery.count(), 1)
         self.assertTrue(product.gallery.first().image)
 
+    def test_gallery_is_saved_when_pins_are_invalid(self):
+        from django.test import override_settings
+
+        group = ProductGroup.objects.create(title="Kostka", slug="kostka-brukowa-test")
+        product = Product.objects.create(
+            group=group, title="CORTINA", slug="kostka-brukowa-cortina-test", is_active=True
+        )
+        user = get_user_model().objects.create_user("cms-cortina", "cortina@example.com", "pass")
+        gif = (
+            b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00"
+            b"\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00"
+            b"\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+        )
+        self.client.force_login(user)
+        payload = {
+            "card_type": Product.CARD_STANDARD,
+            "group": str(group.pk),
+            "title": product.title,
+            "slug": product.slug,
+            "subtitle": "",
+            "description": "",
+            "description_extra": "",
+            "show_main_image": "on",
+            "packshot_columns": "2",
+            "show_related_products": "on",
+            "sort_order": "0",
+            "is_active": "on",
+            "tech_packs_json": "[]",
+            "attributes-TOTAL_FORMS": "0",
+            "attributes-INITIAL_FORMS": "0",
+            "attributes-MIN_NUM_FORMS": "0",
+            "attributes-MAX_NUM_FORMS": "1000",
+            "pins-TOTAL_FORMS": "1",
+            "pins-INITIAL_FORMS": "0",
+            "pins-MIN_NUM_FORMS": "0",
+            "pins-MAX_NUM_FORMS": "1000",
+            "pins-0-x": "10",
+            "pins-0-y": "10",
+            "pins-0-text": "",
+            "pins-0-sort_order": "0",
+            "gallery-TOTAL_FORMS": "1",
+            "gallery-INITIAL_FORMS": "0",
+            "gallery-MIN_NUM_FORMS": "0",
+            "gallery-MAX_NUM_FORMS": "1000",
+            "gallery-0-alt": "Cortina",
+            "gallery-0-sort_order": "0",
+            "packshots-TOTAL_FORMS": "0",
+            "packshots-INITIAL_FORMS": "0",
+            "packshots-MIN_NUM_FORMS": "0",
+            "packshots-MAX_NUM_FORMS": "1000",
+            "colors-TOTAL_FORMS": "0",
+            "colors-INITIAL_FORMS": "0",
+            "colors-MIN_NUM_FORMS": "0",
+            "colors-MAX_NUM_FORMS": "1000",
+            "gallery-0-image": SimpleUploadedFile("cortina.gif", gif, content_type="image/gif"),
+        }
+        with override_settings(SITE_ACCESS_ENABLED=False):
+            response = self.client.post(
+                reverse("cms_product_edit", args=[product.pk]),
+                payload,
+            )
+        product.refresh_from_db()
+        self.assertEqual(product.gallery.count(), 1)
+        self.assertContains(response, "Zdjęcia zostały zapisane")
+
 
 class HeroSlideDisplayTests(TestCase):
     def test_form_title_uses_compact_rich_text(self):

@@ -27,6 +27,27 @@
         {% for error in gallery_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
         {% for error in packshot_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
         {% for error in color_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% if gallery_formset.is_bound %}
+            {% for form_errors in gallery_formset.errors %}
+                {% for field, messages in form_errors.items %}
+                    {% for error in messages %}<p class="cms-field__error">Galeria: {{ error }}</p>{% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+        {% if packshot_formset.is_bound %}
+            {% for form_errors in packshot_formset.errors %}
+                {% for field, messages in form_errors.items %}
+                    {% for error in messages %}<p class="cms-field__error">Packshot: {{ error }}</p>{% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+        {% if color_formset.is_bound %}
+            {% for form_errors in color_formset.errors %}
+                {% for field, messages in form_errors.items %}
+                    {% for error in messages %}<p class="cms-field__error">Kolor: {{ error }}</p>{% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
     </div>
     {% endif %}
 

@@ -208,37 +208,47 @@ def product_edit(request, pk=None):
         tech_packs_ok, tech_packs_data = _parse_tech_packs_payload(
             request.POST.get("tech_packs_json")
         )
-
-        if (
-            form_valid
-            and attribute_formset.is_valid()
-            and pin_formset.is_valid()
-            and gallery_formset.is_valid()
+        media_ok = (
+            gallery_formset.is_valid()
             and packshot_formset.is_valid()
             and color_formset.is_valid()
+        )
+        extras_ok = (
+            attribute_formset.is_valid()
+            and pin_formset.is_valid()
             and tech_packs_ok
-        ):
+        )
+
+        if form_valid and media_ok:
             from django.db import transaction
 
             from cms.services import save_product_tech_packs
 
             with transaction.atomic():
                 product = form.save()
-                attribute_formset.instance = product
-                pin_formset.instance = product
                 gallery_formset.instance = product
                 packshot_formset.instance = product
                 color_formset.instance = product
-                attribute_formset.save()
                 gallery_formset.save()
                 packshot_formset.save()
                 color_formset.save()
-                # Resolve pins aimed at not-yet-saved gallery tiles (pending:N).
-                pin_formset.apply_pending_gallery_images(gallery_formset)
-                pin_formset.save()
-                save_product_tech_packs(product, tech_packs_data)
-            messages.success(request, "Produkt został zapisany.")
-            return redirect("cms_product_edit", pk=product.pk)
+                if extras_ok:
+                    attribute_formset.instance = product
+                    pin_formset.instance = product
+                    attribute_formset.save()
+                    pin_formset.apply_pending_gallery_images(gallery_formset)
+                    pin_formset.save()
+                    save_product_tech_packs(product, tech_packs_data)
+            if extras_ok:
+                messages.success(request, "Produkt został zapisany.")
+                return redirect("cms_product_edit", pk=product.pk)
+            messages.warning(
+                request,
+                "Zdjęcia zostały zapisane. Popraw błędy w pozostałych sekcjach i zapisz ponownie.",
+            )
+            gallery_formset = ProductGalleryFormSet(instance=product, prefix="gallery")
+            packshot_formset = ProductPackshotFormSet(instance=product, prefix="packshots")
+            color_formset = ProductColorFormSet(instance=product, prefix="colors")
         if not tech_packs_ok:
             messages.error(request, "Nie udało się odczytać danych technicznych.")
     else:
