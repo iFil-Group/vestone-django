@@ -89,6 +89,7 @@
                     <th>Nazwa</th>
                     <th>Kategoria</th>
                     <th>Slug</th>
+                    <th>Kolejność</th>
                     <th></th>
                 </tr>
             </thead>
@@ -98,6 +99,7 @@
                     <td>{{ item.title }}</td>
                     <td>{{ item.group.title }}</td>
                     <td>{{ item.slug }}</td>
+                    <td>{{ item.sort_order }}</td>
                     <td class="cms-table__actions">
                         {% url 'cms_product_edit' item.pk as row_edit_url %}
                         {% url 'cms_delete' 'product' item.pk as row_delete_url %}

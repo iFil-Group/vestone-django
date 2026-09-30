@@ -57,7 +57,7 @@
         {% include "cms/partials/card_head.html" with title="Podstawowe informacje" intro="Nazwa, kategoria, opisy i ustawienia publikacji produktu. Kategorię ustawiasz polem Kategoria." %}
         <div class="cms-card__body">
             {% for field in form %}
-                {% if field.name != "image" and field.name != "related_products" and field.name != "show_related_products" and field.name != "card_type" and field.name != "description_extra" and field.name != "show_main_image" and field.name != "show_packshot" and field.name != "packshot_columns" %}
+                {% if field.name != "image" and field.name != "related_products" and field.name != "related_tips" and field.name != "show_related_products" and field.name != "card_type" and field.name != "description_extra" and field.name != "show_main_image" and field.name != "show_packshot" and field.name != "packshot_columns" %}
                 {% include "cms/partials/field.html" with field=field %}
                 {% endif %}
             {% endfor %}
@@ -182,6 +182,13 @@
         {% include "cms/partials/card_head.html" with title="Dane techniczne" intro="Paczki niezależne od atrybutów. Każda ma nazwę i listę „Etykieta: Wartość”. Możesz kopiować paczkę albo wczytać dane z innego produktu." %}
         <div class="cms-card__body">
             {% include "cms/partials/tech_packs_editor.html" %}
+        </div>
+    </section>
+
+    <section class="cms-card is-collapsed" data-standard-only>
+        {% include "cms/partials/card_head.html" with title="Porady na karcie produktu" intro="Zaznacz porady, które mają pojawić się pod produktem. Bez zaznaczenia sekcja się nie wyświetli." %}
+        <div class="cms-card__body">
+            {% include "cms/partials/field.html" with field=form.related_tips %}
         </div>
     </section>
 

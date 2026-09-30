@@ -8,6 +8,7 @@
     var list = root.querySelector("[data-where-list]");
     var empty = root.querySelector("[data-where-empty]");
     var mapEl = root.querySelector("[data-where-map]");
+    var mapHint = root.querySelector("[data-where-map-hint]");
     if (!form || !list || !mapEl) return;
 
     var points = Array.prototype.slice.call(root.querySelectorAll("[data-where-point]"));
@@ -22,6 +23,8 @@
             maxZoom: 18,
             attribution: "&copy; OpenStreetMap",
         }).addTo(map);
+    } else if (mapHint) {
+        mapHint.hidden = false;
     }
 
     function filters() {
@@ -108,6 +111,9 @@
 
         if (empty) empty.hidden = visible.length > 0;
         syncFieldStates();
+        if (mapHint) {
+            mapHint.hidden = Boolean(map && bounds.length);
+        }
         if (!map) return;
         if (bounds.length === 1) {
             map.setView(bounds[0], 12);

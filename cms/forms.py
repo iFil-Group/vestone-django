@@ -124,6 +124,7 @@ class ContentBlockForm(StyledModelForm):
             "image",
             "button_label",
             "button_url",
+            "sort_order",
             "is_active",
         )
 
@@ -148,9 +149,15 @@ class HeroSlideForm(StyledModelForm):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["mobile_image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["image"].help_text = (
+            "Zdjęcie desktop: 1920×1080 px (proporcja 16:9, kadrowanie cover)."
+        )
+        self.fields["mobile_image"].help_text = (
+            "Zdjęcie mobile: 768×1024 px (pion, kadrowanie cover na telefonie)."
+        )
         self.fields["video"].widget.attrs.setdefault("accept", "video/mp4,video/webm")
         self.fields["video"].help_text = (
-            "MP4 (H.264) albo WebM, do 20 MB, najlepiej 1920×1080, dźwięk zbędny "
+            "MP4 (H.264) albo WebM, do ok. 120 MB, najlepiej 1920×1080, dźwięk zbędny "
             "(film odtwarza się wyciszony). Tytuł i lead mogą zostać puste, "
             "jeśli ma być samo zdjęcie albo film."
         )
@@ -181,11 +188,10 @@ class PromotionSlideForm(StyledModelForm):
     line_1 = forms.CharField(
         label="Linia 1",
         required=False,
-        max_length=200,
-        help_text="Na pasku przesuwają się maksymalnie 3 linijki. Etykieta linku zostaje w miejscu.",
+        help_text="Na pasku przesuwają się maksymalnie 3 linijki. Pogrubienie i kursywa dozwolone.",
     )
-    line_2 = forms.CharField(label="Linia 2", required=False, max_length=200)
-    line_3 = forms.CharField(label="Linia 3", required=False, max_length=200)
+    line_2 = forms.CharField(label="Linia 2", required=False)
+    line_3 = forms.CharField(label="Linia 3", required=False)
 
     class Meta:
         model = PromotionSlide
@@ -207,11 +213,14 @@ class PromotionSlideForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         from django.utils import timezone
 
-        from cms.services import promotion_text_lines
+        from cms.services import promotion_richtext_lines
 
         super().__init__(*args, **kwargs)
         self.fields["text"].required = False
         self.fields["text"].widget = forms.HiddenInput()
+        for name in ("line_1", "line_2", "line_3"):
+            self.fields[name].widget = RichTextWidget(compact=True)
+            self.fields[name].required = False
         self.fields["link_label"].help_text = (
             "Przycisk zostaje na stałe obok przesuwających się linijek."
         )
@@ -225,7 +234,7 @@ class PromotionSlideForm(StyledModelForm):
         self.fields["active_from"].help_text = "Po zapisie data zostaje w formularzu."
         self.fields["active_until"].help_text = "Po zapisie data zostaje w formularzu."
 
-        lines = promotion_text_lines(self.instance.text) if self.instance.pk else []
+        lines = promotion_richtext_lines(self.instance.text) if self.instance.pk else []
         self.fields["line_1"].initial = lines[0] if len(lines) > 0 else ""
         self.fields["line_2"].initial = lines[1] if len(lines) > 1 else ""
         self.fields["line_3"].initial = lines[2] if len(lines) > 2 else ""
@@ -244,12 +253,16 @@ class PromotionSlideForm(StyledModelForm):
         from django.utils import timezone
 
         cleaned = super().clean()
-        lines = [
-            (cleaned.get("line_1") or "").strip(),
-            (cleaned.get("line_2") or "").strip(),
-            (cleaned.get("line_3") or "").strip(),
-        ]
-        cleaned["text"] = "\n".join(line for line in lines if line)
+        from django.utils.html import strip_tags
+
+        from cms.services import _inline_richtext
+
+        lines = []
+        for key in ("line_1", "line_2", "line_3"):
+            raw = (cleaned.get(key) or "").strip()
+            if strip_tags(raw).strip():
+                lines.append(_inline_richtext(raw))
+        cleaned["text"] = "\n".join(lines)
 
         for name, hour, minute, second in (
             ("active_from", 0, 0, 0),
@@ -308,7 +321,6 @@ class SalesPointForm(StyledModelForm):
             "latitude",
             "longitude",
             "offer_type",
-            "sort_order",
             "is_active",
         )
 
@@ -322,9 +334,10 @@ class SalesPointForm(StyledModelForm):
             "placeholder", "www.przyklad.pl"
         )
         self.fields["sort_name"].help_text = (
-            "Do sortowania alfabetycznego. Zostaw puste, a uzupełni się samo "
-            "(bez PPHU, PHU itd.)."
+            "Lista punktów sortuje się alfabetycznie według tego pola. Zostaw puste, "
+            "a uzupełni się samo (bez PPHU, PHU itd.)."
         )
+        self.fields["email"].widget = forms.Textarea(attrs={"rows": 2, "class": "cms-input"})
         self.fields["latitude"].widget.attrs.setdefault("placeholder", "51.436519")
         self.fields["longitude"].widget.attrs.setdefault("placeholder", "19.225727")
 
@@ -392,6 +405,7 @@ class ProductForm(StyledModelForm):
             "show_packshot",
             "packshot_columns",
             "related_products",
+            "related_tips",
             "show_related_products",
             "sort_order",
             "is_active",
@@ -412,6 +426,13 @@ class ProductForm(StyledModelForm):
             pk=self.instance.pk
         ).select_related("group").order_by("title")
         self.fields["related_products"].widget = forms.MultipleHiddenInput()
+        self.fields["related_tips"].queryset = Tip.objects.filter(is_published=True).order_by(
+            "-published_at", "title"
+        )
+        self.fields["related_tips"].widget = forms.CheckboxSelectMultiple()
+        self.fields["related_tips"].help_text = (
+            "Wybrane porady pojawią się na dole karty produktu."
+        )
         self.fields["show_related_products"].help_text = (
             "Odznacz, jeśli sekcja „Sprawdź inne produkty” ma zniknąć ze strony."
         )
@@ -443,6 +464,10 @@ class ProductAttributeAssignmentForm(StyledModelForm):
         required=False,
         label="Nowa wartość",
         widget=forms.TextInput(attrs={"placeholder": "np. 60 × 60 cm"}),
+    )
+    new_option_icon_display = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
     )
 
     class Meta:
@@ -537,11 +562,15 @@ class ProductAttributeAssignmentForm(StyledModelForm):
             attribute.save(update_fields=["show_in_filters"])
 
         if new_option_value:
-            option, _ = ProductAttributeOption.objects.get_or_create(
+            icon_display = (self.cleaned_data.get("new_option_icon_display") or "").strip()
+            option, created = ProductAttributeOption.objects.get_or_create(
                 attribute=attribute,
                 value=new_option_value,
-                defaults={"sort_order": 0},
+                defaults={"sort_order": 0, "icon_display": icon_display},
             )
+            if not created and icon_display and option.icon_display != icon_display:
+                option.icon_display = icon_display
+                option.save(update_fields=["icon_display"])
         elif option and option.attribute_id != attribute.pk:
             option = ProductAttributeOption.objects.get(pk=option.pk)
 
@@ -760,9 +789,8 @@ class ProductPackshotInlineForm(StyledModelForm):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["sort_order"].widget = forms.HiddenInput()
-        self.fields["caption"].widget.attrs.setdefault(
-            "placeholder", "Opcjonalny podpis pod zdjęciem"
-        )
+        self.fields["caption"].widget = RichTextWidget(compact=True)
+        self.fields["caption"].required = False
 
     def clean(self):
         cleaned = super().clean()
@@ -796,9 +824,8 @@ class ProductColorInlineForm(StyledModelForm):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["sort_order"].widget = forms.HiddenInput()
-        self.fields["caption"].widget.attrs.setdefault(
-            "placeholder", "Nazwa koloru, np. Grafit"
-        )
+        self.fields["caption"].widget = RichTextWidget(compact=True)
+        self.fields["caption"].required = False
 
     def clean(self):
         cleaned = super().clean()
@@ -830,6 +857,14 @@ class SurfaceItemForm(StyledModelForm):
             "slug",
             "surface_type",
             "image",
+            "filter_product_name",
+            "filter_category",
+            "filter_application",
+            "filter_surface",
+            "filter_format",
+            "filter_thickness",
+            "filter_color",
+            "filter_load",
             "sort_order",
             "is_active",
         )
@@ -976,6 +1011,8 @@ class JobOpeningForm(StyledModelForm):
             "excerpt",
             "body",
             "image",
+            "application_email",
+            "sort_order",
             "is_active",
         )
 

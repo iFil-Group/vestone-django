@@ -13,7 +13,7 @@
     <div class="careers__intro rich-text">{{ page_intro.body|safe }}</div>
     {% endif %}
     {% if page_intro.body_extra %}<div class="careers__intro rich-text">{{ page_intro.body_extra|safe }}</div>{% endif %}
-    {% if jobs and page_intro.image %}<img class="careers__empty-banner" src="{{ page_intro.image }}" alt="">{% endif %}
+
     <div class="careers__jobs">
         {% if jobs %}
         <h2 class="careers__jobs-title">Aktualne oferty</h2>
@@ -66,15 +66,21 @@
             </li>
             {% endfor %}
         </ul>
-        {% else %}
-            {% if page_intro.image %}<img class="careers__empty-banner" src="{{ page_intro.image }}" alt="">{% endif %}
         {% endif %}
     </div>
+
+    {% if page_intro.image %}
+    <img class="careers__footer-image" src="{{ page_intro.image }}" alt="">
+    {% endif %}
 </div>
 {% if application_sent %}
-<dialog class="career-modal career-modal--thanks" data-career-thanks>
+<dialog class="career-modal career-modal--thanks" data-career-thanks open>
     <button type="button" class="career-modal__close" data-job-close aria-label="Zamknij">×</button>
-    <p>Dziękujemy za przesłanie zgłoszenia, jednocześnie informujemy, że skontaktujemy się wyłącznie z wybranymi kandydatami.</p>
+    <div class="career-thanks__body rich-text">
+        {% if careers_thanks.body %}{{ careers_thanks.body|safe }}{% else %}
+        <p>Dziękujemy za przesłanie zgłoszenia. Skontaktujemy się wyłącznie z wybranymi kandydatami.</p>
+        {% endif %}
+    </div>
 </dialog>
 {% endif %}
 {% endblock %}

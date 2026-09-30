@@ -86,7 +86,7 @@ def form_widget(request, slug):
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[widget.recipient_email],
-            fail_silently=True,
+            fail_silently=False,
         )
         submitted = True
         form = WidgetSubmissionForm(widget=widget)
@@ -184,11 +184,23 @@ def product_detail(request, category_slug, product_slug):
             permanent=True,
         )
 
+    from cms.models import Product
+
+    product_obj = (
+        Product.objects.filter(group__slug=category_slug, slug=product["slug"])
+        .prefetch_related("related_tips")
+        .first()
+    )
     related = []
-    if product.get("show_related_products", True):
-        related = get_related_products(
-            exclude_slug=product["slug"], category_slug=category_slug
-        )
+    if product.get("show_related_products", True) and product_obj:
+        related = get_related_products(product=product_obj)
+    product_tips = []
+    if product_obj:
+        from cms.services import _article_dict, get_placeholder
+
+        placeholder = get_placeholder()
+        for tip in product_obj.related_tips.filter(is_published=True).prefetch_related("gallery"):
+            product_tips.append(_article_dict(tip, placeholder))
 
     return render(
         request,
@@ -199,6 +211,7 @@ def product_detail(request, category_slug, product_slug):
             "category": category,
             "product": product,
             "related_products": related,
+            "product_tips": product_tips,
             "placeholder_img": get_placeholder(),
             "sales_points": get_sales_points(),
             "map_section": get_content_block(
@@ -216,7 +229,7 @@ def product_detail(request, category_slug, product_slug):
 
 
 def surfaces(request):
-    from cms.services import get_placeholder, get_surface_groups
+    from cms.services import get_placeholder, get_surface_filter_options, get_surface_groups
 
     return render(
         request,
@@ -226,6 +239,7 @@ def surfaces(request):
             "page_heading": "Barwy i powierzchnie",
             "placeholder_img": get_placeholder(),
             "surface_groups": get_surface_groups(),
+            "surface_filters": get_surface_filter_options(),
         },
     )
 
@@ -315,17 +329,23 @@ def downloads(request):
 
 
 def about_company(request):
-    from cms.services import get_content_block
+    from cms.models import ContentBlock
 
-    content = get_content_block("page-about-company", image_fallback=False)
+    reserved = {"page-careers-intro", "page-warranty", "page-media"}
+    sections = (
+        ContentBlock.objects.filter(group=ContentBlock.GROUP_ABOUT, is_active=True)
+        .exclude(key__in=reserved)
+        .order_by("sort_order", "label")
+    )
+    lead = next((block for block in sections if block.key == "page-about-company"), None)
     return render(
         request,
         "website/about.html",
         {
             "page_title": "O nas",
-            "page_heading": content.get("title") or "O nas",
-            "page_lead": content.get("subtitle"),
-            "page_content": content,
+            "page_heading": (lead.title if lead else "") or "O nas",
+            "page_lead": lead.subtitle if lead else "",
+            "about_sections": sections,
         },
     )
 
@@ -379,6 +399,7 @@ def careers(request):
         "page-careers-intro",
         {"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."},
     )
+    careers_thanks = get_content_block("page-careers-thanks", {})
     application_sent = False
     application_job_id = request.POST.get("job", "") if request.method == "POST" else ""
     application_form = JobApplicationForm(request.POST or None, request.FILES or None)
@@ -391,11 +412,15 @@ def careers(request):
                 f"Telefon: {application.phone}"
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[get_site_settings()["email"] or settings.DEFAULT_FROM_EMAIL],
+            to=[
+                application.job.application_email
+                or get_site_settings()["email"]
+                or settings.DEFAULT_FROM_EMAIL
+            ],
         )
         application.cv.open("rb")
         email.attach(application.cv.name.rsplit("/", 1)[-1], application.cv.read())
-        email.send(fail_silently=True)
+        email.send(fail_silently=False)
         application.cv.close()
         application_sent = True
         application_form = JobApplicationForm()
@@ -407,6 +432,7 @@ def careers(request):
             "page_heading": "Praca i kariera",
             "jobs": get_job_openings(),
             "page_intro": intro,
+            "careers_thanks": careers_thanks,
             "application_form": application_form,
             "application_job_id": application_job_id,
             "application_sent": application_sent,

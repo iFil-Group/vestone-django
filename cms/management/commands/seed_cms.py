@@ -89,6 +89,17 @@ class Command(BaseCommand):
             ("page-warranty", ContentBlock.GROUP_ABOUT, "Warunki gwarancji", "Warunki gwarancji", "", LOREM_LONG, "", "", ""),
             ("page-media", ContentBlock.GROUP_ABOUT, "Dla mediów", "Dla mediów", "", LOREM_LONG, "", "", ""),
             ("page-careers-intro", ContentBlock.GROUP_ABOUT, "Praca i kariera — intro", "Praca i kariera", "", LOREM, "", "", ""),
+            (
+                "page-careers-thanks",
+                ContentBlock.GROUP_ABOUT,
+                "Praca i kariera — podziękowanie",
+                "",
+                "",
+                "<p>Dziękujemy za przesłanie zgłoszenia. Skontaktujemy się wyłącznie z wybranymi kandydatami.</p>",
+                "",
+                "",
+                "",
+            ),
             ("page-about-company", ContentBlock.GROUP_ABOUT, "O nas — pełna treść", "O nas", "VESTONE - TWOJA PRZESTRZEŃ", LOREM_LONG, LOREM, "", ""),
         ]
         for key, group, label, title, subtitle, body, body_extra, button_label, button_url in blocks:

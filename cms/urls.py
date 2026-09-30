@@ -70,5 +70,11 @@ urlpatterns = [
     path("ifil-log/panel/punkty-sprzedazy/", views.sales_point_list, name="cms_sales_points"),
     path("ifil-log/panel/punkty-sprzedazy/dodaj/", views.sales_point_edit, name="cms_sales_point_add"),
     path("ifil-log/panel/punkty-sprzedazy/<int:pk>/", views.sales_point_edit, name="cms_sales_point_edit"),
+    path("ifil-log/panel/biblioteka/", views.media_library, name="cms_media_library"),
+    path(
+        "ifil-log/panel/atrybuty/opcja/<int:pk>/usun/",
+        views.delete_attribute_option,
+        name="cms_attribute_option_delete",
+    ),
     path("ifil-log/panel/usun/<slug:model_name>/<int:pk>/", views.delete_object, name="cms_delete"),
 ]

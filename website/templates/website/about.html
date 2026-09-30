@@ -7,18 +7,21 @@
 
 {% block page_content %}
 <div class="split-page split-page--single">
-    <div class="split-page__content prose">
-        {% if page_content.body %}
-        {{ page_content.body|safe }}
-        {% endif %}
-        {% if page_content.body_extra %}
-        {{ page_content.body_extra|safe }}
-        {% endif %}
-        {% if page_content.image %}
+    {% for block in about_sections %}
+    <section class="split-page__content prose about-block">
+        {% if block.title %}<h2>{{ block.title }}</h2>{% endif %}
+        {% if block.subtitle %}<p class="about-block__subtitle">{{ block.subtitle }}</p>{% endif %}
+        {% if block.body %}{{ block.body|safe }}{% endif %}
+        {% if block.body_extra %}{{ block.body_extra|safe }}{% endif %}
+        {% if block.image %}
         <figure class="about-static-figure">
-            <img class="about-static-image" src="{{ page_content.image }}" alt="">
+            <img class="about-static-image" src="{{ block.image.url }}" alt="">
         </figure>
         {% endif %}
-    </div>
+        {% if block.button_label and block.button_url %}
+        <p><a class="home-about__link" href="{{ block.button_url }}">{{ block.button_label }}</a></p>
+        {% endif %}
+    </section>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -288,7 +288,35 @@
     list-style: none;
     border: 1px solid var(--vestone-line);
     border-radius: 3px;
-    overflow: hidden;
+    overflow: visible;
+}
+
+@media (min-width: 900px) {
+    .downloads__items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+        gap: 0.75rem;
+        border: none;
+        overflow: visible;
+    }
+
+    .downloads__item {
+        border: 1px solid var(--vestone-line);
+        border-radius: 3px;
+        flex-direction: column;
+        align-items: flex-start;
+        height: 100%;
+    }
+
+    .downloads__item:last-child {
+        border-bottom: 1px solid var(--vestone-line);
+    }
+
+    .downloads__item-btn {
+        margin-top: auto;
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .downloads__item {
@@ -342,6 +370,8 @@
     font-weight: 600;
     color: var(--vestone-gray-deep);
     line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .downloads__item-meta,
@@ -387,6 +417,44 @@
         justify-content: center;
         margin-left: 3.5rem;
     }
+}
+
+.where-buy__map-wrap {
+    position: relative;
+    min-height: 28rem;
+}
+
+.where-buy__map-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+    color: var(--vestone-gray-muted);
+    background: rgba(244, 246, 248, 0.92);
+}
+
+.where-buy__map-hint[hidden] {
+    display: none !important;
+}
+
+.careers__footer-image {
+    display: block;
+    width: min(100%, 56rem);
+    margin: 2.5rem auto 0;
+    border-radius: 3px;
+}
+
+.career-modal--thanks {
+    max-width: 32rem;
+    border-bottom: 4px solid var(--vestone-red);
+}
+
+.career-thanks__body {
+    padding: 0.5rem 0 0.25rem;
 }
 
 /* —— Gdzie kupić (full page map) —— */

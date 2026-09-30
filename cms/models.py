@@ -70,10 +70,11 @@ class ContentBlock(models.Model):
     image = models.ImageField("Obraz", upload_to="cms/pages/", blank=True)
     button_label = models.CharField("Etykieta przycisku", max_length=120, blank=True)
     button_url = models.CharField("URL przycisku", max_length=255, blank=True)
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywny", default=True)
 
     class Meta:
-        ordering = ["group", "label"]
+        ordering = ["group", "sort_order", "label"]
         verbose_name = "Blok treści"
         verbose_name_plural = "Bloki treści"
 
@@ -218,7 +219,11 @@ class SalesPoint(models.Model):
     city = models.CharField("Miejscowość", max_length=120, blank=True)
     address = models.CharField("Adres", max_length=300)
     phone = models.CharField("Telefon", max_length=80, blank=True)
-    email = models.EmailField("E-mail", blank=True)
+    email = models.TextField(
+        "E-mail",
+        blank=True,
+        help_text="Jeden adres lub kilka oddzielonych przecinkiem, średnikiem lub nową linią.",
+    )
     website_url = models.CharField("Adres strony", max_length=500, blank=True)
     latitude = models.DecimalField(
         "Szerokość geograficzna",
@@ -359,10 +364,17 @@ class Product(models.Model):
     )
     related_products = models.ManyToManyField(
         "self",
+        through="ProductRelatedProduct",
         symmetrical=False,
         blank=True,
         related_name="related_to_products",
         verbose_name="Polecane produkty",
+    )
+    related_tips = models.ManyToManyField(
+        "Tip",
+        blank=True,
+        related_name="featured_on_products",
+        verbose_name="Porady na karcie produktu",
     )
     show_related_products = models.BooleanField(
         "Pokaż „Sprawdź inne produkty”",
@@ -399,6 +411,31 @@ class Product(models.Model):
                     lines = [line for line in lines if line != self.slug]
                     self.legacy_slugs = "\n".join(lines[-30:])
         super().save(*args, **kwargs)
+
+
+class ProductRelatedProduct(models.Model):
+    from_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="related_product_links",
+        verbose_name="Produkt",
+    )
+    to_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="related_from_links",
+        verbose_name="Polecany produkt",
+    )
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        unique_together = [("from_product", "to_product")]
+        verbose_name = "Powiązanie produktów"
+        verbose_name_plural = "Powiązania produktów"
+
+    def __str__(self):
+        return f"{self.from_product} → {self.to_product}"
 
 
 class ProductSpec(models.Model):
@@ -448,7 +485,18 @@ class ProductAttributeOption(models.Model):
         related_name="options",
         verbose_name="Atrybut",
     )
-    value = models.CharField("Wartość", max_length=200)
+    value = models.TextField("Wartość", blank=True)
+    icon_display = models.CharField(
+        "Ikona nośności",
+        max_length=20,
+        blank=True,
+        choices=[
+            ("", "Tekst / brak"),
+            ("pedestrian", "Ruch pieszy"),
+            ("car", "Ruch pojazdów"),
+            ("pedestrian_car", "Pieszy i pojazdy"),
+        ],
+    )
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
 
     class Meta:
@@ -547,7 +595,13 @@ class ProductTechRow(models.Model):
         "Ikona",
         max_length=20,
         blank=True,
-        choices=[("", "Brak"), ("load", "Nośność")],
+        choices=[
+            ("", "Brak"),
+            ("load", "Nośność (legacy)"),
+            ("pedestrian", "Ruch pieszy"),
+            ("car", "Ruch pojazdów"),
+            ("pedestrian_car", "Pieszy i pojazdy"),
+        ],
     )
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
 
@@ -589,7 +643,7 @@ class ProductPackshotImage(models.Model):
         verbose_name="Produkt",
     )
     image = models.ImageField("Zdjęcie", upload_to="cms/products/packshots/", blank=True)
-    caption = models.CharField("Podpis", max_length=255, blank=True)
+    caption = models.TextField("Podpis", blank=True)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
 
     class Meta:
@@ -609,7 +663,7 @@ class ProductColorImage(models.Model):
         verbose_name="Produkt",
     )
     image = models.ImageField("Zdjęcie nawierzchni", upload_to="cms/products/colors/", blank=True)
-    caption = models.CharField("Nazwa koloru", max_length=255, blank=True)
+    caption = models.TextField("Nazwa koloru", blank=True)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
 
     class Meta:
@@ -656,6 +710,14 @@ class SurfaceItem(models.Model):
         verbose_name="Grupa produktowa",
     )
     image = models.ImageField("Zdjęcie", upload_to="cms/surfaces/", blank=True)
+    filter_product_name = models.CharField("Filtr: nazwa produktu", max_length=200, blank=True)
+    filter_category = models.CharField("Filtr: kategoria", max_length=200, blank=True)
+    filter_application = models.CharField("Filtr: zastosowanie", max_length=200, blank=True)
+    filter_surface = models.CharField("Filtr: powierzchnia", max_length=200, blank=True)
+    filter_format = models.CharField("Filtr: format", max_length=200, blank=True)
+    filter_thickness = models.CharField("Filtr: grubość", max_length=200, blank=True)
+    filter_color = models.CharField("Filtr: kolor", max_length=200, blank=True)
+    filter_load = models.CharField("Filtr: nośność", max_length=200, blank=True)
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywna", default=True)
 
@@ -836,10 +898,16 @@ class JobOpening(models.Model):
     excerpt = models.TextField("Zajawka", blank=True)
     body = models.TextField("Opis", blank=True)
     image = models.ImageField("Zdjęcie", upload_to="cms/jobs/", blank=True)
+    application_email = models.EmailField(
+        "E-mail na CV",
+        blank=True,
+        help_text="Na ten adres trafiają aplikacje. Puste = adres z ustawień strony.",
+    )
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywna", default=True)
 
     class Meta:
-        ordering = ["title"]
+        ordering = ["sort_order", "title"]
         verbose_name = "Oferta pracy"
         verbose_name_plural = "Oferty pracy"
 

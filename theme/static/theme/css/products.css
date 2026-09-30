@@ -938,13 +938,14 @@
 }
 
 .product-gallery__slide {
-    flex: 0 0 calc((100% - (var(--product-gallery-gap) * 2)) / 3);
+    flex: 0 0 100%;
     min-width: 0;
 }
 
 .product-gallery__img {
     display: block;
     width: 100%;
+    min-height: clamp(18rem, 42vw, 32rem);
     height: auto;
     object-fit: contain;
     object-position: center;
@@ -1050,10 +1051,15 @@
 }
 
 .product-tech__table tbody th {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.45rem;
+    display: table-cell;
+    vertical-align: middle;
     font-weight: 600;
+}
+
+.product-tech__table tbody th .product-load-icons {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-right: 0.35rem;
 }
 
 .product-tech__label-col,
@@ -1126,6 +1132,13 @@
     min-width: 0;
 }
 
+.product-colors__zoom {
+    display: block;
+    overflow: hidden;
+    border-radius: 3px;
+    background: #f0f2f4;
+}
+
 .product-colors__img {
     display: block;
     width: 100%;
@@ -1133,6 +1146,63 @@
     object-fit: cover;
     border-radius: 3px;
     background: #f0f2f4;
+    transition: transform 0.35s ease;
+}
+
+@media (hover: hover) {
+    .product-colors__zoom:hover .product-colors__img {
+        transform: scale(1.12);
+    }
+}
+
+.product-load-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.product-load-icons img {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+    object-fit: contain;
+}
+
+.product-packshot-strip {
+    width: min(1200px, 100% - 2.5rem);
+    margin: 2rem auto 0;
+}
+
+.product-packshot-strip__track {
+    display: flex;
+    gap: 0.85rem;
+    margin: 0;
+    padding: 0.35rem 0 0.75rem;
+    list-style: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.product-packshot-strip__item {
+    flex: 0 0 min(11rem, 38vw);
+    scroll-snap-align: start;
+}
+
+.product-packshot-strip__img {
+    display: block;
+    width: 100%;
+    max-height: 9rem;
+    object-fit: contain;
+    background: #f4f6f8;
+    border-radius: 3px;
+}
+
+.product-packshot-strip__caption {
+    margin: 0.4rem 0 0;
+    font-size: 0.82rem;
+    text-align: center;
+    color: var(--vestone-gray-muted);
 }
 
 .product-colors__caption {
@@ -1313,26 +1383,92 @@
     display: none !important;
 }
 
+.surface-page__filters-wrap {
+    width: min(1200px, 100% - 2.5rem);
+    margin: 0 auto;
+    padding-top: 1.5rem;
+}
+
+.surface-page__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: flex-end;
+}
+
+.surface-page__filter {
+    display: grid;
+    gap: 0.25rem;
+    min-width: min(100%, 11rem);
+}
+
+.surface-page__filter-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #5c6b76;
+}
+
+.surface-page__filter-select {
+    width: 100%;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--vestone-line);
+    border-radius: 2px;
+    background: #fff;
+}
+
+.surface-page__filter-reset {
+    border: 0;
+    background: transparent;
+    color: var(--vestone-red);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.45rem 0.25rem;
+}
+
 .surface-group {
     margin-bottom: 3.5rem;
+}
+
+.surface-group--split {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, 8rem) 1fr;
+    gap: 1.25rem 1.75rem;
+    align-items: start;
+}
+
+.surface-group__head {
+    display: grid;
+    grid-template-columns: 4px 1fr;
+    gap: 0.85rem;
+    align-items: start;
+}
+
+.surface-group__bar {
+    display: block;
+    width: 4px;
+    min-height: 5rem;
+    align-self: stretch;
+    background: var(--vestone-gray-deep, #374650);
+    border-radius: 2px;
+}
+
+@media (min-width: 768px) {
+    .surface-group--split {
+        grid-template-columns: minmax(7rem, 10rem) 1fr;
+    }
 }
 
 .surface-group[hidden] {
     display: none !important;
 }
 
-.surface-group__media {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1.75rem;
-}
-
 .surface-group__image {
     display: block;
-    width: min(100%, 28rem);
+    width: 100%;
     height: auto;
-    max-height: 12rem;
+    max-height: 7.5rem;
     object-fit: contain;
+    justify-self: start;
 }
 
 .surface-group__grid {
@@ -1371,6 +1507,20 @@
     overflow: hidden;
     border-radius: 3px;
     background: #e8ecef;
+}
+
+.surface-swatch__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.35s ease;
+}
+
+@media (hover: hover) {
+    .surface-swatch__media:hover img {
+        transform: scale(1.12);
+    }
 }
 
 .surface-swatch__media img {

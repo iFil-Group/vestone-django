@@ -9,24 +9,11 @@
             {% if map_section.body %}
             <div class="home-map__text rich-text">{{ map_section.body|safe }}</div>
             {% endif %}
-            <div class="home-map__points scroll-glass scroll-glass--dark">
-                {% for point in sales_points %}
-                <article class="home-map-point">
-                    <h3><img src="{% static point.pin %}" alt=""> {{ point.name }}</h3>
-                    {% if point.city or point.voivodeship_label %}
-                    <p class="home-map-point__region">{% if point.city %}{{ point.city }}{% endif %}{% if point.city and point.voivodeship_label %}, {% endif %}{% if point.voivodeship_label %}woj. {{ point.voivodeship_label }}{% endif %}</p>
-                    {% endif %}
-                    <address>{{ point.address }}</address>
-                    {% if point.phone %}<a class="home-map-point__plain" href="tel:{{ point.phone }}">{{ point.phone }}</a>{% endif %}
-                    {% if point.email %}<a class="home-map-point__plain" href="mailto:{{ point.email }}">{{ point.email }}</a>{% endif %}
-                    <div>{% if point.website_href %}<a href="{{ point.website_href }}" target="_blank" rel="noopener">Strona</a>{% endif %} {% if point.route_url %}<a href="{{ point.route_url }}" target="_blank" rel="noopener">Wyznacz trasę</a>{% endif %}</div>
-                </article>
-                {% empty %}<p>Brak punktów sprzedaży.</p>{% endfor %}
-            </div>
             <div class="home-map__legend">
-                <span><img src="{% static 'img/pin-grey.png' %}" alt=""> Punkty sprzedające pełną ofertę produktów</span>
-                <span><img src="{% static 'img/pin-red.png' %}" alt=""> Punkty sprzedające wyłącznie płyty dekoracyjne MUSSO</span>
+                <span><img src="{% static 'img/pin-grey.png' %}" alt=""> Pełna oferta produktów VESTONE</span>
+                <span><img src="{% static 'img/pin-musso.png' %}" alt=""> Wyłącznie płyty dekoracyjne MUSSO</span>
             </div>
+            <a class="home-map__cta" href="{{ map_section.button_url|default:'/gdzie-kupic/' }}">{{ map_section.button_label|default:"Wyszukaj punkt sprzedaży" }}</a>
         </div>
     </div>
 </section>

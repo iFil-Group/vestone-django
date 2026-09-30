@@ -3,7 +3,7 @@
         <div class="home-announce__rotator">
             {% for item in promotion_slides %}
             <div class="home-announce__slide{% if forloop.first %} is-active{% endif %}" data-promo-line>
-                <p class="home-announce__text">{{ item.text }}</p>
+                <p class="home-announce__text">{{ item.text|safe }}</p>
             </div>
             {% endfor %}
         </div>

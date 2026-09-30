@@ -7,6 +7,18 @@ from django.utils.html import strip_tags
 _WRAPPING_P = re.compile(r"^<p>(.*)</p>$", re.IGNORECASE | re.DOTALL)
 
 
+def parse_sales_point_emails(raw):
+    if not raw:
+        return []
+    parts = re.split(r"[,;\n]+", str(raw))
+    emails = []
+    for part in parts:
+        cleaned = part.strip()
+        if cleaned and "@" in cleaned:
+            emails.append(cleaned)
+    return emails
+
+
 def _media_url(file_field):
     if file_field and hasattr(file_field, "url"):
         return file_field.url
@@ -186,6 +198,19 @@ def promotion_text_lines(value, limit=3):
     return [line for line in lines if line][:limit]
 
 
+def promotion_richtext_lines(value, limit=3):
+    from django.utils.html import strip_tags
+
+    raw = (value or "").replace("\r\n", "\n")
+    lines = []
+    for part in raw.split("\n"):
+        if strip_tags(part).strip():
+            lines.append(part.strip())
+    if not lines and strip_tags(raw).strip():
+        lines = [raw.strip()]
+    return lines[:limit]
+
+
 def get_promotion_slides():
     from django.db.models import Q
     from django.utils import timezone
@@ -198,10 +223,10 @@ def get_promotion_slides():
     )
     lines = []
     for item in slides:
-        for line in promotion_text_lines(item.text):
+        for line in promotion_richtext_lines(item.text):
             lines.append(
                 {
-                    "text": line,
+                    "text": _inline_richtext(line) if "<" in line else line,
                     "link_label": item.link_label,
                     "link_url": item.link_url,
                 }
@@ -274,7 +299,10 @@ def get_sales_points():
     from cms.models import SalesPoint
 
     points = SalesPoint.objects.filter(is_active=True).order_by("sort_name", "name")
-    return [
+    payload = []
+    for point in points:
+        emails = parse_sales_point_emails(point.email)
+        payload.append(
         {
             "id": point.pk,
             "name": point.name,
@@ -284,17 +312,18 @@ def get_sales_points():
             "city": point.city,
             "address": point.address,
             "phone": point.phone,
-            "email": point.email,
+            "email": emails[0] if emails else "",
+            "emails": emails,
             "website_url": point.website_url,
             "website_href": _website_href(point.website_url),
             "offer_type": point.offer_type,
             "lat": float(point.latitude) if point.latitude is not None else None,
             "lng": float(point.longitude) if point.longitude is not None else None,
-            "pin": "img/pin-red.png" if point.offer_type == SalesPoint.OFFER_MUSSO else "img/pin-grey.png",
+            "pin": "img/pin-musso.png" if point.offer_type == SalesPoint.OFFER_MUSSO else "img/pin-grey.png",
             "route_url": _sales_point_route_url(point),
         }
-        for point in points
-    ]
+        )
+    return payload
 
 
 def get_floating_promotions():
@@ -360,11 +389,12 @@ def _product_dict(product, placeholder):
         {
             "label": assignment.option.attribute.name,
             "value": assignment.option.value,
+            "icon_display": assignment.option.icon_display or "",
             "slug": assignment.option.attribute.slug,
         }
         for assignment in product.attribute_assignments.select_related(
             "option__attribute"
-        ).all()
+        ).order_by("sort_order", "id")
     ]
     specs = []
     specs_by_slug = {}
@@ -373,8 +403,18 @@ def _product_dict(product, placeholder):
             spec = {"label": attribute["label"], "values": [], "slug": attribute["slug"]}
             specs_by_slug[attribute["slug"]] = spec
             specs.append(spec)
-        if attribute["value"] not in specs_by_slug[attribute["slug"]]["values"]:
-            specs_by_slug[attribute["slug"]]["values"].append(attribute["value"])
+        bucket = specs_by_slug[attribute["slug"]]["values"]
+        token = (attribute["icon_display"] or attribute["value"] or "").strip()
+        if token and token not in [v.get("key") for v in bucket]:
+            bucket.append(
+                {
+                    "key": token,
+                    "html": attribute["value"],
+                    "icon_display": attribute["icon_display"],
+                }
+            )
+    for spec in specs:
+        spec["values"].sort(key=lambda item: (item.get("key") or "").lower())
 
     tech_packs = [
         pack_data
@@ -456,7 +496,7 @@ def _tech_row_icon(label, icon_preset):
     if preset:
         return preset
     if "nośność" in (label or "").lower() or "noscnosc" in (label or "").lower():
-        return "load"
+        return "pedestrian_car"
     return ""
 
 
@@ -658,9 +698,21 @@ def get_related_products(product=None, exclude_slug=None, category_slug=None, li
     if product and product.pk:
         if not getattr(product, "show_related_products", True):
             return []
-        qs = product.related_products.filter(
-            is_active=True, group__is_active=True
-        ).select_related("group")
+        from cms.models import ProductRelatedProduct
+
+        links = (
+            ProductRelatedProduct.objects.filter(from_product=product)
+            .select_related("to_product__group")
+            .order_by("sort_order", "id")
+        )
+        items = []
+        for link in links:
+            item = link.to_product
+            if not item.is_active or not item.group.is_active:
+                continue
+            items.append(item)
+            if len(items) >= limit:
+                break
         return [
             {
                 "slug": item.slug,
@@ -668,7 +720,7 @@ def get_related_products(product=None, exclude_slug=None, category_slug=None, li
                 "category_slug": item.group.slug,
                 "image": _image_url(item.image, placeholder),
             }
-            for item in qs[:limit]
+            for item in items
         ]
     from website.content_data import RELATED_PRODUCTS
 
@@ -692,7 +744,31 @@ def get_surface_groups():
                 "slug": item.slug,
                 "title": item.title,
                 "image": _image_url(item.image, placeholder),
-                "search_text": f"{item.title} {group.name}".lower(),
+                "search_text": " ".join(
+                    filter(
+                        None,
+                        [
+                            item.title,
+                            group.name,
+                            item.filter_product_name,
+                            item.filter_category,
+                            item.filter_application,
+                            item.filter_surface,
+                            item.filter_format,
+                            item.filter_thickness,
+                            item.filter_color,
+                            item.filter_load,
+                        ],
+                    )
+                ).lower(),
+                "filter_product_name": item.filter_product_name,
+                "filter_category": item.filter_category,
+                "filter_application": item.filter_application,
+                "filter_surface": item.filter_surface,
+                "filter_format": item.filter_format,
+                "filter_thickness": item.filter_thickness,
+                "filter_color": item.filter_color,
+                "filter_load": item.filter_load,
             }
             for item in group.items.all()
             if item.is_active
@@ -708,6 +784,36 @@ def get_surface_groups():
             }
         )
     return result
+
+
+def get_surface_filter_options():
+    from cms.models import SurfaceItem
+
+    field_names = [
+        ("filter_product_name", "Nazwa produktu"),
+        ("filter_category", "Kategoria"),
+        ("filter_application", "Zastosowanie"),
+        ("filter_surface", "Powierzchnia"),
+        ("filter_format", "Format"),
+        ("filter_thickness", "Grubość"),
+        ("filter_color", "Kolor"),
+        ("filter_load", "Nośność"),
+    ]
+    options = []
+    for field, label in field_names:
+        values = sorted(
+            {
+                value.strip()
+                for value in SurfaceItem.objects.filter(is_active=True)
+                .exclude(**{field: ""})
+                .values_list(field, flat=True)
+                if (value or "").strip()
+            },
+            key=str.lower,
+        )
+        if values:
+            options.append({"field": field, "label": label, "values": values})
+    return options
 
 
 def get_surface_items():
@@ -811,7 +917,7 @@ def resolve_news_post(slug):
 def get_job_openings():
     from cms.models import JobOpening
 
-    jobs = JobOpening.objects.filter(is_active=True)
+    jobs = JobOpening.objects.filter(is_active=True).order_by("sort_order", "title")
     if jobs.exists():
         return [
             {

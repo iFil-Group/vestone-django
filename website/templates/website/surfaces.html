@@ -4,7 +4,7 @@
 {% block title %}Barwy i powierzchnie — Vestone{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260731b">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20260930a">
 {% endblock %}
 
 {% block main %}
@@ -33,18 +33,38 @@
         </div>
     </header>
 
+    {% if surface_filters %}
+    <div class="surface-page__filters-wrap">
+        <form class="surface-page__filters" data-surface-filters>
+            {% for filter in surface_filters %}
+            <label class="surface-page__filter">
+                <span class="surface-page__filter-label">{{ filter.label }}</span>
+                <select class="surface-page__filter-select" data-surface-filter="{{ filter.field }}">
+                    <option value="">Wszystkie</option>
+                    {% for value in filter.values %}
+                    <option value="{{ value }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            {% endfor %}
+            <button type="button" class="surface-page__filter-reset" data-surface-reset hidden>Wyczyść filtry</button>
+        </form>
+    </div>
+    {% endif %}
+
     <div class="surface-page__body">
         <p class="surface-page__empty" data-surface-empty {% if surface_groups %}hidden{% endif %}>
             {% if surface_groups %}
-            Brak wyników dla podanej frazy.
+            Brak wyników dla podanych filtrów.
             {% else %}
             Brak barw i powierzchni do wyświetlenia.
             {% endif %}
         </p>
 
         {% for group in surface_groups %}
-        <section class="surface-group" data-surface-group aria-label="{{ group.name }}">
-            <div class="surface-group__media">
+        <section class="surface-group surface-group--split" data-surface-group aria-label="{{ group.name }}">
+            <div class="surface-group__head">
+                <span class="surface-group__bar" aria-hidden="true"></span>
                 <img
                     class="surface-group__image"
                     src="{{ group.image|default:placeholder_img }}"
@@ -58,6 +78,14 @@
                     class="surface-group__item"
                     data-surface-item
                     data-search="{{ item.search_text }}"
+                    data-filter-product-name="{{ item.filter_product_name }}"
+                    data-filter-category="{{ item.filter_category }}"
+                    data-filter-application="{{ item.filter_application }}"
+                    data-filter-surface="{{ item.filter_surface }}"
+                    data-filter-format="{{ item.filter_format }}"
+                    data-filter-thickness="{{ item.filter_thickness }}"
+                    data-filter-color="{{ item.filter_color }}"
+                    data-filter-load="{{ item.filter_load }}"
                 >
                     <article class="surface-swatch">
                         <span class="surface-swatch__media">
@@ -81,5 +109,5 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'theme/js/surface-catalog.js' %}?v=20260731a" defer></script>
+<script src="{% static 'theme/js/surface-catalog.js' %}?v=20260930a" defer></script>
 {% endblock %}

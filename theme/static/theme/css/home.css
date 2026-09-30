@@ -61,6 +61,35 @@
     line-height: 1.45;
 }
 
+@media (max-width: 599px) {
+    .home-announce__inner {
+        flex-wrap: wrap;
+        align-items: stretch;
+        padding: 0.65rem 0;
+    }
+    .home-announce__rotator {
+        flex: 1 1 100%;
+        max-width: none;
+        height: auto;
+        min-height: 2.9em;
+    }
+    .home-announce__text {
+        white-space: normal;
+        text-overflow: unset;
+        overflow: visible;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        text-align: left;
+    }
+    .home-announce__btn {
+        flex-basis: 100%;
+        width: 100%;
+        margin-top: 0.35rem;
+    }
+}
+
 .home-announce__btn {
     flex-shrink: 0;
     display: inline-flex;
@@ -1116,7 +1145,22 @@
     }
 }
 
-.home-map { min-height:clamp(32rem, 70vh, 46rem); }
+.home-map { min-height: clamp(22rem, 52vh, 34rem); }
+.home-map__panel { padding: 1.25rem var(--home-wrap-inset, 1rem); }
+.home-map__box {
+    max-height: none;
+}
+@media (max-width: 767px) {
+    .home-map__panel {
+        position: relative;
+        inset: auto;
+        padding: 1.5rem var(--home-wrap-inset, 1rem) 2rem;
+    }
+    .home-map__box {
+        width: 100%;
+        max-width: none;
+    }
+}
 .home-map__box {
     width:min(31rem, 100%);
     max-width:none;

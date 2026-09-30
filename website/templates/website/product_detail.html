@@ -97,18 +97,21 @@
                             {% for row in product.tech_table.rows %}
                             <tr>
                                 <th scope="row">
-                                    {% if row.icon == "load" %}
+                                    {% if row.icon %}
                                     <span class="product-tech__icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" focusable="false">
-                                            <path d="M3 16.5V15h1.2l1.4-4.2A2 2 0 0 1 7.5 9.5h7.2a2 2 0 0 1 1.9 1.3L18 15h1.2a1.8 1.8 0 1 1 0 3.6H18a2.3 2.3 0 0 1-4.4 0H9.4a2.3 2.3 0 0 1-4.4 0H3v-2.1Zm4.1 2.1a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm9.8 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0ZM7.5 11l-1 3h10.2l-1.1-3H7.5Z"/>
-                                            <path d="M6.2 7.2h5.6l.9-1.8H8.4L6.2 7.2Z"/>
-                                        </svg>
+                                        {% include "website/partials/load_capacity_icons.html" with mode=row.icon %}
                                     </span>
                                     {% endif %}
                                     {{ row.label }}
                                 </th>
                                 {% for value in row.values %}
-                                <td>{% if value %}<div class="product-tech__value rich-text">{{ value|safe }}</div>{% endif %}</td>
+                                <td>
+                                    {% if row.icon and not value %}
+                                    {% include "website/partials/load_capacity_icons.html" with mode=row.icon %}
+                                    {% elif value %}
+                                    <div class="product-tech__value rich-text">{{ value|safe }}</div>
+                                    {% endif %}
+                                </td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
@@ -120,18 +123,18 @@
         {% endif %}
 
         {% if product.show_packshot and product.packshots %}
-        <section class="product-packshot" aria-label="Packshot" data-packshot-columns="{{ product.packshot_columns }}">
-            <ul class="product-packshot__grid product-packshot__grid--cols-{{ product.packshot_columns }}">
+        <section class="product-packshot-strip" aria-label="Packshot">
+            <ul class="product-packshot-strip__track">
                 {% for item in product.packshots %}
-                <li class="product-packshot__item">
+                <li class="product-packshot-strip__item">
                     <img
-                        class="product-packshot__img"
+                        class="product-packshot-strip__img"
                         src="{{ item.image }}"
-                        alt="{% if item.caption %}{{ item.caption }}{% else %}{{ product.title }} — packshot{% endif %}"
+                        alt="{% if item.caption %}{{ item.caption|striptags }}{% else %}{{ product.title }} packshot{% endif %}"
                         loading="lazy"
                     >
                     {% if item.caption %}
-                    <p class="product-packshot__caption">{{ item.caption }}</p>
+                    <p class="product-packshot-strip__caption rich-text">{{ item.caption|safe }}</p>
                     {% endif %}
                 </li>
                 {% endfor %}
@@ -146,14 +149,16 @@
                 <ul class="product-colors__grid">
                     {% for item in product.colors %}
                     <li class="product-colors__item">
-                        <img
-                            class="product-colors__img"
-                            src="{{ item.image }}"
-                            alt="{% if item.caption %}{{ item.caption }}{% else %}{{ product.title }} — kolor{% endif %}"
-                            loading="lazy"
-                        >
+                        <span class="product-colors__zoom">
+                            <img
+                                class="product-colors__img"
+                                src="{{ item.image }}"
+                                alt="{% if item.caption %}{{ item.caption|striptags }}{% else %}{{ product.title }} kolor{% endif %}"
+                                loading="lazy"
+                            >
+                        </span>
                         {% if item.caption %}
-                        <p class="product-colors__caption">{{ item.caption }}</p>
+                        <p class="product-colors__caption rich-text">{{ item.caption|safe }}</p>
                         {% endif %}
                     </li>
                     {% endfor %}
@@ -179,7 +184,21 @@
     {% endif %}
 
     {% include "website/partials/home_section_map.html" with placeholder_img=placeholder_img section_id="product-map-heading" %}
-    {% include "website/partials/home_section_tips.html" with placeholder_img=placeholder_img section_id="product-tips-heading" %}
+    {% if product_tips %}
+    <section class="home-tips" aria-labelledby="product-tips-heading" data-card-carousel>
+        <div class="home-tips__inner">
+            {% include "website/partials/section_heading.html" with title="Porady" id="product-tips-heading" %}
+            <div class="home-card-carousel">
+                <ul class="home-tips__grid" data-carousel-track>
+                    {% for tip in product_tips %}
+                    <li>{% include "website/partials/home_article_card.html" with item=tip url_prefix="/porady/" %}</li>
+                    {% endfor %}
+                </ul>
+                {% include "website/partials/carousel_controls.html" with label="Porady" %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
 </div>
 {% endblock %}
 

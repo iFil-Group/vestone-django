@@ -35,12 +35,13 @@
     </div>
     <div class="cms-table-wrap">
         <table class="cms-table">
-            <thead><tr><th>Etykieta</th><th>Klucz</th><th></th></tr></thead>
+            <thead><tr><th>Etykieta</th><th>Klucz</th><th>Kolejność</th><th></th></tr></thead>
             <tbody>
                 {% for block in home_blocks %}
                 <tr>
                     <td>{{ block.label }}</td>
                     <td><code>{{ block.key }}</code></td>
+                    <td>{{ block.sort_order }}</td>
                     <td class="cms-table__actions">
                         {% url 'cms_page_block_edit' block.pk as row_edit_url %}
                         {% url 'cms_delete' 'content-block' block.pk as row_delete_url %}
@@ -63,12 +64,13 @@
     </div>
     <div class="cms-table-wrap">
         <table class="cms-table">
-            <thead><tr><th>Etykieta</th><th>Klucz</th><th></th></tr></thead>
+            <thead><tr><th>Etykieta</th><th>Klucz</th><th>Kolejność</th><th></th></tr></thead>
             <tbody>
                 {% for block in about_blocks %}
                 <tr>
                     <td>{{ block.label }}</td>
                     <td><code>{{ block.key }}</code></td>
+                    <td>{{ block.sort_order }}</td>
                     <td class="cms-table__actions">
                         {% url 'cms_page_block_edit' block.pk as row_edit_url %}
                         {% url 'cms_delete' 'content-block' block.pk as row_delete_url %}

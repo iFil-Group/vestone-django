@@ -13,6 +13,9 @@
             {% for image in article.gallery %}
             <figure class="article-gallery__slide article-gallery__slide--{{ image.layout }}">
                 <img src="{{ image.image }}" alt="{{ image.alt }}" loading="lazy">
+                {% if image.alt %}
+                <figcaption class="article-gallery__caption">{{ image.alt }}</figcaption>
+                {% endif %}
             </figure>
             {% endfor %}
         </div>

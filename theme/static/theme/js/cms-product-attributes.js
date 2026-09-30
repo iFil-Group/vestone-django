@@ -43,6 +43,56 @@
         return null;
     }
 
+    function getCsrfToken() {
+        var input = document.querySelector("[name=csrfmiddlewaretoken]");
+        return input ? input.value : "";
+    }
+
+    function attributeEntry(card) {
+        var attributeId = cardAttributeId(card);
+        return attributeId ? catalog[String(attributeId)] : null;
+    }
+
+    function isLoadAttribute(card) {
+        var entry = attributeEntry(card);
+        if (!entry) {
+            return false;
+        }
+        var slug = (entry.slug || "").toLowerCase();
+        var name = (entry.name || "").toLowerCase();
+        return slug.indexOf("nosn") !== -1 || name.indexOf("nośno") !== -1 || name.indexOf("nosno") !== -1;
+    }
+
+    function sortOptionValues(options) {
+        return options.slice().sort(function (a, b) {
+            var re = /(\d+)/;
+            var am = re.exec(a.value || "");
+            var bm = re.exec(b.value || "");
+            if (am && bm) {
+                var diff = parseInt(am[1], 10) - parseInt(bm[1], 10);
+                if (diff !== 0) {
+                    return diff;
+                }
+            }
+            return (a.value || "").localeCompare(b.value || "", "pl", { numeric: true });
+        });
+    }
+
+    function syncLoadCapacityUi(card) {
+        var iconSelect = card.querySelector("[data-attr-value-icon]");
+        var valueNewInput = card.querySelector("[data-attr-value-new]");
+        if (!iconSelect) {
+            return;
+        }
+        var load = isLoadAttribute(card);
+        iconSelect.hidden = !load;
+        if (valueNewInput && load) {
+            valueNewInput.placeholder = "Opcjonalny opis (może być pusty przy samej ikonie)";
+        } else if (valueNewInput) {
+            valueNewInput.placeholder = "Nowa wartość, np. Opal";
+        }
+    }
+
     function cardAttributeLabel(card) {
         var select = card.querySelector("[data-attr-select]");
         if (select && select.selectedIndex > 0) {
@@ -89,7 +139,7 @@
 
         var entry = catalog[String(attributeId)];
         if (entry) {
-            entry.options.forEach(function (option) {
+            sortOptionValues(entry.options).forEach(function (option) {
                 if (used.indexOf(option.value.toLowerCase()) !== -1) {
                     return;
                 }
@@ -103,6 +153,12 @@
         if (current && select.querySelector('option[value="' + current + '"]')) {
             select.value = current;
         }
+
+        var catalogDelete = card.querySelector("[data-attr-catalog-delete]");
+        if (catalogDelete) {
+            catalogDelete.hidden = !select.value;
+        }
+        syncLoadCapacityUi(card);
     }
 
     function syncCardToRows(card) {
@@ -213,7 +269,7 @@
         return row;
     }
 
-    function addValueChip(card, label, optionId, newValue) {
+    function addValueChip(card, label, optionId, newValue, iconDisplay) {
         var valuesWrap = card.querySelector("[data-attr-values]");
         if (!valuesWrap) {
             return;
@@ -238,6 +294,10 @@
             optionField.value = String(optionId);
         } else if (newValue && newValueField) {
             newValueField.value = newValue;
+        }
+        var iconField = rowField(row, "new_option_icon_display");
+        if (iconField && iconDisplay) {
+            iconField.value = iconDisplay;
         }
 
         syncCardToRows(card);
@@ -290,7 +350,9 @@
         var filterCheckbox = card.querySelector("[data-attr-filter]");
         var valueSelect = card.querySelector("[data-attr-value-select]");
         var valueNewInput = card.querySelector("[data-attr-value-new]");
+        var valueIconSelect = card.querySelector("[data-attr-value-icon]");
         var addValueButton = card.querySelector("[data-attr-value-add]");
+        var catalogDeleteButton = card.querySelector("[data-attr-catalog-delete]");
         var removeCardButton = card.querySelector("[data-attr-remove-card]");
 
         function syncAttributeInputs() {
@@ -303,6 +365,52 @@
             }
             populateValueSelect(card);
             syncCardToRows(card);
+        }
+
+        if (valueSelect) {
+            valueSelect.addEventListener("change", function () {
+                populateValueSelect(card);
+            });
+        }
+
+        if (catalogDeleteButton) {
+            catalogDeleteButton.addEventListener("click", function () {
+                if (!valueSelect || !valueSelect.value) {
+                    return;
+                }
+                var optionId = valueSelect.value;
+                if (
+                    !window.confirm(
+                        "Usunąć tę wartość z katalogu atrybutów? Zniknie też na wszystkich produktach."
+                    )
+                ) {
+                    return;
+                }
+                fetch("/ifil-log/panel/atrybuty/opcja/" + optionId + "/usun/", {
+                    method: "POST",
+                    headers: { "X-CSRFToken": getCsrfToken() },
+                    credentials: "same-origin",
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error("delete failed");
+                        }
+                        var attributeId = cardAttributeId(card);
+                        if (attributeId && catalog[String(attributeId)]) {
+                            catalog[String(attributeId)].options = catalog[String(attributeId)].options.filter(
+                                function (opt) {
+                                    return String(opt.id) !== String(optionId);
+                                }
+                            );
+                        }
+                        valueSelect.value = "";
+                        populateValueSelect(card);
+                        window.alert("Wartość usunięta z katalogu. Zapisz produkt, jeśli edytujesz przypisania.");
+                    })
+                    .catch(function () {
+                        window.alert("Nie udało się usunąć wartości. Odśwież stronę i spróbuj ponownie.");
+                    });
+            });
         }
 
         if (attrSelect) {
@@ -335,12 +443,18 @@
 
                 var optionId = valueSelect ? valueSelect.value : "";
                 var newValue = valueNewInput ? valueNewInput.value.trim() : "";
+                var iconDisplay =
+                    valueIconSelect && !valueIconSelect.hidden ? valueIconSelect.value : "";
 
                 if (optionId) {
                     var label = valueSelect.options[valueSelect.selectedIndex].text;
-                    addValueChip(card, label, optionId, "");
-                } else if (newValue) {
-                    addValueChip(card, newValue, "", newValue);
+                    addValueChip(card, label, optionId, "", "");
+                } else if (newValue || iconDisplay) {
+                    var chipLabel = newValue;
+                    if (!chipLabel && iconDisplay && valueIconSelect) {
+                        chipLabel = valueIconSelect.options[valueIconSelect.selectedIndex].text;
+                    }
+                    addValueChip(card, chipLabel || "—", "", newValue || chipLabel, iconDisplay);
                 } else {
                     window.alert("Wybierz wartość z listy albo wpisz nową.");
                     return;
@@ -351,6 +465,9 @@
                 }
                 if (valueNewInput) {
                     valueNewInput.value = "";
+                }
+                if (valueIconSelect) {
+                    valueIconSelect.value = "";
                 }
             });
         }

@@ -67,6 +67,7 @@ CMS_SECTIONS = [
     {"slug": "news", "label": "Aktualności", "url_name": "cms_news"},
     {"slug": "downloads", "label": "Pliki do pobrania", "url_name": "cms_downloads"},
     {"slug": "documents", "label": "Dokumenty", "url_name": "cms_documents"},
+    {"slug": "media", "label": "Biblioteka plików", "url_name": "cms_media_library"},
     {"slug": "sales-points", "label": "Punkty sprzedaży", "url_name": "cms_sales_points"},
     {"slug": "promotions", "label": "Promocje i formularze", "url_name": "cms_promotions"},
     {"slug": "pages", "label": "Strona", "url_name": "cms_pages"},
@@ -239,6 +240,8 @@ def product_edit(request, pk=None):
                     pin_formset.apply_pending_gallery_images(gallery_formset)
                     pin_formset.save()
                     save_product_tech_packs(product, tech_packs_data)
+                _save_related_products(product, request)
+                form.save_m2m()
             if extras_ok:
                 messages.success(request, "Produkt został zapisany.")
                 return redirect("cms_product_edit", pk=product.pk)
@@ -303,10 +306,37 @@ def _gallery_pin_targets(product):
 
 
 def _selected_related_products(request, instance):
+    from cms.models import ProductRelatedProduct
+
     if request.method == "POST":
         ids = [value for value in request.POST.getlist("related_products") if value.isdigit()]
-        return list(Product.objects.filter(pk__in=ids).select_related("group"))
-    return list(instance.related_products.select_related("group").all()) if instance else []
+        if not ids:
+            return []
+        order = {pk: index for index, pk in enumerate(ids)}
+        products = list(Product.objects.filter(pk__in=ids).select_related("group"))
+        products.sort(key=lambda item: order.get(str(item.pk), 999))
+        return products
+    if not instance:
+        return []
+    links = (
+        ProductRelatedProduct.objects.filter(from_product=instance)
+        .select_related("to_product__group")
+        .order_by("sort_order", "id")
+    )
+    return [link.to_product for link in links]
+
+
+def _save_related_products(product, request):
+    from cms.models import ProductRelatedProduct
+
+    ids = [int(value) for value in request.POST.getlist("related_products") if value.isdigit()]
+    ProductRelatedProduct.objects.filter(from_product=product).exclude(to_product_id__in=ids).delete()
+    for order, pk in enumerate(ids):
+        ProductRelatedProduct.objects.update_or_create(
+            from_product=product,
+            to_product_id=pk,
+            defaults={"sort_order": order},
+        )
 
 
 @login_required
@@ -352,17 +382,29 @@ def _parse_tech_packs_payload(raw):
 def _attribute_options_data():
     from .models import ProductAttribute
 
+    import re
+
+    def _sort_key(value):
+        parts = re.split(r"(\d+)", (value or "").strip())
+        return [int(part) if part.isdigit() else part.lower() for part in parts if part]
+
     payload = {}
     attributes = ProductAttribute.objects.prefetch_related("options").order_by(
         "sort_order", "name"
     )
     for attribute in attributes:
+        options = sorted(attribute.options.all(), key=lambda option: _sort_key(option.value))
         payload[str(attribute.pk)] = {
             "name": attribute.name,
+            "slug": attribute.slug,
             "show_in_filters": attribute.show_in_filters,
             "options": [
-                {"id": option.pk, "value": option.value}
-                for option in attribute.options.all()
+                {
+                    "id": option.pk,
+                    "value": option.value,
+                    "icon_display": option.icon_display or "",
+                }
+                for option in options
             ],
         }
     return payload
@@ -372,7 +414,9 @@ def _all_attributes():
     from .models import ProductAttribute
 
     return list(
-        ProductAttribute.objects.order_by("sort_order", "name").values("id", "name", "show_in_filters")
+        ProductAttribute.objects.order_by("sort_order", "name").values(
+            "id", "name", "slug", "show_in_filters"
+        )
     )
 
 
@@ -741,10 +785,14 @@ def document_edit(request, pk=None):
 
 @login_required
 def page_index(request):
-    home_blocks = ContentBlock.objects.filter(group=ContentBlock.GROUP_HOME)
-    about_blocks = ContentBlock.objects.filter(group=ContentBlock.GROUP_ABOUT)
+    home_blocks = ContentBlock.objects.filter(group=ContentBlock.GROUP_HOME).order_by(
+        "sort_order", "label"
+    )
+    about_blocks = ContentBlock.objects.filter(group=ContentBlock.GROUP_ABOUT).order_by(
+        "sort_order", "label"
+    )
     hero_slides = HeroSlide.objects.order_by("sort_order")
-    sales_points = SalesPoint.objects.order_by("sort_order", "name")
+    sales_points = SalesPoint.objects.order_by("sort_name", "name")
     settings_form = SiteSettingsForm(request.POST or None, instance=SiteSettings.load())
     if request.method == "POST" and settings_form.is_valid():
         settings_form.save()
@@ -1011,6 +1059,59 @@ DELETE_MODELS = {
     "floating-promotion": (FloatingPromotion, "cms_promotions"),
     "sales-point": (SalesPoint, "cms_sales_points"),
 }
+
+
+@login_required
+def delete_attribute_option(request, pk):
+    from django.http import JsonResponse
+
+    from .models import ProductAttributeOption
+
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    option = get_object_or_404(ProductAttributeOption, pk=pk)
+    option.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def media_library(request):
+    import os
+
+    from django.conf import settings
+
+    media_root = settings.MEDIA_ROOT
+    files = []
+    if os.path.isdir(media_root):
+        for dirpath, _dirnames, filenames in os.walk(media_root):
+            for name in filenames:
+                if name.startswith("."):
+                    continue
+                full_path = os.path.join(dirpath, name)
+                rel_path = os.path.relpath(full_path, media_root).replace("\\", "/")
+                files.append(
+                    {
+                        "path": rel_path,
+                        "url": settings.MEDIA_URL + rel_path,
+                        "size": os.path.getsize(full_path),
+                    }
+                )
+    files.sort(key=lambda item: item["path"].lower())
+
+    if request.method == "POST":
+        rel_path = (request.POST.get("path") or "").strip()
+        if rel_path and ".." not in rel_path:
+            full_path = os.path.join(media_root, rel_path)
+            if os.path.isfile(full_path):
+                os.remove(full_path)
+                messages.success(request, f"Usunięto plik: {rel_path}")
+        return redirect("cms_media_library")
+
+    return render(
+        request,
+        "cms/media_library.html",
+        _panel_context("media", "Biblioteka plików", files=files),
+    )
 
 
 @login_required
