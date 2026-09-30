@@ -251,7 +251,11 @@ class Migration(migrations.Migration):
             code=lambda apps, schema_editor: _copy_related_products(apps, schema_editor),
             reverse_code=migrations.RunPython.noop,
         ),
-        migrations.AlterField(
+        migrations.RemoveField(
+            model_name="product",
+            name="related_products",
+        ),
+        migrations.AddField(
             model_name="product",
             name="related_products",
             field=models.ManyToManyField(
