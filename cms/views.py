@@ -386,7 +386,15 @@ def _attribute_options_data():
 
     def _sort_key(value):
         parts = re.split(r"(\d+)", (value or "").strip())
-        return [int(part) if part.isdigit() else part.lower() for part in parts if part]
+        key = []
+        for part in parts:
+            if not part:
+                continue
+            if part.isdigit():
+                key.append((0, int(part)))
+            else:
+                key.append((1, part.lower()))
+        return key
 
     payload = {}
     attributes = ProductAttribute.objects.prefetch_related("options").order_by(

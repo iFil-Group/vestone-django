@@ -243,7 +243,7 @@ class Command(BaseCommand):
         html = response.content.decode()
         report.add(
             "Barwy: skrypt filtrów",
-            "product-filters.js" in html,
+            "surface-catalog.js" in html,
         )
 
     def _test_not_found(self, client, report):
