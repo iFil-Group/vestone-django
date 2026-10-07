@@ -1,0 +1,22 @@
+<section class="home-tips home-news" aria-labelledby="{{ heading_id }}" data-card-carousel>
+    <div class="home-tips__inner">
+        <div class="home-tips__header">
+            {% include "website/partials/section_heading.html" with title=block.title|default:"Aktualności" id=heading_id %}
+            <div class="home-tips__header-side">
+                <div class="home-tips__lead rich-text">{{ block.body|safe }}</div>
+                {% if block.button_url %}
+                <a href="{{ block.button_url|default:'/o-nas/aktualnosci/' }}" class="home-tips__btn">{{ block.button_label|default:'Zobacz wszystkie' }}</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="home-card-carousel">
+            <ul class="home-tips__grid" data-carousel-track>
+                {% for item in featured_news %}
+                <li>{% include "website/partials/home_article_card.html" with item=item url_prefix="/o-nas/aktualnosci/" %}</li>
+                {% endfor %}
+            </ul>
+            {% include "website/partials/carousel_controls.html" with label="Aktualności" %}
+        </div>
+    </div>
+</section>

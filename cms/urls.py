@@ -57,6 +57,11 @@ urlpatterns = [
     path("ifil-log/panel/strona/konfiguracja-email/", views.email_config, name="cms_email_config"),
     path("ifil-log/panel/strona/blok/dodaj/", views.content_block_edit, name="cms_page_block_add"),
     path("ifil-log/panel/strona/blok/<int:pk>/", views.content_block_edit, name="cms_page_block_edit"),
+    path(
+        "ifil-log/panel/strona/blok/<int:pk>/przesun/<slug:direction>/",
+        views.content_block_move,
+        name="cms_content_block_move",
+    ),
     path("ifil-log/panel/strona/slajd/dodaj/", views.hero_slide_edit, name="cms_hero_add"),
     path("ifil-log/panel/strona/slajd/<int:pk>/", views.hero_slide_edit, name="cms_hero_edit"),
     path("ifil-log/panel/strona/opinia/dodaj/", views.review_edit, name="cms_review_add"),

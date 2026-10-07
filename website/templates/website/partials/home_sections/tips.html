@@ -1,0 +1,22 @@
+<section class="home-tips" aria-labelledby="{{ heading_id }}" data-card-carousel>
+    <div class="home-tips__inner">
+        <div class="home-tips__header">
+            {% include "website/partials/section_heading.html" with title=block.title id=heading_id %}
+            <div class="home-tips__header-side">
+                <div class="home-tips__lead rich-text">{{ block.body|safe }}</div>
+                {% if block.button_url %}
+                <a href="{{ block.button_url|default:'/porady/' }}" class="home-tips__btn">{{ block.button_label|default:'Zobacz wszystkie' }}</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="home-card-carousel">
+            <ul class="home-tips__grid" data-carousel-track>
+                {% for tip in featured_tips %}
+                <li>{% include "website/partials/home_article_card.html" with item=tip url_prefix="/porady/" %}</li>
+                {% endfor %}
+            </ul>
+            {% include "website/partials/carousel_controls.html" with label="Porady" %}
+        </div>
+    </div>
+</section>

@@ -154,17 +154,38 @@ class ContentBlockForm(StyledModelForm):
             "image",
             "button_label",
             "button_url",
-            "sort_order",
             "is_active",
         )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["key"].help_text = (
+            "Strona główna: bloki z grupy „Strona główna” wyświetlają się wg kolejności z listy w panelu. "
+            "Znane klucze (np. home-products-lead) mają dedykowany układ; pozostałe — sekcja uniwersalna."
+        )
         self.fields["image"].help_text = (
             "Zdjęcie wyświetlane na podstronie (m.in. O nas, Dla mediów). "
             "Po wgraniu zapisz blok, żeby pojawiło się na stronie."
         )
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if instance.pk is None:
+            from django.db.models import Max
+
+            from .models import ContentBlock
+
+            current_max = (
+                ContentBlock.objects.filter(group=instance.group).aggregate(
+                    maximum=Max("sort_order")
+                )["maximum"]
+                or 0
+            )
+            instance.sort_order = current_max + 1
+        if commit:
+            instance.save()
+        return instance
 
 
 class HeroSlideForm(StyledModelForm):

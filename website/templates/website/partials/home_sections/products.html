@@ -1,0 +1,26 @@
+<section class="home-products" aria-labelledby="home-section-{{ section_key }}-heading">
+    <div class="home-products__inner">
+        <div class="home-products__header">
+            {% include "website/partials/section_heading.html" with title=block.title id=heading_id %}
+            <div class="home-products__header-side">
+                <div class="home-products__lead rich-text">{{ block.body|safe }}</div>
+                {% if block.button_url %}
+                <a href="{{ block.button_url|default:'/produkty/' }}" class="home-products__btn">{{ block.button_label|default:'Zobacz wszystkie' }}</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <ul class="home-products__grid">
+            {% for group in product_groups %}
+            <li>
+                <a href="/produkty/{{ group.slug }}/" class="home-product-card">
+                    <span class="home-product-card__media">
+                        <img src="{{ group.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="300">
+                    </span>
+                    <span class="home-product-card__title">{{ group.title }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>

@@ -35,25 +35,30 @@
 <section class="cms-section">
     <div class="cms-toolbar">
         <h2 class="cms-section__title">Strona główna — bloki treści</h2>
+        <p class="cms-section__help">Kolejność na stronie głównej — strzałkami. Nieaktywne bloki nie są widoczne na stronie.</p>
         <a href="{% url 'cms_page_block_add' %}" class="cms-btn cms-btn--ghost">Dodaj blok</a>
     </div>
     <div class="cms-table-wrap">
         <table class="cms-table">
-            <thead><tr><th>Etykieta</th><th>Klucz</th><th>Kolejność</th><th></th></tr></thead>
+            <thead><tr><th>Etykieta</th><th>Klucz</th><th>Aktywny</th><th></th></tr></thead>
             <tbody>
                 {% for block in home_blocks %}
                 <tr>
                     <td>{{ block.label }}</td>
                     <td><code>{{ block.key }}</code></td>
-                    <td>{{ block.sort_order }}</td>
+                    <td>{% if block.is_active %}Tak{% else %}Nie{% endif %}</td>
                     <td class="cms-table__actions">
+                        <div class="cms-table__action-row">
+                            <form method="post" action="{% url 'cms_content_block_move' block.pk 'up' %}" class="cms-row-action-form">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w górę">↑</button></form>
+                            <form method="post" action="{% url 'cms_content_block_move' block.pk 'down' %}" class="cms-row-action-form">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w dół">↓</button></form>
                         {% url 'cms_page_block_edit' block.pk as row_edit_url %}
                         {% url 'cms_delete' 'content-block' block.pk as row_delete_url %}
                         {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć blok?" %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="3" class="cms-table__empty">Brak bloków. Uruchom seed_cms.</td></tr>
+                <tr><td colspan="4" class="cms-table__empty">Brak bloków. Uruchom seed_cms.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -68,21 +73,25 @@
     </div>
     <div class="cms-table-wrap">
         <table class="cms-table">
-            <thead><tr><th>Etykieta</th><th>Klucz</th><th>Kolejność</th><th></th></tr></thead>
+            <thead><tr><th>Etykieta</th><th>Klucz</th><th>Aktywny</th><th></th></tr></thead>
             <tbody>
                 {% for block in about_blocks %}
                 <tr>
                     <td>{{ block.label }}</td>
                     <td><code>{{ block.key }}</code></td>
-                    <td>{{ block.sort_order }}</td>
+                    <td>{% if block.is_active %}Tak{% else %}Nie{% endif %}</td>
                     <td class="cms-table__actions">
+                        <div class="cms-table__action-row">
+                            <form method="post" action="{% url 'cms_content_block_move' block.pk 'up' %}" class="cms-row-action-form">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w górę">↑</button></form>
+                            <form method="post" action="{% url 'cms_content_block_move' block.pk 'down' %}" class="cms-row-action-form">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w dół">↓</button></form>
                         {% url 'cms_page_block_edit' block.pk as row_edit_url %}
                         {% url 'cms_delete' 'content-block' block.pk as row_delete_url %}
                         {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć blok?" %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="3" class="cms-table__empty">Brak bloków O nas.</td></tr>
+                <tr><td colspan="4" class="cms-table__empty">Brak bloków O nas.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

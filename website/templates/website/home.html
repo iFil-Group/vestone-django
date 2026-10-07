@@ -4,7 +4,7 @@
 {% block title %}Vestone — kostka brukowa, płyty tarasowe, mała architektura{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260907h">
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20261007f">
 {% endblock %}
 
 {% block main %}
@@ -47,89 +47,23 @@
         </div>
     </section>
 
-    <section class="home-products" aria-labelledby="home-products-heading">
-        <div class="home-products__inner">
-            <div class="home-products__header">
-                {% include "website/partials/section_heading.html" with title=products_section.title id="home-products-heading" %}
-                <div class="home-products__header-side">
-                    <div class="home-products__lead rich-text">{{ products_section.body|safe }}</div>
-                    <a href="{{ products_section.button_url|default:'/produkty/' }}" class="home-products__btn">{{ products_section.button_label|default:'Zobacz wszystkie' }}</a>
-                </div>
-            </div>
-
-            <ul class="home-products__grid">
-                {% for group in product_groups %}
-                <li>
-                    <a href="/produkty/{{ group.slug }}/" class="home-product-card">
-                        <span class="home-product-card__media">
-                            <img src="{{ group.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="300">
-                        </span>
-                        <span class="home-product-card__title">{{ group.title }}</span>
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </section>
-
-    <section class="home-about" id="o-nas" aria-labelledby="home-about-heading">
-        <div class="home-about__inner">
-            <div class="home-about__visual">
-                <img src="{{ about_section.image|default:placeholder_img }}" alt="" class="home-about__img" loading="lazy" width="720" height="540">
-            </div>
-            <div class="home-about__copy">
-                {% include "website/partials/section_heading.html" with title=about_section.title|default:"O nas" id="home-about-heading" modifier="light" %}
-                <div class="home-about__text rich-text">{{ about_section.body|safe }}</div>
-                {% if about_section.button_label %}
-                <a href="{{ about_section.button_url|default:'/o-nas/' }}" class="home-about__link">{{ about_section.button_label }}</a>
-                {% endif %}
-            </div>
-        </div>
-    </section>
-
-    <section class="home-tips home-news" aria-labelledby="home-news-heading" data-card-carousel>
-        <div class="home-tips__inner">
-            <div class="home-tips__header">
-                {% include "website/partials/section_heading.html" with title=news_section.title|default:"Aktualności" id="home-news-heading" %}
-                <div class="home-tips__header-side">
-                    <div class="home-tips__lead rich-text">{{ news_section.body|safe }}</div>
-                    <a href="{{ news_section.button_url|default:'/o-nas/aktualnosci/' }}" class="home-tips__btn">{{ news_section.button_label|default:'Zobacz wszystkie' }}</a>
-                </div>
-            </div>
-
-            <div class="home-card-carousel">
-                <ul class="home-tips__grid" data-carousel-track>
-                    {% for item in featured_news %}
-                    <li>{% include "website/partials/home_article_card.html" with item=item url_prefix="/o-nas/aktualnosci/" %}</li>
-                    {% endfor %}
-                </ul>
-                {% include "website/partials/carousel_controls.html" with label="Aktualności" %}
-            </div>
-        </div>
-    </section>
-
-    {% include "website/partials/home_section_map.html" %}
-
-    <section class="home-tips" aria-labelledby="home-tips-heading" data-card-carousel>
-        <div class="home-tips__inner">
-            <div class="home-tips__header">
-                {% include "website/partials/section_heading.html" with title=tips_section.title id="home-tips-heading" %}
-                <div class="home-tips__header-side">
-                    <div class="home-tips__lead rich-text">{{ tips_section.body|safe }}</div>
-                    <a href="{{ tips_section.button_url|default:'/porady/' }}" class="home-tips__btn">{{ tips_section.button_label|default:'Zobacz wszystkie' }}</a>
-                </div>
-            </div>
-
-            <div class="home-card-carousel">
-            <ul class="home-tips__grid" data-carousel-track>
-                {% for tip in featured_tips %}
-                <li>{% include "website/partials/home_article_card.html" with item=tip url_prefix="/porady/" %}</li>
-                {% endfor %}
-            </ul>
-            {% include "website/partials/carousel_controls.html" with label="Porady" %}
-            </div>
-        </div>
-    </section>
+    {% for section in home_sections %}
+    {% with heading_id="home-section-"|add:section.key|add:"-heading" block=section.data %}
+        {% if section.type == "products" %}
+            {% include "website/partials/home_sections/products.html" with section_key=section.key %}
+        {% elif section.type == "about" %}
+            {% include "website/partials/home_sections/about.html" %}
+        {% elif section.type == "news" %}
+            {% include "website/partials/home_sections/news.html" %}
+        {% elif section.type == "map" %}
+            {% include "website/partials/home_sections/map.html" %}
+        {% elif section.type == "tips" %}
+            {% include "website/partials/home_sections/tips.html" %}
+        {% else %}
+            {% include "website/partials/home_sections/custom.html" %}
+        {% endif %}
+    {% endwith %}
+    {% endfor %}
 
 </div>
 {% endblock %}

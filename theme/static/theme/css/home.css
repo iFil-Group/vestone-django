@@ -1064,6 +1064,64 @@
 }
 
 /* —— Extended homepage modules —— */
+.home-custom {
+    padding: 3rem 0;
+    background: var(--vestone-white, #fff);
+}
+
+.home-custom__inner {
+    width: min(1200px, 100% - 2.5rem);
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.home-custom__header {
+    display: grid;
+    gap: 1rem 1.5rem;
+}
+
+@media (min-width: 900px) {
+    .home-custom__header {
+        grid-template-columns: 1fr 1.2fr;
+        align-items: end;
+    }
+}
+
+.home-custom__lead {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--vestone-gray, #374650);
+}
+
+.home-custom__btn {
+    display: inline-flex;
+    margin-top: 1rem;
+    padding: 0.65rem 1.25rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--vestone-white, #fff);
+    background: var(--vestone-red, #e11946);
+    border-radius: 3px;
+}
+
+.home-custom__btn:hover {
+    filter: brightness(1.05);
+}
+
+.home-custom__media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 3px;
+}
+
+.home-custom__extra {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--vestone-gray-muted, #5c6b76);
+}
+
 .home-announce.is-hidden { display:none; }
 .home-announce__text > :first-child,
 .rich-text > :first-child { margin-top:0; }

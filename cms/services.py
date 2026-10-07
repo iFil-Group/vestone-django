@@ -132,7 +132,9 @@ def get_content_block(key, fallback=None, image_fallback=True):
 def get_content_blocks_by_group(group):
     from cms.models import ContentBlock
 
-    blocks = ContentBlock.objects.filter(group=group, is_active=True)
+    blocks = ContentBlock.objects.filter(group=group, is_active=True).order_by(
+        "sort_order", "label", "pk"
+    )
     placeholder = get_placeholder()
     return {
         block.key: {
@@ -1109,11 +1111,102 @@ def get_product_filters(category_slug=None):
     return filters
 
 
+HOME_BLOCK_SKIP_RENDER = frozenset({"home-announce", "products-cta"})
+
+HOME_BLOCK_SECTION_TYPES = {
+    "home-products-lead": "products",
+    "home-about": "about",
+    "home-news-lead": "news",
+    "home-map": "map",
+    "home-tips-lead": "tips",
+    "home-contact": "contact",
+    "home-reviews-lead": "reviews",
+}
+
+HOME_BLOCK_DEFAULTS = {
+    "home-products-lead": {
+        "title": "Nasze produkty",
+        "body": (
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio "
+            "praesent libero sed cursus ante dapibus diam."
+        ),
+        "button_label": "Zobacz wszystkie",
+        "button_url": "/produkty/",
+    },
+    "home-about": {
+        "title": "O nas",
+        "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "body_extra": "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "button_label": "Czytaj więcej",
+        "button_url": "/#o-nas",
+    },
+    "home-news-lead": {
+        "title": "Aktualności",
+        "body": (
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+            "Praesent commodo cursus magna."
+        ),
+        "button_label": "Zobacz wszystkie",
+        "button_url": "/o-nas/aktualnosci/",
+    },
+    "home-map": {
+        "title": "Gdzie kupić",
+        "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "button_label": "Wyszukaj punkt sprzedaży",
+        "button_url": "/gdzie-kupic/",
+    },
+    "home-tips-lead": {
+        "title": "Porady",
+        "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "button_label": "Zobacz wszystkie",
+        "button_url": "/porady/",
+    },
+    "home-contact": {
+        "title": "Kontakt",
+        "body": (
+            "<p><strong>DZIAŁ HANDLOWY i DZIAŁ KSIĘGOWY</strong><br>"
+            '<a href="tel:+48227555440">48 755 54 40</a><br>'
+            '<a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a></p>'
+        ),
+    },
+}
+
+
+def get_home_sections(blocks, placeholder):
+    from cms.models import ContentBlock
+
+    sections = []
+    queryset = ContentBlock.objects.filter(
+        group=ContentBlock.GROUP_HOME, is_active=True
+    ).order_by("sort_order", "label", "pk")
+    for block in queryset:
+        if block.key in HOME_BLOCK_SKIP_RENDER:
+            continue
+        defaults = {**HOME_BLOCK_DEFAULTS.get(block.key, {})}
+        if block.key == "home-about" and "image" not in defaults:
+            defaults["image"] = placeholder
+        if block.key == "home-map" and "image" not in defaults:
+            defaults["image"] = placeholder
+        if block.key == "home-contact" and "image" not in defaults:
+            defaults["image"] = placeholder
+        data = _merge_content_block(blocks, block.key, defaults)
+        sections.append(
+            {
+                "type": HOME_BLOCK_SECTION_TYPES.get(block.key, "custom"),
+                "key": block.key,
+                "label": block.label,
+                "data": data,
+            }
+        )
+    return sections
+
+
 def get_home_context():
     placeholder = get_placeholder()
     blocks = get_content_blocks_by_group("home")
     about_blocks = get_content_blocks_by_group("about")
     promotion_slides = get_promotion_slides()
+    reviews = get_reviews()
     return {
         "placeholder_img": placeholder,
         "product_groups": get_product_groups(),
@@ -1125,78 +1218,8 @@ def get_home_context():
         ),
         "floating_promotions": get_floating_promotions(),
         "sales_points": get_sales_points(),
-        "products_section": _merge_content_block(
-            blocks,
-            "home-products-lead",
-            {
-                "title": "Nasze produkty",
-                "body": (
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio "
-                    "praesent libero sed cursus ante dapibus diam."
-                ),
-                "button_label": "Zobacz wszystkie",
-                "button_url": "/produkty/",
-            },
-        ),
-        "about_section": _merge_content_block(
-            blocks,
-            "home-about",
-            {
-                "title": "O nas",
-                "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                "body_extra": "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                "image": placeholder,
-                "button_label": "Czytaj więcej",
-                "button_url": "/#o-nas",
-            },
-        ),
-        "news_section": _merge_content_block(
-            blocks,
-            "home-news-lead",
-            {
-                "title": "Aktualności",
-                "body": (
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-                    "Praesent commodo cursus magna."
-                ),
-                "button_label": "Zobacz wszystkie",
-                "button_url": "/o-nas/aktualnosci/",
-            },
-        ),
-        "map_section": _merge_content_block(
-            blocks,
-            "home-map",
-            {
-                "title": "Gdzie kupić",
-                "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                "button_label": "Wyszukaj punkt sprzedaży",
-                "button_url": "/gdzie-kupic/",
-                "image": placeholder,
-            },
-        ),
-        "tips_section": _merge_content_block(
-            blocks,
-            "home-tips-lead",
-            {
-                "title": "Porady",
-                "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                "button_label": "Zobacz wszystkie",
-                "button_url": "/porady/",
-            },
-        ),
-        "contact_section": _merge_content_block(
-            blocks,
-            "home-contact",
-            {
-                "title": "Kontakt",
-                "body": (
-                    "<p><strong>DZIAŁ HANDLOWY i DZIAŁ KSIĘGOWY</strong><br>"
-                    '<a href="tel:+48227555440">48 755 54 40</a><br>'
-                    '<a href="mailto:informacja@vestone.pl">informacja@vestone.pl</a></p>'
-                ),
-                "image": placeholder,
-            },
-        ),
+        "home_sections": get_home_sections(blocks, placeholder),
+        "review_slides": _review_slides(reviews),
         "about_pages": about_blocks,
         "featured_tips": get_tips(),
         "featured_news": get_news(),

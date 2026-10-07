@@ -1,0 +1,14 @@
+<section class="home-about" id="o-nas" aria-labelledby="{{ heading_id }}">
+    <div class="home-about__inner">
+        <div class="home-about__visual">
+            <img src="{{ block.image|default:placeholder_img }}" alt="" class="home-about__img" loading="lazy" width="720" height="540">
+        </div>
+        <div class="home-about__copy">
+            {% include "website/partials/section_heading.html" with title=block.title|default:"O nas" id=heading_id modifier="light" %}
+            <div class="home-about__text rich-text">{{ block.body|safe }}</div>
+            {% if block.button_label %}
+            <a href="{{ block.button_url|default:'/o-nas/' }}" class="home-about__link">{{ block.button_label }}</a>
+            {% endif %}
+        </div>
+    </div>
+</section>

@@ -1,0 +1,27 @@
+<section class="home-custom" aria-labelledby="{{ heading_id }}">
+    <div class="home-custom__inner">
+        <div class="home-custom__header">
+            {% if block.title %}
+            {% include "website/partials/section_heading.html" with title=block.title id=heading_id %}
+            {% endif %}
+            {% if block.body or block.button_url %}
+            <div class="home-custom__side">
+                {% if block.body %}
+                <div class="home-custom__lead rich-text">{{ block.body|safe }}</div>
+                {% endif %}
+                {% if block.button_url %}
+                <a href="{{ block.button_url }}" class="home-custom__btn">{{ block.button_label|default:'Czytaj więcej' }}</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% if block.image %}
+        <div class="home-custom__media">
+            <img src="{{ block.image }}" alt="" loading="lazy" width="1200" height="600">
+        </div>
+        {% endif %}
+        {% if block.body_extra %}
+        <div class="home-custom__extra rich-text">{{ block.body_extra|safe }}</div>
+        {% endif %}
+    </div>
+</section>

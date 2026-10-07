@@ -845,6 +845,25 @@ def page_index(request):
 
 
 @login_required
+def content_block_move(request, pk, direction):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    block = get_object_or_404(ContentBlock, pk=pk)
+    siblings = list(
+        ContentBlock.objects.filter(group=block.group).order_by("sort_order", "label", "pk")
+    )
+    index = siblings.index(block)
+    target_index = index - 1 if direction == "up" else index + 1
+    if 0 <= target_index < len(siblings):
+        siblings[index], siblings[target_index] = siblings[target_index], siblings[index]
+        for order, sibling in enumerate(siblings):
+            if sibling.sort_order != order:
+                sibling.sort_order = order
+                sibling.save(update_fields=["sort_order"])
+    return redirect("cms_pages")
+
+
+@login_required
 def email_config(request):
     form = EmailSettingsForm(request.POST or None, instance=EmailSettings.load())
     if request.method == "POST" and form.is_valid():
