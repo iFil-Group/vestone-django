@@ -160,6 +160,7 @@ class Command(BaseCommand):
             ("Dodaj formularz", reverse("cms_form_widget_add")),
             ("Dodaj widget promocyjny", reverse("cms_floating_promotion_add")),
             ("Strona", reverse("cms_pages")),
+            ("Konfiguracja e-mail", reverse("cms_email_config")),
             ("Dodaj blok", reverse("cms_page_block_add")),
             ("Dodaj slajd hero", reverse("cms_hero_add")),
             ("Dodaj opinię", reverse("cms_review_add")),

@@ -13,6 +13,7 @@ from .forms import (
     DownloadCategoryForm,
     DownloadItemForm,
     EmailAuthenticationForm,
+    EmailSettingsForm,
     FloatingPromotionForm,
     FormWidgetForm,
     HeroSlideForm,
@@ -52,6 +53,7 @@ from .models import (
     ProductGroup,
     PromotionSlide,
     Review,
+    EmailSettings,
     SiteSettings,
     SalesPoint,
     SurfaceCategory,
@@ -837,6 +839,26 @@ def page_index(request):
             hero_slides=hero_slides,
             sales_points=sales_points,
             settings_form=settings_form,
+            page_tab="content",
+        ),
+    )
+
+
+@login_required
+def email_config(request):
+    form = EmailSettingsForm(request.POST or None, instance=EmailSettings.load())
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Konfiguracja e-mail została zapisana.")
+        return redirect("cms_email_config")
+    return render(
+        request,
+        "cms/email_config.html",
+        _panel_context(
+            "pages",
+            "Konfiguracja e-mail",
+            form=form,
+            page_tab="email",
         ),
     )
 

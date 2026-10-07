@@ -7,6 +7,7 @@ from .models import (
     ContentBlock,
     DownloadCategory,
     DownloadItem,
+    EmailSettings,
     FloatingPromotion,
     FormWidget,
     HeroSlide,
@@ -108,6 +109,35 @@ class SiteSettingsForm(StyledModelForm):
             "commercial_label",
             "commercial_phone",
         )
+
+
+class EmailSettingsForm(StyledModelForm):
+    smtp_password_input = forms.CharField(
+        label="Hasło SMTP",
+        required=False,
+        widget=forms.PasswordInput(render_value=False, attrs={"class": "cms-input", "autocomplete": "new-password"}),
+        help_text="Pozostaw puste, aby zachować obecne hasło.",
+    )
+
+    class Meta:
+        model = EmailSettings
+        fields = (
+            "smtp_host",
+            "smtp_port",
+            "smtp_username",
+            "smtp_use_tls",
+            "default_from_email",
+            "default_notification_email",
+        )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        password = self.cleaned_data.get("smtp_password_input", "")
+        if password:
+            instance.smtp_password = password
+        if commit:
+            instance.save()
+        return instance
 
 
 class ContentBlockForm(StyledModelForm):

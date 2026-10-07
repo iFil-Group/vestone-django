@@ -27,9 +27,10 @@
         <a href="{% url 'cms_form_widget_add' %}" class="cms-btn cms-btn--primary">Dodaj formularz</a>
     </div>
     <div class="cms-table-wrap"><table class="cms-table">
-        <thead><tr><th>Nazwa</th><th>Adres strony</th><th>Zgłoszenia</th><th></th></tr></thead>
+        <thead><tr><th>Nazwa</th><th>E-mail powiadomień</th><th>Adres strony</th><th>Zgłoszenia</th><th></th></tr></thead>
         <tbody>{% for item in form_widgets %}<tr>
             <td>{{ item.title }}</td>
+            <td>{{ item.recipient_email }}</td>
             <td>
                 {% if item.slug == "zamow-katalog" %}
                 <a href="/zamow-katalog/" target="_blank">/zamow-katalog/</a>
@@ -44,7 +45,7 @@
                 {% url 'cms_delete' 'form-widget' item.pk as row_delete_url %}
                 {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć formularz i zgłoszenia?" %}
             </td>
-        </tr>{% empty %}<tr><td colspan="4" class="cms-table__empty">Brak formularzy.</td></tr>{% endfor %}</tbody>
+        </tr>{% empty %}<tr><td colspan="5" class="cms-table__empty">Brak formularzy.</td></tr>{% endfor %}</tbody>
     </table></div>
 </section>
 

@@ -1,0 +1,14 @@
+<nav class="cms-switch" role="tablist" aria-label="Sekcja strony">
+    <a
+        href="{% url 'cms_pages' %}"
+        class="cms-switch__btn{% if page_tab == 'content' %} is-active{% endif %}"
+        role="tab"
+        aria-selected="{% if page_tab == 'content' %}true{% else %}false{% endif %}"
+    >Treści i kontakt</a>
+    <a
+        href="{% url 'cms_email_config' %}"
+        class="cms-switch__btn{% if page_tab == 'email' %} is-active{% endif %}"
+        role="tab"
+        aria-selected="{% if page_tab == 'email' %}true{% else %}false{% endif %}"
+    >Konfiguracja e-mail</a>
+</nav>

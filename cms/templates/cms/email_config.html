@@ -1,0 +1,56 @@
+{% extends "cms/base_panel.html" %}
+
+{% block panel_content %}
+<div class="cms-toolbar cms-toolbar--split">
+    {% include "cms/partials/page_tabs.html" with page_tab="email" %}
+</div>
+
+<section class="cms-section">
+    <h2 class="cms-section__title">Serwer SMTP</h2>
+    <p class="cms-section__help">
+        Gdy serwer SMTP jest pusty, wysyłka korzysta z ustawień środowiska na serwerze (<code>EMAIL_HOST</code> w .env).
+    </p>
+    <form method="post" class="cms-form cms-form--narrow">
+        {% csrf_token %}
+        {% for field in form %}
+        {% include "cms/partials/field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="cms-btn cms-btn--primary">Zapisz konfigurację</button>
+    </form>
+</section>
+
+<section class="cms-section">
+    <h2 class="cms-section__title">Adresy odbiorców powiadomień</h2>
+    <div class="cms-table-wrap">
+        <table class="cms-table">
+            <thead>
+                <tr>
+                    <th>Źródło</th>
+                    <th>Gdzie ustawić</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Formularze promocji (katalog, zamówienia)</td>
+                    <td>
+                        <a href="{% url 'cms_promotions' %}">Promocje i formularze</a>
+                        → edycja widgetu → pole <strong>Adres e-mail odbiorcy</strong> (każdy formularz osobno).
+                    </td>
+                </tr>
+                <tr>
+                    <td>Aplikacje na ofertę pracy</td>
+                    <td>
+                        <a href="{% url 'cms_jobs' %}">Oferty pracy</a>
+                        → edycja oferty → <strong>E-mail na CV</strong>.
+                        Puste pole = domyślny odbiorca powyżej.
+                    </td>
+                </tr>
+                <tr>
+                    <td>Pasek promocyjny / widget boczny</td>
+                    <td>Brak powiadomień e-mail — tylko linki i treść wizualna.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

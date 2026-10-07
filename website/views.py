@@ -66,8 +66,8 @@ def home(request):
 
 
 def form_widget(request, slug):
-    from django.core.mail import send_mail
     from django.shortcuts import get_object_or_404
+    from cms.mail import send_cms_mail
     from cms.models import FormWidget
     from website.forms import WidgetSubmissionForm
 
@@ -76,7 +76,7 @@ def form_widget(request, slug):
     form = WidgetSubmissionForm(request.POST or None, widget=widget)
     if request.method == "POST" and form.is_valid():
         submission = form.save()
-        send_mail(
+        send_cms_mail(
             subject=f"Nowe zgłoszenie — {widget.title}",
             message=(
                 f"Imię i nazwisko: {submission.first_name} {submission.last_name}\n"
@@ -84,9 +84,7 @@ def form_widget(request, slug):
                 f"{submission.postal_code} {submission.city}\n"
                 f"Firma: {submission.company or '—'}"
             ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[widget.recipient_email],
-            fail_silently=False,
         )
         submitted = True
         form = WidgetSubmissionForm(widget=widget)
@@ -392,7 +390,8 @@ def news_detail(request, slug):
 
 def careers(request):
     from django.core.mail import EmailMessage
-    from cms.services import get_content_block, get_job_openings, get_site_settings
+    from cms.mail import get_cms_from_email, get_cms_mail_connection, get_default_notification_recipient
+    from cms.services import get_content_block, get_job_openings
     from website.forms import JobApplicationForm
 
     intro = get_content_block(
@@ -411,12 +410,11 @@ def careers(request):
                 f"Kandydat: {application.name}\nE-mail: {application.email}\n"
                 f"Telefon: {application.phone}"
             ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=get_cms_from_email(),
             to=[
-                application.job.application_email
-                or get_site_settings()["email"]
-                or settings.DEFAULT_FROM_EMAIL
+                application.job.application_email or get_default_notification_recipient()
             ],
+            connection=get_cms_mail_connection(),
         )
         application.cv.open("rb")
         email.attach(application.cv.name.rsplit("/", 1)[-1], application.cv.read())

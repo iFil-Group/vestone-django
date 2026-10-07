@@ -1,6 +1,10 @@
 {% extends "cms/base_panel.html" %}
 
 {% block panel_content %}
+<div class="cms-toolbar cms-toolbar--split">
+    {% include "cms/partials/page_tabs.html" with page_tab="content" %}
+</div>
+
 <section class="cms-section">
     <div class="cms-toolbar">
         <h2 class="cms-section__title">Strona główna — slajdy hero</h2>

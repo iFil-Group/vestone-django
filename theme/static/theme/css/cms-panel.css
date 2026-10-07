@@ -453,6 +453,10 @@ body.cms-body--panel {
     margin-bottom: 1.5rem;
 }
 
+.cms-form--narrow {
+    max-width: 40rem;
+}
+
 .cms-form--inline-card {
     max-width: 40rem;
     padding: 1.25rem;

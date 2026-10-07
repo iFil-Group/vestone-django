@@ -50,6 +50,41 @@ class SiteSettings(models.Model):
         return obj
 
 
+class EmailSettings(models.Model):
+    smtp_host = models.CharField(
+        "Serwer SMTP",
+        max_length=255,
+        blank=True,
+        help_text="Puste — ustawienia z pliku .env na serwerze.",
+    )
+    smtp_port = models.PositiveIntegerField("Port SMTP", default=587)
+    smtp_username = models.CharField("Użytkownik SMTP", max_length=255, blank=True)
+    smtp_password = models.CharField("Hasło SMTP", max_length=255, blank=True)
+    smtp_use_tls = models.BooleanField("Połączenie TLS", default=True)
+    default_from_email = models.EmailField(
+        "Adres nadawcy",
+        blank=True,
+        help_text="From w wiadomościach wychodzących z formularzy.",
+    )
+    default_notification_email = models.EmailField(
+        "Domyślny odbiorca powiadomień",
+        blank=True,
+        help_text="Gdy oferta pracy nie ma własnego adresu na CV. Formularze promocji — osobno przy każdym formularzu.",
+    )
+
+    class Meta:
+        verbose_name = "Konfiguracja e-mail"
+        verbose_name_plural = "Konfiguracja e-mail"
+
+    def __str__(self):
+        return "Konfiguracja e-mail"
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class ContentBlock(models.Model):
     GROUP_HOME = "home"
     GROUP_ABOUT = "about"

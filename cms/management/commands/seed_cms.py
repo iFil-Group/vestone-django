@@ -5,6 +5,7 @@ from django.utils.text import slugify
 
 from cms.models import (
     ContentBlock,
+    EmailSettings,
     FormWidget,
     HeroSlide,
     NewsPost,
@@ -32,6 +33,8 @@ class Command(BaseCommand):
     help = "Uzupełnia brakujące dane startowe. Nie kasuje i nie nadpisuje treści z CMS."
 
     def handle(self, *args, **options):
+        EmailSettings.objects.get_or_create(pk=1)
+
         if not SiteSettings.objects.exists():
             SiteSettings.objects.create(
                 pk=1,
