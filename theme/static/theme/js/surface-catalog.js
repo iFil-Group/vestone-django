@@ -69,6 +69,15 @@
         if (resetButton) {
             resetButton.hidden = !query && !Object.keys(filters).length;
         }
+
+        if (filtersForm) {
+            filtersForm.querySelectorAll("[data-surface-filter]").forEach(function (select) {
+                var field = select.closest(".product-filters__field");
+                if (field) {
+                    field.classList.toggle("is-active", select.selectedIndex > 0);
+                }
+            });
+        }
     }
 
     if (searchInput) {
