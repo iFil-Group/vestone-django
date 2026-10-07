@@ -1142,6 +1142,19 @@ def delete_attribute_option(request, pk):
     return JsonResponse({"ok": True})
 
 
+def _media_library_kind(filename):
+    import os
+
+    extension = os.path.splitext(filename)[1].lower()
+    if extension in {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".avif"}:
+        return "image"
+    if extension in {".mp4", ".webm", ".mov", ".m4v"}:
+        return "video"
+    if extension == ".pdf":
+        return "pdf"
+    return "file"
+
+
 @login_required
 def media_library(request):
     import os
@@ -1160,8 +1173,10 @@ def media_library(request):
                 files.append(
                     {
                         "path": rel_path,
+                        "basename": name,
                         "url": settings.MEDIA_URL + rel_path,
                         "size": os.path.getsize(full_path),
+                        "kind": _media_library_kind(name),
                     }
                 )
     files.sort(key=lambda item: item["path"].lower())
