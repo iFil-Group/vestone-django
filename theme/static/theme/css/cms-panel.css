@@ -841,6 +841,46 @@ button.cms-row-action {
     min-width: 8rem;
 }
 
+.cms-attr-value-format {
+    flex: 1 1 100%;
+    min-width: min(100%, 18rem);
+}
+
+.cms-attr-value-format__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.cms-attr-value-format__toolbar button {
+    min-width: 2rem;
+    padding: 0.25rem 0.45rem;
+    font-size: 0.82rem;
+    border: 1px solid rgba(55, 70, 80, 0.18);
+    border-radius: 3px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.cms-attr-card__value-editor {
+    min-height: 2.5rem;
+    padding: 0.55rem 0.75rem;
+    line-height: 1.45;
+}
+
+.cms-attr-card__value-editor:empty::before {
+    content: attr(data-placeholder);
+    color: #9aa8b3;
+}
+
+.cms-attr-card__catalog-hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: #5c6b76;
+}
+
 .cms-attr-card__add-sep {
     font-size: 0.85rem;
     color: #5c6b76;

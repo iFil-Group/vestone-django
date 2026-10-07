@@ -415,6 +415,9 @@ def _product_dict(product, placeholder):
             )
     for spec in specs:
         spec["values"].sort(key=lambda item: (item.get("key") or "").lower())
+        icon_values = [value for value in spec["values"] if value.get("icon_display")]
+        if icon_values:
+            spec["values"] = icon_values[:1]
 
     tech_packs = [
         pack_data

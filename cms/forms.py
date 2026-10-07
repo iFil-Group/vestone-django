@@ -519,6 +519,9 @@ class ProductAttributeAssignmentForm(StyledModelForm):
             raise forms.ValidationError("Wybrana wartość nie należy do wskazanego atrybutu.")
 
         if new_option_value:
+            from cms.services import _inline_richtext
+
+            cleaned["new_option_value"] = _inline_richtext(new_option_value) or new_option_value
             cleaned["option"] = None
 
         if new_attribute_name:

@@ -102,12 +102,33 @@
         return newInput && newInput.value.trim() ? newInput.value.trim() : "Nowy atrybut";
     }
 
+    function plainTextFromHtml(html) {
+        var wrapper = document.createElement("div");
+        wrapper.innerHTML = html || "";
+        return wrapper.textContent.replace(/\s+/g, " ").trim();
+    }
+
+    function readValueEditor(card) {
+        var editor = card.querySelector("[data-attr-value-new]");
+        if (!editor) {
+            return "";
+        }
+        return (editor.innerHTML || "").trim();
+    }
+
+    function clearValueEditor(card) {
+        var editor = card.querySelector("[data-attr-value-new]");
+        if (editor) {
+            editor.innerHTML = "";
+        }
+    }
+
     function chipValues(card) {
         var values = [];
         card.querySelectorAll("[data-attr-chip]").forEach(function (chip) {
             var label = chip.querySelector(".cms-attr-chip__label");
             if (label) {
-                values.push(label.textContent.trim().toLowerCase());
+                values.push(plainTextFromHtml(label.innerHTML).toLowerCase());
             }
         });
         return values;
@@ -140,7 +161,7 @@
         var entry = catalog[String(attributeId)];
         if (entry) {
             sortOptionValues(entry.options).forEach(function (option) {
-                if (used.indexOf(option.value.toLowerCase()) !== -1) {
+                if (used.indexOf(plainTextFromHtml(option.value).toLowerCase()) !== -1) {
                     return;
                 }
                 var el = document.createElement("option");
@@ -156,7 +177,8 @@
 
         var catalogDelete = card.querySelector("[data-attr-catalog-delete]");
         if (catalogDelete) {
-            catalogDelete.hidden = !select.value;
+            catalogDelete.hidden = !attributeId;
+            catalogDelete.disabled = !select.value;
         }
         syncLoadCapacityUi(card);
     }
@@ -310,7 +332,12 @@
         chip.innerHTML =
             '<span class="cms-attr-chip__label"></span>' +
             '<button type="button" class="cms-attr-chip__remove" data-attr-chip-remove aria-label="Usuń wartość">&times;</button>';
-        chip.querySelector(".cms-attr-chip__label").textContent = label.trim();
+        var labelEl = chip.querySelector(".cms-attr-chip__label");
+        if (label.indexOf("<") !== -1) {
+            labelEl.innerHTML = label.trim();
+        } else {
+            labelEl.textContent = label.trim();
+        }
         valuesWrap.appendChild(chip);
         bindChip(chip, card);
         populateValueSelect(card);
@@ -442,19 +469,26 @@
                 }
 
                 var optionId = valueSelect ? valueSelect.value : "";
-                var newValue = valueNewInput ? valueNewInput.value.trim() : "";
+                var newValueHtml = readValueEditor(card);
+                var newValuePlain = plainTextFromHtml(newValueHtml);
                 var iconDisplay =
                     valueIconSelect && !valueIconSelect.hidden ? valueIconSelect.value : "";
 
                 if (optionId) {
                     var label = valueSelect.options[valueSelect.selectedIndex].text;
                     addValueChip(card, label, optionId, "", "");
-                } else if (newValue || iconDisplay) {
-                    var chipLabel = newValue;
+                } else if (newValuePlain || iconDisplay) {
+                    var chipLabel = newValueHtml || newValuePlain;
                     if (!chipLabel && iconDisplay && valueIconSelect) {
                         chipLabel = valueIconSelect.options[valueIconSelect.selectedIndex].text;
                     }
-                    addValueChip(card, chipLabel || "—", "", newValue || chipLabel, iconDisplay);
+                    addValueChip(
+                        card,
+                        chipLabel || "—",
+                        "",
+                        newValueHtml || chipLabel,
+                        iconDisplay
+                    );
                 } else {
                     window.alert("Wybierz wartość z listy albo wpisz nową.");
                     return;
@@ -463,14 +497,28 @@
                 if (valueSelect) {
                     valueSelect.value = "";
                 }
-                if (valueNewInput) {
-                    valueNewInput.value = "";
-                }
+                clearValueEditor(card);
                 if (valueIconSelect) {
                     valueIconSelect.value = "";
                 }
             });
         }
+
+        card.querySelectorAll("[data-attr-cmd]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                var editor = card.querySelector("[data-attr-value-new]");
+                if (!editor) {
+                    return;
+                }
+                editor.focus();
+                var command = button.getAttribute("data-attr-cmd");
+                if (command === "superscript") {
+                    document.execCommand("superscript", false, null);
+                } else if (command) {
+                    document.execCommand(command, false, null);
+                }
+            });
+        });
 
         if (valueNewInput) {
             valueNewInput.addEventListener("keydown", function (event) {

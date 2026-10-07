@@ -19,6 +19,10 @@
     var prevButton = root.querySelector("[data-product-gallery-prev]");
     var nextButton = root.querySelector("[data-product-gallery-next]");
 
+    function perView() {
+        return window.innerWidth < 768 ? 1 : 2;
+    }
+
     function getGap() {
         var styles = window.getComputedStyle(track);
         return parseFloat(styles.columnGap || styles.gap) || 16;
@@ -32,19 +36,23 @@
         return first.getBoundingClientRect().width + getGap();
     }
 
-    function visibleCount() {
-        var viewport = root.querySelector(".product-gallery__viewport") || root;
-        if (!slides[0] || !viewport.clientWidth) return 1;
-        var width = slides[0].getBoundingClientRect().width;
-        if (!width) return 1;
-        return Math.max(1, Math.round(viewport.clientWidth / width));
+    function updateSlideStates() {
+        var count = perView();
+        slides.forEach(function (slide, slideIndex) {
+            slide.classList.toggle(
+                "is-active",
+                slideIndex >= index && slideIndex < index + count
+            );
+        });
     }
 
     function update(animate) {
-        var maxIndex = Math.max(0, originalCount - visibleCount());
+        var count = perView();
+        var maxIndex = Math.max(0, originalCount - count);
         index = Math.min(Math.max(0, index), maxIndex);
-        track.style.transition = animate === false ? "none" : "transform 0.4s ease";
+        track.style.transition = animate === false ? "none" : "transform 0.45s ease";
         track.style.transform = "translateX(" + -index * slideStep() + "px)";
+        updateSlideStates();
         var hasOverflow = maxIndex > 0;
         if (prevButton) {
             prevButton.hidden = !hasOverflow;
@@ -60,7 +68,7 @@
 
     function next() {
         if (nextButton && nextButton.disabled) return;
-        index = Math.min(index + 1, Math.max(0, originalCount - visibleCount()));
+        index = Math.min(index + 1, Math.max(0, originalCount - perView()));
         update(true);
     }
 
@@ -77,7 +85,6 @@
         update(false);
     });
 
-    // Recalculate after images load — slide width can be 0 on first paint.
     slides.forEach(function (slide) {
         var img = slide.querySelector("img");
         if (img && !img.complete) {

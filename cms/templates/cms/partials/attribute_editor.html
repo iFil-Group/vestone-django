@@ -50,7 +50,19 @@
                         <option value="">— wybierz istniejącą wartość —</option>
                     </select>
                     <span class="cms-attr-card__add-sep">lub</span>
-                    <input type="text" class="cms-input cms-attr-card__value-new" data-attr-value-new placeholder="Nowa wartość, np. Opal">
+                    <div class="cms-attr-value-format" data-attr-value-format>
+                        <div class="cms-attr-value-format__toolbar" role="toolbar" aria-label="Formatowanie wartości">
+                            <button type="button" data-attr-cmd="bold" title="Pogrubienie"><strong>B</strong></button>
+                            <button type="button" data-attr-cmd="italic" title="Kursywa"><em>I</em></button>
+                            <button type="button" data-attr-cmd="superscript" title="Indeks górny">x²</button>
+                        </div>
+                        <div
+                            class="cms-input cms-attr-card__value-editor"
+                            contenteditable="true"
+                            data-attr-value-new
+                            data-placeholder="Nowa wartość, np. 60 m²"
+                        ></div>
+                    </div>
                     <select class="cms-select cms-attr-card__value-icon" data-attr-value-icon hidden>
                         <option value="">Ikona nośności (opcjonalnie)</option>
                         <option value="pedestrian">Ruch pieszy</option>
@@ -58,8 +70,9 @@
                         <option value="pedestrian_car">Pieszy i pojazdy</option>
                     </select>
                     <button type="button" class="cms-btn cms-btn--ghost cms-btn--small" data-attr-value-add>Dodaj wartość</button>
-                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-catalog-delete hidden>Usuń z katalogu</button>
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-catalog-delete disabled>Usuń z katalogu</button>
                 </div>
+                <p class="cms-attr-card__catalog-hint">Wybierz wartość z listy, aby dodać ją do produktu. „Usuń z katalogu” kasuje ją we wszystkich produktach.</p>
             </div>
         </article>
         {% empty %}
@@ -106,7 +119,19 @@
                         <option value="">— wybierz istniejącą wartość —</option>
                     </select>
                     <span class="cms-attr-card__add-sep">lub</span>
-                    <input type="text" class="cms-input cms-attr-card__value-new" data-attr-value-new placeholder="Nowa wartość, np. Opal">
+                    <div class="cms-attr-value-format" data-attr-value-format>
+                        <div class="cms-attr-value-format__toolbar" role="toolbar" aria-label="Formatowanie wartości">
+                            <button type="button" data-attr-cmd="bold" title="Pogrubienie"><strong>B</strong></button>
+                            <button type="button" data-attr-cmd="italic" title="Kursywa"><em>I</em></button>
+                            <button type="button" data-attr-cmd="superscript" title="Indeks górny">x²</button>
+                        </div>
+                        <div
+                            class="cms-input cms-attr-card__value-editor"
+                            contenteditable="true"
+                            data-attr-value-new
+                            data-placeholder="Nowa wartość, np. 60 m²"
+                        ></div>
+                    </div>
                     <select class="cms-select cms-attr-card__value-icon" data-attr-value-icon hidden>
                         <option value="">Ikona nośności (opcjonalnie)</option>
                         <option value="pedestrian">Ruch pieszy</option>
@@ -114,8 +139,9 @@
                         <option value="pedestrian_car">Pieszy i pojazdy</option>
                     </select>
                     <button type="button" class="cms-btn cms-btn--ghost cms-btn--small" data-attr-value-add>Dodaj wartość</button>
-                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-catalog-delete hidden>Usuń z katalogu</button>
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-catalog-delete disabled>Usuń z katalogu</button>
                 </div>
+                <p class="cms-attr-card__catalog-hint">Wybierz wartość z listy, aby dodać ją do produktu. „Usuń z katalogu” kasuje ją we wszystkich produktach.</p>
             </div>
         </article>
     </template>
