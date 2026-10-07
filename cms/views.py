@@ -800,7 +800,7 @@ def page_index(request):
         "sort_order", "label"
     )
     hero_slides = HeroSlide.objects.order_by("sort_order")
-    sales_points = SalesPoint.objects.order_by("sort_name", "name")
+    sales_points = SalesPoint.objects.order_by("name")
     settings_form = SiteSettingsForm(request.POST or None, instance=SiteSettings.load())
     if request.method == "POST" and settings_form.is_valid():
         settings_form.save()
@@ -1003,7 +1003,7 @@ def sales_point_list(request):
         "cms/list.html",
         _panel_context(
             "sales-points", "Punkty sprzedaży",
-            items=SalesPoint.objects.all().order_by("sort_name", "name"),
+            items=SalesPoint.objects.all().order_by("name"),
             add_url=reverse("cms_sales_point_add"),
             edit_url_name="cms_sales_point_edit",
             delete_model="sales-point",

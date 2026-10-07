@@ -65,7 +65,7 @@ class Command(BaseCommand):
             ("home-products-lead", ContentBlock.GROUP_HOME, "Nasze produkty — lead", "Nasze produkty", "", LOREM, "", "Zobacz wszystkie", "/produkty/"),
             ("home-about", ContentBlock.GROUP_HOME, "O nas (sekcja)", "O nas", "", LOREM, "", "VESTONE - TWOJA PRZESTRZEŃ", "/o-nas/"),
             ("home-news-lead", ContentBlock.GROUP_HOME, "Aktualności — lead", "Aktualności", "", LOREM, "", "Zobacz wszystkie", "/o-nas/aktualnosci/"),
-            ("home-map", ContentBlock.GROUP_HOME, "Gdzie kupić (sekcja)", "Gdzie kupić", "", LOREM, "", "Sprawdź", "/gdzie-kupic/"),
+            ("home-map", ContentBlock.GROUP_HOME, "Gdzie kupić (sekcja)", "Gdzie kupić", "", LOREM, "", "Wyszukaj punkt sprzedaży", "/gdzie-kupic/"),
             ("home-tips-lead", ContentBlock.GROUP_HOME, "Porady — lead", "Porady", "", LOREM, "", "Zobacz wszystkie", "/porady/"),
             (
                 "home-contact",

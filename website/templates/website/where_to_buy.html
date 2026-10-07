@@ -39,6 +39,10 @@
                     </button>
                 </div>
             </div>
+            <div class="where-buy__legend where-buy__legend--top" aria-label="Legenda mapy">
+                <span><img src="{% static 'img/pin-grey.png' %}" alt=""> Punkty sprzedające pełną ofertę produktów</span>
+                <span><img src="{% static 'img/pin-red.png' %}" alt=""> Punkty sprzedające wyłącznie płyty dekoracyjne MUSSO</span>
+            </div>
             <div class="product-filters__grid product-filters__grid--3" role="group" aria-label="Filtry punktów sprzedaży">
                 <label class="product-filters__field">
                     <span class="product-filters__label">Oferta</span>
@@ -79,11 +83,6 @@
 
     <section class="where-buy__body">
         <div class="where-buy__inner">
-            <div class="where-buy__legend">
-                <span><img src="{% static 'img/pin-grey.png' %}" alt=""> Pełna oferta produktów VESTONE</span>
-                <span><img src="{% static 'img/pin-musso.png' %}" alt=""> Wyłącznie płyty dekoracyjne MUSSO</span>
-            </div>
-
             <div class="where-buy__layout">
                 <div class="where-buy__map-wrap">
                     <div class="where-buy__map" id="where-buy-map" data-where-map aria-label="Mapa punktów sprzedaży"></div>
@@ -138,5 +137,5 @@
 
 {% block extra_scripts %}
 <script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
-<script src="{% static 'theme/js/where-to-buy.js' %}?v=20260907b" defer></script>
+<script src="{% static 'theme/js/where-to-buy.js' %}?v=20261007a" defer></script>
 {% endblock %}

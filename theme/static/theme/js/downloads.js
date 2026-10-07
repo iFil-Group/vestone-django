@@ -7,18 +7,29 @@
     }
 
     var searchInput = root.querySelector("[data-downloads-search]");
-    var categoryButtons = root.querySelectorAll("[data-downloads-category]");
+    var categorySelect = root.querySelector("[data-downloads-categories]");
     var groups = root.querySelectorAll("[data-downloads-group]");
-    var items = root.querySelectorAll("[data-download-item]");
     var emptyState = root.querySelector("[data-downloads-empty]");
-    var activeCategory = "all";
 
     function normalize(value) {
         return (value || "").toLowerCase().trim();
     }
 
+    function selectedCategories() {
+        if (!categorySelect) {
+            return [];
+        }
+        return Array.prototype.slice
+            .call(categorySelect.selectedOptions)
+            .map(function (option) {
+                return option.value;
+            });
+    }
+
     function applyFilters() {
         var query = normalize(searchInput ? searchInput.value : "");
+        var categories = selectedCategories();
+        var filterByCategory = categories.length > 0;
         var visibleCount = 0;
 
         groups.forEach(function (group) {
@@ -27,9 +38,9 @@
             var groupVisible = 0;
 
             groupItems.forEach(function (item) {
+                var itemCategory = item.getAttribute("data-category");
                 var matchCategory =
-                    activeCategory === "all" ||
-                    item.getAttribute("data-category") === activeCategory;
+                    !filterByCategory || categories.indexOf(itemCategory) !== -1;
                 var searchData = normalize(item.getAttribute("data-search"));
                 var matchSearch = !query || searchData.indexOf(query) !== -1;
                 var visible = matchCategory && matchSearch;
@@ -42,8 +53,7 @@
             });
 
             var showGroup =
-                (activeCategory === "all" || activeCategory === groupId) &&
-                groupVisible > 0;
+                (!filterByCategory || categories.indexOf(groupId) !== -1) && groupVisible > 0;
             group.hidden = !showGroup;
         });
 
@@ -52,19 +62,9 @@
         }
     }
 
-    categoryButtons.forEach(function (button) {
-        button.addEventListener("click", function () {
-            activeCategory = button.getAttribute("data-downloads-category");
-
-            categoryButtons.forEach(function (btn) {
-                var isActive = btn === button;
-                btn.classList.toggle("is-active", isActive);
-                btn.setAttribute("aria-selected", isActive ? "true" : "false");
-            });
-
-            applyFilters();
-        });
-    });
+    if (categorySelect) {
+        categorySelect.addEventListener("change", applyFilters);
+    }
 
     if (searchInput) {
         searchInput.addEventListener("input", applyFilters);

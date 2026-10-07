@@ -319,7 +319,7 @@ def get_sales_points():
             "offer_type": point.offer_type,
             "lat": float(point.latitude) if point.latitude is not None else None,
             "lng": float(point.longitude) if point.longitude is not None else None,
-            "pin": "img/pin-musso.png" if point.offer_type == SalesPoint.OFFER_MUSSO else "img/pin-grey.png",
+            "pin": "img/pin-red.png" if point.offer_type == SalesPoint.OFFER_MUSSO else "img/pin-grey.png",
             "route_url": _sales_point_route_url(point),
         }
         )
@@ -1088,7 +1088,7 @@ def get_home_context():
             {
                 "title": "Gdzie kupić",
                 "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                "button_label": "Sprawdź",
+                "button_label": "Wyszukaj punkt sprzedaży",
                 "button_url": "/gdzie-kupic/",
                 "image": placeholder,
             },

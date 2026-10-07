@@ -19,9 +19,10 @@
     var map = null;
     if (typeof window.L !== "undefined") {
         map = window.L.map(mapEl, { scrollWheelZoom: false }).setView([52.0, 19.2], 6);
-        window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 18,
-            attribution: "&copy; OpenStreetMap",
+        window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         }).addTo(map);
     } else if (mapHint) {
         mapHint.hidden = false;

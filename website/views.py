@@ -219,7 +219,7 @@ def product_detail(request, category_slug, product_slug):
                 {
                     "title": "Gdzie kupić",
                     "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                    "button_label": "Sprawdź",
+                    "button_label": "Wyszukaj punkt sprzedaży",
                     "button_url": "/gdzie-kupic/",
                     "image": get_placeholder(),
                 },

@@ -185,11 +185,7 @@ class HeroSlideForm(StyledModelForm):
 
 
 class PromotionSlideForm(StyledModelForm):
-    line_1 = forms.CharField(
-        label="Linia 1",
-        required=False,
-        help_text="Na pasku przesuwają się maksymalnie 3 linijki. Pogrubienie i kursywa dozwolone.",
-    )
+    line_1 = forms.CharField(label="Linia 1", required=False)
     line_2 = forms.CharField(label="Linia 2", required=False)
     line_3 = forms.CharField(label="Linia 3", required=False)
 
@@ -219,7 +215,7 @@ class PromotionSlideForm(StyledModelForm):
         self.fields["text"].required = False
         self.fields["text"].widget = forms.HiddenInput()
         for name in ("line_1", "line_2", "line_3"):
-            self.fields[name].widget = RichTextWidget(compact=True)
+            self.fields[name].widget = RichTextWidget(compact=True, show_help=False)
             self.fields[name].required = False
         self.fields["link_label"].help_text = (
             "Przycisk zostaje na stałe obok przesuwających się linijek."

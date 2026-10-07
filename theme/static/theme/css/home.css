@@ -73,6 +73,9 @@
         height: auto;
         min-height: 2.9em;
     }
+    .home-announce__slide {
+        justify-content: center;
+    }
     .home-announce__text {
         white-space: normal;
         text-overflow: unset;
@@ -81,12 +84,14 @@
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 3;
         line-clamp: 3;
-        text-align: left;
+        text-align: center;
+        width: 100%;
     }
     .home-announce__btn {
         flex-basis: 100%;
         width: 100%;
-        margin-top: 0.35rem;
+        margin-top: 0.15rem;
+        align-self: center;
     }
 }
 

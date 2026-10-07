@@ -12,12 +12,14 @@ class CMSClearableFileInput(forms.ClearableFileInput):
 class RichTextWidget(forms.Textarea):
     template_name = "cms/widgets/rich_textarea.html"
 
-    def __init__(self, attrs=None, compact=False):
+    def __init__(self, attrs=None, compact=False, show_help=True):
         attrs = {"class": "cms-textarea cms-richtext-source", **(attrs or {})}
         super().__init__(attrs)
         self.compact = compact
+        self.show_help = show_help
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context["widget"]["compact"] = self.compact
+        context["widget"]["show_help"] = self.show_help
         return context

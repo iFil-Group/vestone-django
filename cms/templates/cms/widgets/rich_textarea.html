@@ -27,9 +27,9 @@
         <button type="button" data-command="removeFormat" title="Wyczyść formatowanie">Wyczyść</button>
     </div>
     <div class="cms-richtext__editor" contenteditable="true" role="textbox" aria-multiline="true"></div>
-    {% if widget.compact %}
+    {% if widget.compact and widget.show_help %}
     <p class="cms-field__help">Pogrubienie i kursywa. Pole może zostać puste.</p>
-    {% else %}
+    {% elif not widget.compact %}
     <p class="cms-field__help">Pogrubienie, kursywa, indeks górny i nagłówki. Pole może zostać puste. Tekst z Worda przejmuje styl strony.</p>
     {% endif %}
     {% include "django/forms/widgets/textarea.html" %}

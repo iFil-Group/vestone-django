@@ -139,7 +139,7 @@
     --downloads-control-h: 2.75rem;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1rem;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--vestone-line);
@@ -148,9 +148,59 @@
 @media (min-width: 900px) {
     .downloads__toolbar {
         flex-direction: row;
-        align-items: center;
-        gap: 1.5rem;
+        align-items: flex-end;
+        gap: 1.25rem;
     }
+}
+
+.downloads__filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 0 1 16rem;
+    min-width: 0;
+}
+
+.downloads__filter-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--vestone-gray-muted);
+}
+
+.downloads__filter-select {
+    width: 100%;
+    min-height: var(--downloads-control-h);
+    max-height: var(--downloads-control-h);
+    padding: 0.45rem 0.75rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--vestone-gray);
+    background: #f7f8f9;
+    border: 1px solid var(--vestone-line);
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+    .downloads__filter-select {
+        min-height: var(--downloads-control-h);
+        max-height: none;
+        height: var(--downloads-control-h);
+    }
+
+    .downloads__filter-select[multiple] {
+        height: var(--downloads-control-h);
+        overflow: hidden;
+    }
+}
+
+.downloads__filter-select:focus {
+    outline: none;
+    border-color: var(--vestone-red);
+    box-shadow: 0 0 0 3px rgba(225, 25, 70, 0.1);
+    background: var(--vestone-white);
 }
 
 .downloads__search {
@@ -897,6 +947,14 @@
     margin: 1.1rem 0 1.4rem;
     font-size: 0.82rem;
     color: var(--vestone-gray);
+}
+
+.product-filters .where-buy__legend--top {
+    margin: 0.25rem 0 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(220, 228, 234, 0.92);
+    font-size: 0.8rem;
 }
 
 .where-buy__legend img {
