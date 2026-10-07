@@ -741,6 +741,25 @@ def download_item_edit(request, pk=None):
 
 
 @login_required
+def product_move(request, pk, direction):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    product = get_object_or_404(Product, pk=pk)
+    siblings = list(
+        Product.objects.filter(group=product.group).order_by("sort_order", "title", "pk")
+    )
+    index = siblings.index(product)
+    target_index = index - 1 if direction == "up" else index + 1
+    if 0 <= target_index < len(siblings):
+        siblings[index], siblings[target_index] = siblings[target_index], siblings[index]
+        for order, sibling in enumerate(siblings):
+            if sibling.sort_order != order:
+                sibling.sort_order = order
+                sibling.save(update_fields=["sort_order"])
+    return redirect(f"{reverse('cms_products')}?tab=produkty")
+
+
+@login_required
 def download_move(request, pk, direction):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])

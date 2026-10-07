@@ -730,6 +730,80 @@ def get_related_products(product=None, exclude_slug=None, category_slug=None, li
     return RELATED_PRODUCTS[:limit]
 
 
+_SURFACE_FILTER_FIELDS = (
+    "filter_product_name",
+    "filter_category",
+    "filter_application",
+    "filter_surface",
+    "filter_format",
+    "filter_thickness",
+    "filter_color",
+    "filter_load",
+)
+
+_SURFACE_ATTR_HINTS = {
+    "filter_application": ("zastosowanie", "application"),
+    "filter_surface": ("powierzchnia", "surface"),
+    "filter_format": ("format",),
+    "filter_thickness": ("grubosc", "grubość", "thickness"),
+    "filter_color": ("kolor", "barwa", "color"),
+    "filter_load": ("nosnosc", "nośność", "nosnosc", "load"),
+}
+
+
+def _surface_products_for_type(surface_type):
+    from cms.models import Product
+
+    return list(
+        Product.objects.filter(group__slug=surface_type.slug)
+        .select_related("group")
+        .prefetch_related("attribute_assignments__option__attribute")
+        .order_by("sort_order", "title")
+    )
+
+
+def _product_attribute_filter_map(product):
+    values = {}
+    for assignment in product.attribute_assignments.all():
+        option = assignment.option
+        attribute = option.attribute
+        slug = (attribute.slug or "").lower()
+        name = (attribute.name or "").lower()
+        raw = strip_tags(option.value or "").strip()
+        if not raw and not option.icon_display:
+            continue
+        display = raw
+        if option.icon_display:
+            display = {
+                "pedestrian": "ruch pieszy",
+                "car": "ruch pojazdów",
+                "pedestrian_car": "ruch pieszy i pojazdów",
+            }.get(option.icon_display, raw)
+        for field, hints in _SURFACE_ATTR_HINTS.items():
+            if field in values:
+                continue
+            if any(hint in slug or hint in name for hint in hints):
+                values[field] = display
+    return values
+
+
+def _effective_surface_filters(item, surface_type, products):
+    effective = {field: (getattr(item, field) or "").strip() for field in _SURFACE_FILTER_FIELDS}
+    if products:
+        if not effective["filter_category"]:
+            effective["filter_category"] = products[0].group.title
+        if len(products) == 1 and not effective["filter_product_name"]:
+            effective["filter_product_name"] = products[0].title
+        for product in products:
+            attrs = _product_attribute_filter_map(product)
+            for field, value in attrs.items():
+                if not effective.get(field) and value:
+                    effective[field] = value
+    if not effective["filter_color"]:
+        effective["filter_color"] = item.title
+    return effective
+
+
 def get_surface_groups():
     """Catalog for /barwy-i-powierzchnie/: product groups with nested colors."""
     from cms.models import SurfaceType
@@ -742,40 +816,30 @@ def get_surface_groups():
     )
     result = []
     for group in groups:
-        items = [
-            {
-                "slug": item.slug,
-                "title": item.title,
-                "image": _image_url(item.image, placeholder),
-                "search_text": " ".join(
-                    filter(
-                        None,
-                        [
-                            item.title,
-                            group.name,
-                            item.filter_product_name,
-                            item.filter_category,
-                            item.filter_application,
-                            item.filter_surface,
-                            item.filter_format,
-                            item.filter_thickness,
-                            item.filter_color,
-                            item.filter_load,
-                        ],
-                    )
-                ).lower(),
-                "filter_product_name": item.filter_product_name,
-                "filter_category": item.filter_category,
-                "filter_application": item.filter_application,
-                "filter_surface": item.filter_surface,
-                "filter_format": item.filter_format,
-                "filter_thickness": item.filter_thickness,
-                "filter_color": item.filter_color,
-                "filter_load": item.filter_load,
-            }
-            for item in group.items.all()
-            if item.is_active
-        ]
+        products = _surface_products_for_type(group)
+        items = []
+        for item in group.items.all():
+            if not item.is_active:
+                continue
+            filters = _effective_surface_filters(item, group, products)
+            items.append(
+                {
+                    "slug": item.slug,
+                    "title": item.title,
+                    "image": _image_url(item.image, placeholder),
+                    "search_text": " ".join(
+                        filter(
+                            None,
+                            [
+                                item.title,
+                                group.name,
+                                *[filters[field] for field in _SURFACE_FILTER_FIELDS],
+                            ],
+                        )
+                    ).lower(),
+                    **filters,
+                }
+            )
         if not items:
             continue
         result.append(
@@ -789,10 +853,14 @@ def get_surface_groups():
     return result
 
 
-def get_surface_filter_options():
-    from cms.models import SurfaceItem
+def _unique_filter_values(values):
+    return sorted({value.strip() for value in values if (value or "").strip()}, key=str.lower)
 
-    field_names = [
+
+def get_surface_filter_options():
+    from cms.models import Product, ProductGroup, SurfaceItem
+
+    field_labels = [
         ("filter_product_name", "Nazwa produktu"),
         ("filter_category", "Kategoria"),
         ("filter_application", "Zastosowanie"),
@@ -802,20 +870,30 @@ def get_surface_filter_options():
         ("filter_color", "Kolor"),
         ("filter_load", "Nośność"),
     ]
-    options = []
-    for field, label in field_names:
-        values = sorted(
-            {
-                value.strip()
-                for value in SurfaceItem.objects.filter(is_active=True)
-                .exclude(**{field: ""})
-                .values_list(field, flat=True)
-                if (value or "").strip()
-            },
-            key=str.lower,
+    products = list(
+        Product.objects.select_related("group").prefetch_related(
+            "attribute_assignments__option__attribute"
         )
-        if values:
-            options.append({"field": field, "label": label, "values": values})
+    )
+    options = []
+    for field, label in field_labels:
+        values = set(
+            SurfaceItem.objects.filter(is_active=True)
+            .exclude(**{field: ""})
+            .values_list(field, flat=True)
+        )
+        if field == "filter_product_name":
+            values.update(product.title for product in products)
+        elif field == "filter_category":
+            values.update(
+                ProductGroup.objects.filter(is_active=True).values_list("title", flat=True)
+            )
+        else:
+            for product in products:
+                mapped = _product_attribute_filter_map(product).get(field, "")
+                if mapped:
+                    values.add(mapped)
+        options.append({"field": field, "label": label, "values": _unique_filter_values(values)})
     return options
 
 

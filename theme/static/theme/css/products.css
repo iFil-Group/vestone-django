@@ -1280,7 +1280,7 @@
 /* —— Surfaces catalog (independent from products) —— */
 
 .surface-page {
-    background: #f4f6f8;
+    background: #e3eef8;
     padding-bottom: 4rem;
 }
 
@@ -1469,16 +1469,16 @@
 }
 
 .surface-group__head {
-    display: grid;
-    grid-template-columns: 4px 1fr;
-    gap: 0.85rem;
-    align-items: start;
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+    min-height: 4.5rem;
 }
 
 .surface-group__bar {
     display: block;
     width: 4px;
-    min-height: 5rem;
+    flex-shrink: 0;
     align-self: stretch;
     background: var(--vestone-gray-deep, #374650);
     border-radius: 2px;
@@ -1496,11 +1496,16 @@
 
 .surface-group__image {
     display: block;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
     height: auto;
-    max-height: 7.5rem;
+    max-height: 4.5rem;
     object-fit: contain;
-    justify-self: start;
+    align-self: center;
+    background: #fff;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(55, 70, 80, 0.08);
 }
 
 .surface-group__grid {

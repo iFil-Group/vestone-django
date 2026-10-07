@@ -788,7 +788,7 @@ class ProductPackshotInlineForm(StyledModelForm):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["sort_order"].widget = forms.HiddenInput()
-        self.fields["caption"].widget = RichTextWidget(compact=True)
+        self.fields["caption"].widget = RichTextWidget(compact=True, show_help=False)
         self.fields["caption"].required = False
 
     def clean(self):
@@ -823,7 +823,7 @@ class ProductColorInlineForm(StyledModelForm):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["sort_order"].widget = forms.HiddenInput()
-        self.fields["caption"].widget = RichTextWidget(compact=True)
+        self.fields["caption"].widget = RichTextWidget(compact=True, show_help=False)
         self.fields["caption"].required = False
 
     def clean(self):

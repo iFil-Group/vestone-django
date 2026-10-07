@@ -20,6 +20,11 @@ urlpatterns = [
     path("ifil-log/panel/produkty/grupa/<int:pk>/", views.product_group_edit, name="cms_product_group_edit"),
     path("ifil-log/panel/produkty/dodaj/", views.product_edit, name="cms_product_add"),
     path("ifil-log/panel/produkty/<int:pk>/", views.product_edit, name="cms_product_edit"),
+    path(
+        "ifil-log/panel/produkty/<int:pk>/przesun/<slug:direction>/",
+        views.product_move,
+        name="cms_product_move",
+    ),
     path("ifil-log/panel/produkty/szukaj/", views.product_search, name="cms_product_search"),
     path(
         "ifil-log/panel/produkty/<int:pk>/dane-techniczne/",

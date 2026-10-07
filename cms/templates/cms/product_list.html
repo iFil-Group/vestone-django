@@ -60,7 +60,7 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5" class="cms-table__empty">Brak grup.</td></tr>
+                <tr><td colspan="4" class="cms-table__empty">Brak grup.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -89,7 +89,6 @@
                     <th>Nazwa</th>
                     <th>Kategoria</th>
                     <th>Slug</th>
-                    <th>Kolejność</th>
                     <th></th>
                 </tr>
             </thead>
@@ -99,11 +98,14 @@
                     <td>{{ item.title }}</td>
                     <td>{{ item.group.title }}</td>
                     <td>{{ item.slug }}</td>
-                    <td>{{ item.sort_order }}</td>
                     <td class="cms-table__actions">
+                        <div class="cms-table__action-row">
+                            <form method="post" action="{% url 'cms_product_move' item.pk 'up' %}" class="cms-row-action-form">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w górę w kategorii">↑</button></form>
+                            <form method="post" action="{% url 'cms_product_move' item.pk 'down' %}" class="cms-row-action-form">{% csrf_token %}<button type="submit" class="cms-btn cms-btn--small" aria-label="Przesuń w dół w kategorii">↓</button></form>
                         {% url 'cms_product_edit' item.pk as row_edit_url %}
                         {% url 'cms_delete' 'product' item.pk as row_delete_url %}
                         {% include "cms/partials/row_actions.html" with edit_url=row_edit_url delete_url=row_delete_url delete_confirm="Usunąć produkt?" %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}

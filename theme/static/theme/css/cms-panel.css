@@ -563,6 +563,14 @@ body.cms-body--panel {
     background: #f7f8f9;
 }
 
+.cms-table__action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+}
+
 .cms-table__actions {
     text-align: right;
     white-space: nowrap;
