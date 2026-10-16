@@ -111,6 +111,7 @@ def _merge_content_block(blocks, key, defaults):
 
 def get_content_block(key, fallback=None, image_fallback=True):
     from cms.models import ContentBlock
+    from cms.richtext import normalize_richtext_html
 
     block = ContentBlock.objects.filter(key=key, is_active=True).first()
     if block is None:
@@ -121,8 +122,8 @@ def get_content_block(key, fallback=None, image_fallback=True):
         "key": block.key,
         "title": block.title,
         "subtitle": block.subtitle,
-        "body": block.body,
-        "body_extra": block.body_extra,
+        "body": normalize_richtext_html(block.body),
+        "body_extra": normalize_richtext_html(block.body_extra),
         "image": image,
         "button_label": block.button_label,
         "button_url": block.button_url,
@@ -131,6 +132,7 @@ def get_content_block(key, fallback=None, image_fallback=True):
 
 def get_content_blocks_by_group(group):
     from cms.models import ContentBlock
+    from cms.richtext import normalize_richtext_html
 
     blocks = ContentBlock.objects.filter(group=group, is_active=True).order_by(
         "sort_order", "label", "pk"
@@ -140,8 +142,8 @@ def get_content_blocks_by_group(group):
         block.key: {
             "title": block.title,
             "subtitle": block.subtitle,
-            "body": block.body,
-            "body_extra": block.body_extra,
+            "body": normalize_richtext_html(block.body),
+            "body_extra": normalize_richtext_html(block.body_extra),
             "image": _image_url(block.image, placeholder),
             "button_label": block.button_label,
             "button_url": block.button_url,

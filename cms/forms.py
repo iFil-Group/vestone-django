@@ -169,6 +169,16 @@ class ContentBlockForm(StyledModelForm):
         )
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
 
+    def clean_body(self):
+        from cms.richtext import normalize_richtext_html
+
+        return normalize_richtext_html(self.cleaned_data.get("body"))
+
+    def clean_body_extra(self):
+        from cms.richtext import normalize_richtext_html
+
+        return normalize_richtext_html(self.cleaned_data.get("body_extra"))
+
     def save(self, commit=True):
         instance = super().save(commit=False)
         if instance.pk is None:

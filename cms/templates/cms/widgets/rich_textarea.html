@@ -19,18 +19,20 @@
         <button type="button" data-command="underline" title="Podkreślenie"><u>U</u></button>
         <button type="button" data-command="insertUnorderedList" title="Lista punktowana">• Lista</button>
         <button type="button" data-command="insertOrderedList" title="Lista numerowana">1. Lista</button>
+        <button type="button" data-command="insertLineBreak" title="Nowa linia w tym samym punkcie (Shift+Enter)">↵ Linia</button>
         <button type="button" data-command="createLink" title="Dodaj link">Link</button>
         <button type="button" data-command="unlink" title="Usuń link">Usuń link</button>
         <button type="button" data-command="nbsp" title="Wstaw twardą spację">Twarda spacja</button>
         {% endif %}
-        <button type="button" data-command="outdent" title="Wyłącz listę / wcięcie">Wyłącz listę</button>
+        <button type="button" data-command="outdent" title="Zakończ listę i wróć do zwykłego tekstu">Wyłącz listę</button>
+        <button type="button" data-command="paragraph" title="Nowy akapit poza listą">Akapit</button>
         <button type="button" data-command="removeFormat" title="Wyczyść formatowanie">Wyczyść</button>
     </div>
     <div class="cms-richtext__editor" contenteditable="true" role="textbox" aria-multiline="true"></div>
     {% if widget.compact and widget.show_help %}
     <p class="cms-field__help">Pogrubienie i kursywa. Pole może zostać puste.</p>
     {% elif not widget.compact %}
-    <p class="cms-field__help">Pogrubienie, kursywa, indeks górny i nagłówki. Pole może zostać puste. Tekst z Worda przejmuje styl strony.</p>
+    <p class="cms-field__help">Enter — kolejny punkt listy. Shift+Enter lub „Linia” — nowa linia w tym samym punkcie. „Wyłącz listę” / „Akapit” — tekst bez numeracji. Tekst z Worda przejmuje styl strony.</p>
     {% endif %}
     {% include "django/forms/widgets/textarea.html" %}
 </div>
