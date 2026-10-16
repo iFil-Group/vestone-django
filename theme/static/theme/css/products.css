@@ -1271,8 +1271,7 @@
     width: 100%;
     max-height: 9rem;
     object-fit: contain;
-    background: #f4f6f8;
-    border-radius: 3px;
+    background: transparent;
 }
 
 .product-packshot-strip__caption {
