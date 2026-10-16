@@ -541,6 +541,10 @@
 
 /* —— Product detail page shell —— */
 
+.product-page--detail {
+    overflow-x: clip;
+}
+
 .product-page {
     display: flex;
     flex-direction: column;
@@ -919,10 +923,11 @@
 .product-gallery {
     --product-gallery-gap: 1rem;
     position: relative;
-    left: 50%;
-    width: 100vw;
+    width: 100%;
+    max-width: 100vw;
     margin: 2.5rem 0 0.5rem;
-    transform: translateX(-50%);
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
 }
 
 .product-gallery__inner {
@@ -990,13 +995,17 @@
     width: 2.5rem;
     height: 2.5rem;
     padding: 0;
-    border: 1px solid var(--vestone-line);
+    border: none;
     border-radius: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.94);
-    color: var(--vestone-gray-deep, #374650);
+    background: var(--vestone-gray-deep, #374650);
+    color: #fff;
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(26, 31, 36, 0.1);
+    box-shadow: 0 4px 14px rgba(26, 31, 36, 0.22);
+}
+
+.product-gallery__arrow:hover:not(:disabled) {
+    background: #2a343c;
 }
 
 .product-gallery__arrow svg {
@@ -1216,20 +1225,45 @@
     margin: 2rem auto 0;
 }
 
+.product-packshot-strip__inner {
+    position: relative;
+    padding: 0 3.25rem;
+    box-sizing: border-box;
+}
+
+.product-packshot-strip__viewport {
+    overflow: hidden;
+    width: 100%;
+}
+
 .product-packshot-strip__track {
     display: flex;
     gap: 0.85rem;
     margin: 0;
     padding: 0.35rem 0 0.75rem;
     list-style: none;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
+    will-change: transform;
 }
 
 .product-packshot-strip__item {
-    flex: 0 0 min(11rem, 38vw);
-    scroll-snap-align: start;
+    flex: 0 0 calc((100% - 0.85rem * 3) / 4);
+    min-width: 0;
+}
+
+@media (max-width: 1023px) {
+    .product-packshot-strip__item {
+        flex: 0 0 calc((100% - 0.85rem * 2) / 3);
+    }
+}
+
+@media (max-width: 639px) {
+    .product-packshot-strip__inner {
+        padding: 0 2.75rem;
+    }
+
+    .product-packshot-strip__item {
+        flex: 0 0 calc((100% - 0.85rem) / 2);
+    }
 }
 
 .product-packshot-strip__img {

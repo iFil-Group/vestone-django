@@ -388,6 +388,65 @@ def _pin_coord(value):
     return format(float(value), ".2f")
 
 
+_UNIT_M2_RE = re.compile(r"\bm2\b", re.IGNORECASE)
+
+_LOAD_ICON_BY_TEXT = {
+    "pieszy i pojazdy": "pedestrian_car",
+    "pieszy i pojazdow": "pedestrian_car",
+    "ruch pieszy i pojazdow": "pedestrian_car",
+    "ruch pieszy i pojazdów": "pedestrian_car",
+    "pieszy": "pedestrian",
+    "ruch pieszy": "pedestrian",
+    "pojazdy": "car",
+    "ruch pojazdow": "car",
+    "ruch pojazdów": "car",
+}
+
+
+def _normalize_load_text(text):
+    lowered = (text or "").strip().lower()
+    return (
+        lowered.replace("ł", "l")
+        .replace("ó", "o")
+        .replace("ą", "a")
+        .replace("ę", "e")
+        .replace("ś", "s")
+        .replace("ź", "z")
+        .replace("ż", "z")
+        .replace("ń", "n")
+        .replace("ć", "c")
+    )
+
+
+def _is_load_capacity_label(label):
+    normalized = _normalize_load_text(label)
+    return "nosnosc" in normalized or "noscnosc" in normalized
+
+
+def _is_unit_of_measure_label(label):
+    normalized = _normalize_load_text(label)
+    return "jednostka" in normalized and "miar" in normalized
+
+
+def _infer_load_icon_display(label, value_html, icon_display):
+    preset = (icon_display or "").strip()
+    if preset:
+        return preset
+    if not _is_load_capacity_label(label):
+        return ""
+    text = _normalize_load_text(strip_tags(value_html or ""))
+    return _LOAD_ICON_BY_TEXT.get(text, "")
+
+
+def _format_product_attribute_html(value, label):
+    raw = (value or "").strip()
+    if not raw:
+        return raw
+    if _is_unit_of_measure_label(label) or _UNIT_M2_RE.search(raw):
+        return _UNIT_M2_RE.sub("m<sup>2</sup>", raw)
+    return raw
+
+
 def _product_dict(product, placeholder):
     attributes = [
         {
@@ -408,13 +467,19 @@ def _product_dict(product, placeholder):
             specs_by_slug[attribute["slug"]] = spec
             specs.append(spec)
         bucket = specs_by_slug[attribute["slug"]]["values"]
-        token = (attribute["icon_display"] or attribute["value"] or "").strip()
+        formatted_html = _format_product_attribute_html(
+            attribute["value"], attribute["label"]
+        )
+        icon_display = _infer_load_icon_display(
+            attribute["label"], formatted_html, attribute["icon_display"]
+        )
+        token = (icon_display or strip_tags(formatted_html) or "").strip()
         if token and token not in [v.get("key") for v in bucket]:
             bucket.append(
                 {
                     "key": token,
-                    "html": attribute["value"],
-                    "icon_display": attribute["icon_display"],
+                    "html": formatted_html,
+                    "icon_display": icon_display,
                 }
             )
     for spec in specs:

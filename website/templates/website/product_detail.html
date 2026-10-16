@@ -5,7 +5,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260907d">
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261016a">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261016d">
 {% endblock %}
 
 {% block main %}
@@ -116,22 +116,32 @@
         {% endif %}
 
         {% if product.show_packshot and product.packshots %}
-        <section class="product-packshot-strip" aria-label="Packshot">
-            <ul class="product-packshot-strip__track">
-                {% for item in product.packshots %}
-                <li class="product-packshot-strip__item">
-                    <img
-                        class="product-packshot-strip__img"
-                        src="{{ item.image }}"
-                        alt="{% if item.caption %}{{ item.caption|striptags }}{% else %}{{ product.title }} packshot{% endif %}"
-                        loading="lazy"
-                    >
-                    {% if item.caption %}
-                    <p class="product-packshot-strip__caption rich-text">{{ item.caption|safe }}</p>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
+        <section class="product-packshot-strip" aria-label="Packshot" data-product-packshot>
+            <div class="product-packshot-strip__inner">
+                <div class="product-packshot-strip__viewport">
+                    <ul class="product-packshot-strip__track" data-product-packshot-track>
+                        {% for item in product.packshots %}
+                        <li class="product-packshot-strip__item">
+                            <img
+                                class="product-packshot-strip__img"
+                                src="{{ item.image }}"
+                                alt="{% if item.caption %}{{ item.caption|striptags }}{% else %}{{ product.title }} packshot{% endif %}"
+                                loading="lazy"
+                            >
+                            {% if item.caption %}
+                            <p class="product-packshot-strip__caption rich-text">{{ item.caption|safe }}</p>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <button type="button" class="product-gallery__arrow product-gallery__arrow--prev" data-product-packshot-prev aria-label="Poprzedni packshot">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.4 4.6 8 12l7.4 7.4 1.2-1.2L10.4 12l6.2-6.2z"/></svg>
+                </button>
+                <button type="button" class="product-gallery__arrow product-gallery__arrow--next" data-product-packshot-next aria-label="Następny packshot">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8.6 4.6-1.2 1.2L13.6 12l-6.2 6.2 1.2 1.2L16 12z"/></svg>
+                </button>
+            </div>
         </section>
         {% endif %}
 
@@ -197,5 +207,5 @@
 
 {% block extra_scripts %}
 <script src="{% static 'theme/js/product-pins.js' %}?v=20260728i" defer></script>
-<script src="{% static 'theme/js/product-gallery.js' %}?v=20261007b" defer></script>
+<script src="{% static 'theme/js/product-gallery.js' %}?v=20261016d" defer></script>
 {% endblock %}
