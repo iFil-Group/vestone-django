@@ -4,7 +4,7 @@
 {% block title %}Vestone — kostka brukowa, płyty tarasowe, mała architektura{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20261007f">
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20261016a">
 {% endblock %}
 
 {% block main %}
@@ -17,6 +17,10 @@
                 <video class="home-hero__media" autoplay muted loop playsinline preload="metadata"{% if slide.image %} poster="{{ slide.image }}"{% endif %}>
                     <source src="{{ slide.video }}">
                 </video>
+                <button type="button" class="home-hero__sound" data-hero-sound aria-pressed="false" aria-label="Włącz dźwięk">
+                    <span class="home-hero__sound-icon home-hero__sound-icon--off" aria-hidden="true">🔇</span>
+                    <span class="home-hero__sound-icon home-hero__sound-icon--on" aria-hidden="true">🔊</span>
+                </button>
                 {% else %}
                 <picture>
                     <source media="(max-width: 767px)" srcset="{{ slide.mobile_image|default:slide.image }}">
@@ -69,5 +73,5 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'theme/js/home.js' %}" defer></script>
+<script src="{% static 'theme/js/home.js' %}?v=20261016a" defer></script>
 {% endblock %}

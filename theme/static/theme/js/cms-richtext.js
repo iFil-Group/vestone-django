@@ -126,6 +126,27 @@
         document.execCommand("insertText", false, text);
     }
 
+    function removeListFormatting(editor) {
+        editor.focus();
+        var attempts = 0;
+        while (attempts < 8) {
+            var parent = window.getSelection && window.getSelection().anchorNode;
+            while (parent && parent !== editor && parent.nodeName !== "LI") {
+                parent = parent.parentNode;
+            }
+            if (!parent || parent.nodeName !== "LI") {
+                break;
+            }
+            document.execCommand("outdent", false, null);
+            document.execCommand("insertOrderedList", false, null);
+            document.execCommand("insertUnorderedList", false, null);
+            document.execCommand("formatBlock", false, "p");
+            attempts += 1;
+        }
+        document.execCommand("removeFormat", false, null);
+        document.execCommand("formatBlock", false, "p");
+    }
+
     document.querySelectorAll("[data-richtext]").forEach(function (root) {
         var source = root.querySelector(".cms-richtext-source");
         var editor = root.querySelector(".cms-richtext__editor");
@@ -140,6 +161,25 @@
 
         editor.addEventListener("input", sync);
         editor.closest("form").addEventListener("submit", sync);
+
+        editor.addEventListener("keydown", function (event) {
+            if (event.key !== "Enter" || event.shiftKey) {
+                return;
+            }
+            var selection = window.getSelection();
+            if (!selection || !selection.anchorNode) {
+                return;
+            }
+            var node = selection.anchorNode;
+            if (node.nodeType === Node.TEXT_NODE) {
+                node = node.parentNode;
+            }
+            if (node && node.nodeName === "LI" && !(node.textContent || "").trim()) {
+                event.preventDefault();
+                removeListFormatting(editor);
+                sync();
+            }
+        });
 
         editor.addEventListener("paste", function (event) {
             event.preventDefault();
@@ -174,6 +214,8 @@
             var command = button.dataset.command;
             if (command === "nbsp") {
                 document.execCommand("insertHTML", false, "&nbsp;");
+            } else if (command === "outdent") {
+                removeListFormatting(editor);
             } else if (command === "formatBlock") {
                 applyBlock(button.dataset.value || "p");
             } else if (command === "createLink") {

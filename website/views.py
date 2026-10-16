@@ -76,18 +76,25 @@ def form_widget(request, slug):
     form = WidgetSubmissionForm(request.POST or None, widget=widget)
     if request.method == "POST" and form.is_valid():
         submission = form.save()
-        send_cms_mail(
-            subject=f"Nowe zgłoszenie — {widget.title}",
-            message=(
-                f"Imię i nazwisko: {submission.first_name} {submission.last_name}\n"
-                f"Adres: {submission.street} {submission.house_number}, "
-                f"{submission.postal_code} {submission.city}\n"
-                f"Firma: {submission.company or '—'}"
-            ),
-            recipient_list=[widget.recipient_email],
-        )
-        submitted = True
-        form = WidgetSubmissionForm(widget=widget)
+        try:
+            send_cms_mail(
+                subject=f"Nowe zgłoszenie — {widget.title}",
+                message=(
+                    f"Imię i nazwisko: {submission.first_name} {submission.last_name}\n"
+                    f"Adres: {submission.street} {submission.house_number}, "
+                    f"{submission.postal_code} {submission.city}\n"
+                    f"Firma: {submission.company or '—'}"
+                ),
+                recipient_list=[widget.recipient_email],
+            )
+            submitted = True
+            form = WidgetSubmissionForm(widget=widget)
+        except Exception:
+            submission.delete()
+            form.add_error(
+                None,
+                "Nie udało się wysłać wiadomości. Sprawdź konfigurację e-mail w panelu lub spróbuj ponownie później.",
+            )
 
     return render(
         request,
@@ -404,24 +411,31 @@ def careers(request):
     application_form = JobApplicationForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and application_form.is_valid():
         application = application_form.save()
-        email = EmailMessage(
-            subject=f"Aplikacja: {application.job.title}",
-            body=(
-                f"Kandydat: {application.name}\nE-mail: {application.email}\n"
-                f"Telefon: {application.phone}"
-            ),
-            from_email=get_cms_from_email(),
-            to=[
-                application.job.application_email or get_default_notification_recipient()
-            ],
-            connection=get_cms_mail_connection(),
-        )
-        application.cv.open("rb")
-        email.attach(application.cv.name.rsplit("/", 1)[-1], application.cv.read())
-        email.send(fail_silently=False)
-        application.cv.close()
-        application_sent = True
-        application_form = JobApplicationForm()
+        try:
+            email = EmailMessage(
+                subject=f"Aplikacja: {application.job.title}",
+                body=(
+                    f"Kandydat: {application.name}\nE-mail: {application.email}\n"
+                    f"Telefon: {application.phone}"
+                ),
+                from_email=get_cms_from_email(),
+                to=[
+                    application.job.application_email or get_default_notification_recipient()
+                ],
+                connection=get_cms_mail_connection(),
+            )
+            application.cv.open("rb")
+            email.attach(application.cv.name.rsplit("/", 1)[-1], application.cv.read())
+            email.send(fail_silently=False)
+            application.cv.close()
+            application_sent = True
+            application_form = JobApplicationForm()
+        except Exception:
+            application.delete()
+            application_form.add_error(
+                None,
+                "Nie udało się wysłać aplikacji. Uzupełnij poprawny e-mail i sprawdź konfigurację SMTP w panelu.",
+            )
     return render(
         request,
         "website/careers.html",

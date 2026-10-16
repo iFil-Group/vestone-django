@@ -94,6 +94,27 @@
         }
     }
 
+    document.querySelectorAll("[data-hero-sound]").forEach(function (button) {
+        var slide = button.closest("[data-slide]");
+        if (!slide) {
+            return;
+        }
+        var video = slide.querySelector("video.home-hero__media");
+        if (!video) {
+            button.hidden = true;
+            return;
+        }
+        button.addEventListener("click", function () {
+            var enable = video.muted;
+            video.muted = !enable;
+            button.setAttribute("aria-pressed", enable ? "true" : "false");
+            button.setAttribute("aria-label", enable ? "Wyłącz dźwięk" : "Włącz dźwięk");
+            if (enable) {
+                video.play().catch(function () {});
+            }
+        });
+    });
+
     var hero = document.querySelector(".home-hero[data-slider]");
     initSlider(hero, {
         slideSelector: "[data-slide]",

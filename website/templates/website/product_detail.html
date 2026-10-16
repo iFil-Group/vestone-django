@@ -5,7 +5,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260907d">
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261007b">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261016a">
 {% endblock %}
 
 {% block main %}
@@ -96,17 +96,10 @@
                         <tbody>
                             {% for row in product.tech_table.rows %}
                             <tr>
-                                <th scope="row">
-                                    {% if row.icon %}
-                                    <span class="product-tech__icon" aria-hidden="true">
-                                        {% include "website/partials/load_capacity_icons.html" with mode=row.icon %}
-                                    </span>
-                                    {% endif %}
-                                    {{ row.label }}
-                                </th>
+                                <th scope="row">{{ row.label }}</th>
                                 {% for value in row.values %}
                                 <td>
-                                    {% if row.icon and not value %}
+                                    {% if row.icon %}
                                     {% include "website/partials/load_capacity_icons.html" with mode=row.icon %}
                                     {% elif value %}
                                     <div class="product-tech__value rich-text">{{ value|safe }}</div>

@@ -561,7 +561,8 @@ class ProductAttributeAssignmentForm(StyledModelForm):
             raise forms.ValidationError("Wybierz atrybut lub podaj nazwę nowego atrybutu.")
         if attribute and new_attribute_name:
             raise forms.ValidationError("Wybierz istniejący atrybut albo podaj nazwę nowego — nie oba naraz.")
-        if not option and not new_option_value:
+        icon_display = (self.cleaned_data.get("new_option_icon_display") or "").strip()
+        if not option and not new_option_value and not icon_display:
             raise forms.ValidationError("Wybierz wartość lub podaj nową wartość atrybutu.")
         if option and new_option_value:
             raise forms.ValidationError("Wybierz istniejącą wartość albo podaj nową — nie oba naraz.")
@@ -611,11 +612,14 @@ class ProductAttributeAssignmentForm(StyledModelForm):
             attribute.show_in_filters = show_in_filters
             attribute.save(update_fields=["show_in_filters"])
 
-        if new_option_value:
-            icon_display = (self.cleaned_data.get("new_option_icon_display") or "").strip()
+        icon_display = (self.cleaned_data.get("new_option_icon_display") or "").strip()
+        if new_option_value or icon_display:
+            stored_value = new_option_value
+            if not stored_value and icon_display:
+                stored_value = "\u2014"
             option, created = ProductAttributeOption.objects.get_or_create(
                 attribute=attribute,
-                value=new_option_value,
+                value=stored_value,
                 defaults={"sort_order": 0, "icon_display": icon_display},
             )
             if not created and icon_display and option.icon_display != icon_display:

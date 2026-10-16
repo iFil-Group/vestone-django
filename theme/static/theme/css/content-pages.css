@@ -839,7 +839,17 @@
 }
 .career-modal__rodo { font-size:.78rem; line-height:1.45; color:var(--vestone-gray-muted); }
 .career-modal__rodo a { color:var(--vestone-red); }
-.career-modal--thanks { max-width:36rem; padding:3rem 2rem; font-size:1.05rem; line-height:1.6; }
+.career-modal--thanks {
+    max-width: 36rem;
+    padding: 2.5rem 2rem 2.25rem;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    border-bottom: 4px solid var(--vestone-red);
+    text-align: center;
+}
+.career-modal--thanks .career-thanks__body {
+    padding-top: 0.25rem;
+}
 @media(min-width:900px) { .career-modal__grid { grid-template-columns:1.15fr 1fr; } }
 
 .job-card__apply:hover {

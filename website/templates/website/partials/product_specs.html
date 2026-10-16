@@ -8,7 +8,7 @@
                 {% if val.icon_display %}
                     {% include "website/partials/load_capacity_icons.html" with mode=val.icon_display %}
                 {% elif val.html %}
-                    <span class="rich-text">{{ val.html|safe }}</span>{% if not forloop.last %}, {% endif %}
+                    <span class="rich-text">{{ val.html|safe }}</span>
                 {% endif %}
             {% endfor %}
         </dd>
