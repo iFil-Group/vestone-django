@@ -1283,8 +1283,10 @@
     border-radius: 50%;
     background: rgba(26, 31, 36, 0.55);
     color: #fff;
-    font-size: 1.15rem;
     cursor: pointer;
+}
+.home-hero__sound-icon {
+    display: block;
 }
 .home-hero__sound[aria-pressed="true"] .home-hero__sound-icon--off { display: none; }
 .home-hero__sound[aria-pressed="false"] .home-hero__sound-icon--on { display: none; }
