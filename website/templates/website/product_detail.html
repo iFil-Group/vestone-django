@@ -5,7 +5,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'theme/css/home.css' %}?v=20260907d">
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261016e">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261110a">
 {% endblock %}
 
 {% block main %}
@@ -151,7 +151,7 @@
                 {% include "website/partials/section_heading.html" with title="Kolory" id="product-colors-heading" %}
                 <ul class="product-colors__grid">
                     {% for item in product.colors %}
-                    <li class="product-colors__item">
+                    <li class="product-colors__item"{% if item.anchor %} id="kolor-{{ item.anchor }}"{% endif %}>
                         <span class="product-colors__zoom">
                             <img
                                 class="product-colors__img"
@@ -208,4 +208,5 @@
 {% block extra_scripts %}
 <script src="{% static 'theme/js/product-pins.js' %}?v=20260728i" defer></script>
 <script src="{% static 'theme/js/product-gallery.js' %}?v=20261016d" defer></script>
+<script src="{% static 'theme/js/product-colors.js' %}?v=20261110a" defer></script>
 {% endblock %}

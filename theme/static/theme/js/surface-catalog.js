@@ -1,107 +1,92 @@
 (function () {
     "use strict";
 
-    var root = document.querySelector("[data-surface-catalog]");
-    if (!root) return;
+    var catalog = document.querySelector("[data-surface-catalog]");
+    if (catalog) {
+        var search = catalog.querySelector("[data-surface-search]");
+        var items = Array.prototype.slice.call(catalog.querySelectorAll("[data-surface-color]"));
+        var empty = catalog.querySelector("[data-surface-empty]");
 
-    var searchInput = root.querySelector("[data-surface-search]");
-    var filtersForm = root.querySelector("[data-surface-filters]");
-    var resetButton = root.querySelector("[data-surface-reset]");
-    var emptyMsg = root.querySelector("[data-surface-empty]");
-    var groups = Array.prototype.slice.call(root.querySelectorAll("[data-surface-group]"));
-
-    function normalize(value) {
-        return String(value || "")
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .trim();
-    }
-
-    function activeFilters() {
-        var filters = {};
-        if (!filtersForm) return filters;
-        filtersForm.querySelectorAll("[data-surface-filter]").forEach(function (select) {
-            var key = select.getAttribute("data-surface-filter");
-            var value = (select.value || "").trim();
-            if (key && value) {
-                filters[key] = normalize(value);
-            }
-        });
-        return filters;
-    }
-
-    function itemMatchesFilters(item, filters) {
-        var keys = Object.keys(filters);
-        if (!keys.length) return true;
-        return keys.every(function (key) {
-            var suffix = key.replace(/^filter_/, "").replace(/_/g, "-");
-            var attr = "data-filter-" + suffix;
-            return normalize(item.getAttribute(attr)) === filters[key];
-        });
-    }
-
-    function applyFilter() {
-        var query = normalize(searchInput ? searchInput.value : "");
-        var filters = activeFilters();
-        var anyVisible = false;
-
-        groups.forEach(function (group) {
-            var items = Array.prototype.slice.call(group.querySelectorAll("[data-surface-item]"));
-            var groupVisible = false;
-
+        function apply() {
+            var query = search ? search.value.trim().toLowerCase() : "";
+            var visible = 0;
             items.forEach(function (item) {
-                var haystack = normalize(item.getAttribute("data-search"));
-                var matchSearch = !query || haystack.indexOf(query) !== -1;
-                var matchFilters = itemMatchesFilters(item, filters);
-                var match = matchSearch && matchFilters;
-                item.hidden = !match;
-                if (match) groupVisible = true;
-            });
-
-            group.hidden = !groupVisible;
-            if (groupVisible) anyVisible = true;
-        });
-
-        if (emptyMsg) {
-            emptyMsg.hidden = anyVisible;
-        }
-        if (resetButton) {
-            resetButton.hidden = !query && !Object.keys(filters).length;
-        }
-
-        if (filtersForm) {
-            filtersForm.querySelectorAll("[data-surface-filter]").forEach(function (select) {
-                var field = select.closest(".product-filters__field");
-                if (field) {
-                    field.classList.toggle("is-active", select.selectedIndex > 0);
+                var haystack = item.getAttribute("data-search") || "";
+                var show = !query || haystack.indexOf(query) !== -1;
+                item.hidden = !show;
+                if (show) {
+                    visible += 1;
                 }
             });
+            if (empty) {
+                empty.hidden = visible > 0;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", apply);
+        }
+        apply();
+    }
+
+    var zoomRoot = document.querySelector("[data-surface-zoom]");
+    if (!zoomRoot) {
+        return;
+    }
+
+    var lightbox = zoomRoot.querySelector("[data-surface-lightbox]");
+    var lightboxImage = zoomRoot.querySelector("[data-surface-lightbox-image]");
+    var tiles = Array.prototype.slice.call(zoomRoot.querySelectorAll("[data-surface-zoom-item]"));
+
+    function closeLightbox() {
+        if (lightbox && lightbox.open) {
+            lightbox.close();
         }
     }
 
-    if (searchInput) {
-        searchInput.addEventListener("input", applyFilter);
-        searchInput.addEventListener("search", applyFilter);
+    function openLightbox(src, alt) {
+        if (!lightbox || !lightboxImage) {
+            return;
+        }
+        lightboxImage.src = src;
+        lightboxImage.alt = alt || "";
+        if (typeof lightbox.showModal === "function") {
+            lightbox.showModal();
+        }
     }
 
-    if (filtersForm) {
-        filtersForm.querySelectorAll("[data-surface-filter]").forEach(function (select) {
-            select.addEventListener("change", applyFilter);
-        });
-    }
-
-    if (resetButton) {
-        resetButton.addEventListener("click", function () {
-            if (searchInput) searchInput.value = "";
-            if (filtersForm) {
-                filtersForm.querySelectorAll("[data-surface-filter]").forEach(function (select) {
-                    select.selectedIndex = 0;
-                });
+    tiles.forEach(function (tile) {
+        var button = tile.querySelector("[data-surface-zoom-open]");
+        if (!button) {
+            return;
+        }
+        button.addEventListener("click", function () {
+            if (tile.classList.contains("is-featured")) {
+                openLightbox(
+                    button.getAttribute("data-zoom-src"),
+                    button.getAttribute("data-zoom-alt")
+                );
+                return;
             }
-            applyFilter();
+            tiles.forEach(function (other) {
+                other.classList.toggle("is-featured", other === tile);
+            });
+        });
+    });
+
+    zoomRoot.querySelectorAll("[data-surface-lightbox-close]").forEach(function (button) {
+        button.addEventListener("click", closeLightbox);
+    });
+    if (lightbox) {
+        lightbox.addEventListener("click", function (event) {
+            if (event.target === lightbox) {
+                closeLightbox();
+            }
         });
     }
-
-    applyFilter();
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeLightbox();
+        }
+    });
 })();

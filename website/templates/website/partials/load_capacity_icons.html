@@ -2,10 +2,10 @@
 {% if mode == "load" %}{% with mode="pedestrian_car" %}{% include "website/partials/load_capacity_icons.html" %}{% endwith %}{% else %}
 <span class="product-load-icons" aria-label="Nośność">
     {% if mode == "pedestrian" or mode == "pedestrian_car" %}
-    <img src="{% static 'img/load-pedestrian.png' %}" alt="" width="28" height="28">
+    <img src="{% static 'img/load-pedestrian.png' %}?v=20261110a" alt="" width="28" height="28">
     {% endif %}
     {% if mode == "car" or mode == "pedestrian_car" %}
-    <img src="{% static 'img/load-car.png' %}" alt="" width="28" height="28">
+    <img src="{% static 'img/load-car.png' %}?v=20261110a" alt="" width="28" height="28">
     {% endif %}
 </span>
 {% endif %}

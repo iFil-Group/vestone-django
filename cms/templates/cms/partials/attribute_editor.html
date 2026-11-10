@@ -25,6 +25,13 @@
                         >
                     </div>
                 </div>
+                <div class="cms-attr-card__head-actions">
+                    <button type="button" class="cms-btn cms-btn--small" data-attr-move="up" aria-label="Przesuń w górę">↑</button>
+                    <button type="button" class="cms-btn cms-btn--small" data-attr-move="down" aria-label="Przesuń w dół">↓</button>
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-delete-name{% if not card.attribute_id %} hidden{% endif %}>
+                        Usuń nazwę
+                    </button>
+                </div>
                 <label class="cms-attr-card__filter">
                     <input type="checkbox" data-attr-filter{% if card.show_in_filters %} checked{% endif %}>
                     <span>W filtrach</span>
@@ -104,6 +111,11 @@
                         </select>
                         <input type="text" class="cms-input cms-attr-card__attr-new" data-attr-new placeholder="Nazwa nowego atrybutu" hidden>
                     </div>
+                </div>
+                <div class="cms-attr-card__head-actions">
+                    <button type="button" class="cms-btn cms-btn--small" data-attr-move="up" aria-label="Przesuń w górę">↑</button>
+                    <button type="button" class="cms-btn cms-btn--small" data-attr-move="down" aria-label="Przesuń w dół">↓</button>
+                    <button type="button" class="cms-btn cms-btn--ghost cms-btn--small cms-btn--danger" data-attr-delete-name hidden>Usuń nazwę</button>
                 </div>
                 <label class="cms-attr-card__filter">
                     <input type="checkbox" data-attr-filter>

@@ -1,0 +1,73 @@
+{% extends "website/layout.html" %}
+{% load static %}
+
+{% block title %}{{ surface_color.title }} — Barwy i powierzchnie — Vestone{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261110a">
+{% endblock %}
+
+{% block main %}
+<div class="surface-page surface-page--color" data-surface-zoom>
+    <header class="product-filters">
+        <div class="product-filters__pattern" aria-hidden="true"></div>
+        <div class="product-filters__inner">
+            <div class="product-filters__head">
+                <div class="product-filters__intro">
+                    {% include "website/partials/breadcrumbs.html" %}
+                    <h1 class="product-filters__title">{{ surface_color.title }}</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="surface-page__body">
+        {% if surface_color.products %}
+        <ul class="surface-color-products">
+            {% for item in surface_color.products %}
+            <li class="surface-color-product" data-surface-zoom-item>
+                <button
+                    type="button"
+                    class="surface-color-product__media"
+                    data-surface-zoom-open
+                    data-zoom-src="{{ item.image|default:placeholder_img }}"
+                    data-zoom-alt="{{ item.label }}"
+                    aria-label="Powiększ kolor {{ surface_color.title }} — {{ item.label }}"
+                >
+                    <img
+                        src="{{ item.image|default:placeholder_img }}"
+                        alt="{{ surface_color.title }} — {{ item.label }}"
+                        loading="lazy"
+                        width="400"
+                        height="400"
+                    >
+                </button>
+                <div class="surface-color-product__meta">
+                    <a class="surface-color-product__name" href="{{ item.url }}">{{ item.label }}</a>
+                    {% if item.surface_icon or item.surface_name %}
+                    <p class="surface-color-product__type">
+                        {% if item.surface_icon %}
+                        <img src="{{ item.surface_icon }}" alt="" width="28" height="28">
+                        {% endif %}
+                        <span>{{ item.surface_name }}</span>
+                    </p>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="surface-page__empty">Brak produktów w tym kolorze.</p>
+        {% endif %}
+    </div>
+
+    <dialog class="surface-zoom-lightbox" data-surface-lightbox>
+        <button type="button" class="surface-zoom-lightbox__close" data-surface-lightbox-close aria-label="Zamknij">×</button>
+        <img src="" alt="" data-surface-lightbox-image>
+    </dialog>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'theme/js/surface-catalog.js' %}?v=20261110a" defer></script>
+{% endblock %}

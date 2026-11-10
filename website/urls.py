@@ -20,6 +20,7 @@ urlpatterns = [
         name="product_category",
     ),
     path("barwy-i-powierzchnie/", views.surfaces, name="surfaces"),
+    path("barwy-i-powierzchnie/<slug:slug>/", views.surface_color, name="surface_color"),
     path("gdzie-kupic/", views.where_to_buy, name="where_to_buy"),
     path("porady/", views.tips, name="tips"),
     path("porady/<slug:slug>/", views.tip_detail, name="tip_detail"),

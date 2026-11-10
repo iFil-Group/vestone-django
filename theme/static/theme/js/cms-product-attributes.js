@@ -539,6 +539,71 @@
             });
         }
 
+        card.querySelectorAll("[data-attr-move]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                var direction = button.getAttribute("data-attr-move");
+                if (direction === "up" && card.previousElementSibling) {
+                    cardsRoot.insertBefore(card, card.previousElementSibling);
+                } else if (direction === "down" && card.nextElementSibling) {
+                    cardsRoot.insertBefore(card.nextElementSibling, card);
+                }
+            });
+        });
+
+        var deleteNameButton = card.querySelector("[data-attr-delete-name]");
+        function syncDeleteNameButton() {
+            if (!deleteNameButton) {
+                return;
+            }
+            deleteNameButton.hidden = !cardAttributeId(card);
+        }
+        syncDeleteNameButton();
+        if (attrSelect) {
+            attrSelect.addEventListener("change", syncDeleteNameButton);
+        }
+        if (deleteNameButton) {
+            deleteNameButton.addEventListener("click", function () {
+                var attributeId = cardAttributeId(card);
+                if (!attributeId) {
+                    return;
+                }
+                var label = attrSelect && attrSelect.options[attrSelect.selectedIndex]
+                    ? attrSelect.options[attrSelect.selectedIndex].text
+                    : "ten atrybut";
+                if (
+                    !window.confirm(
+                        "Usunąć nazwę „" + label + "” z katalogu? Zniknie ze wszystkich produktów."
+                    )
+                ) {
+                    return;
+                }
+                fetch("/ifil-log/panel/atrybuty/" + attributeId + "/usun/", {
+                    method: "POST",
+                    headers: { "X-CSRFToken": getCsrfToken() },
+                    credentials: "same-origin",
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error("delete failed");
+                        }
+                        delete catalog[String(attributeId)];
+                        document.querySelectorAll("[data-attr-select]").forEach(function (select) {
+                            var option = select.querySelector('option[value="' + attributeId + '"]');
+                            if (option) {
+                                option.remove();
+                            }
+                            if (select.value === String(attributeId)) {
+                                select.value = "";
+                                select.dispatchEvent(new Event("change"));
+                            }
+                        });
+                    })
+                    .catch(function () {
+                        window.alert("Nie udało się usunąć nazwy atrybutu. Odśwież stronę i spróbuj ponownie.");
+                    });
+            });
+        }
+
         card.querySelectorAll("[data-attr-chip]").forEach(function (chip) {
             bindChip(chip, card);
         });
@@ -578,6 +643,17 @@
             function () {
                 cardsRoot.querySelectorAll("[data-attr-card]").forEach(syncCardToRows);
                 reindexFormset();
+                var order = 0;
+                cardsRoot.querySelectorAll("[data-attr-card]").forEach(function (sortedCard) {
+                    sortedCard.querySelectorAll("[data-attr-chip]").forEach(function (chip) {
+                        var row = formRow(chip.getAttribute("data-form-index"));
+                        var sortField = rowField(row, "sort_order");
+                        if (sortField) {
+                            sortField.value = String(order);
+                        }
+                        order += 1;
+                    });
+                });
                 formsetRoot.querySelectorAll("select:disabled, input:disabled, textarea:disabled").forEach(function (el) {
                     el.disabled = false;
                 });

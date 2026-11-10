@@ -716,6 +716,12 @@ class SurfaceType(models.Model):
     name = models.CharField("Nazwa", max_length=160)
     slug = models.SlugField("Slug", max_length=120, unique=True)
     image = models.ImageField("Zdjęcie", upload_to="cms/surfaces/groups/", blank=True)
+    icon = models.ImageField(
+        "Ikona rodzaju powierzchni",
+        upload_to="cms/surfaces/icons/",
+        blank=True,
+        help_text="Mała ikona przy produktach na stronie koloru (np. TOP ARTE, AVANGARDE).",
+    )
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywna", default=True)
 

@@ -4,7 +4,7 @@
 {% block title %}Praca i kariera — Vestone{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}?v=20261016a">
+<link rel="stylesheet" href="{% static 'theme/css/content-pages.css' %}?v=20261110a">
 {% endblock %}
 
 {% block page_content %}
@@ -66,6 +66,8 @@
             </li>
             {% endfor %}
         </ul>
+        {% else %}
+        <p class="careers__empty">Obecnie nie prowadzimy rekrutacji.</p>
         {% endif %}
     </div>
 

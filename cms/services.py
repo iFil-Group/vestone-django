@@ -3,6 +3,7 @@ import re
 from django.conf import settings
 from django.utils.formats import date_format
 from django.utils.html import strip_tags
+from django.utils.text import slugify
 
 _WRAPPING_P = re.compile(r"^<p>(.*)</p>$", re.IGNORECASE | re.DOTALL)
 
@@ -359,22 +360,51 @@ def get_reviews():
 
 
 def get_product_groups():
-    from cms.models import ProductGroup
+    from django.db.models import Prefetch
 
-    groups = ProductGroup.objects.filter(is_active=True)
+    from cms.models import Product, ProductGroup
+
     placeholder = get_placeholder()
+    groups = (
+        ProductGroup.objects.filter(is_active=True)
+        .prefetch_related(
+            Prefetch(
+                "products",
+                queryset=Product.objects.filter(is_active=True).order_by(
+                    "sort_order", "title", "pk"
+                ),
+            )
+        )
+        .order_by("sort_order", "title")
+    )
     if groups.exists():
-        return [
-            {
-                "slug": group.slug,
-                "title": group.title,
-                "image": _image_url(group.image, placeholder),
-            }
-            for group in groups
-        ]
+        catalog = []
+        for group in groups:
+            products = list(group.products.all())
+            href = f"/produkty/{group.slug}/"
+            if len(products) == 1:
+                href = f"/produkty/{group.slug}/{products[0].slug}/"
+            catalog.append(
+                {
+                    "slug": group.slug,
+                    "title": group.title,
+                    "image": _image_url(group.image, placeholder),
+                    "href": href,
+                    "product_count": len(products),
+                }
+            )
+        return catalog
     from website.content_data import PRODUCT_GROUPS
 
-    return [{**group, "image": placeholder} for group in PRODUCT_GROUPS]
+    return [
+        {
+            **group,
+            "image": placeholder,
+            "href": f"/produkty/{group['slug']}/",
+            "product_count": 0,
+        }
+        for group in PRODUCT_GROUPS
+    ]
 
 
 def get_product_group(slug):
@@ -426,6 +456,16 @@ def _is_load_capacity_label(label):
 def _is_unit_of_measure_label(label):
     normalized = _normalize_load_text(label)
     return "jednostka" in normalized and "miar" in normalized
+
+
+def _is_color_label(label, slug=""):
+    normalized = _normalize_load_text(label)
+    slug_norm = (slug or "").lower()
+    return "kolor" in normalized or "kolor" in slug_norm or "barwa" in normalized
+
+
+def _color_anchor(text):
+    return slugify(strip_tags(text or ""))
 
 
 def _infer_load_icon_display(label, value_html, icon_display):
@@ -480,6 +520,11 @@ def _product_dict(product, placeholder):
                     "key": token,
                     "html": formatted_html,
                     "icon_display": icon_display,
+                    "color_anchor": (
+                        _color_anchor(formatted_html)
+                        if _is_color_label(attribute["label"], attribute["slug"])
+                        else ""
+                    ),
                 }
             )
     for spec in specs:
@@ -508,7 +553,7 @@ def _product_dict(product, placeholder):
         if (pack_data["name"] or "").strip() and pack_data["rows"]
     ]
 
-    return {
+    result = {
         "slug": product.slug,
         "title": product.title,
         "category_slug": product.group.slug,
@@ -533,6 +578,7 @@ def _product_dict(product, placeholder):
             {
                 "image": _media_url(item.image),
                 "caption": (item.caption or "").strip(),
+                "anchor": _color_anchor(item.caption),
             }
             for item in product.colors.all()
             if item.image and getattr(item.image, "name", None)
@@ -561,6 +607,15 @@ def _product_dict(product, placeholder):
         "tech_packs": tech_packs,
         "tech_table": _tech_table(tech_packs),
     }
+    color_anchors = {
+        item["anchor"] for item in result["colors"] if item.get("anchor")
+    }
+    for spec in result["specs"]:
+        for value in spec["values"]:
+            anchor = value.get("color_anchor") or ""
+            if anchor and anchor not in color_anchors:
+                value["color_anchor"] = ""
+    return result
 
 
 def _tech_row_icon(label, icon_preset):
@@ -920,6 +975,108 @@ def get_surface_groups():
             }
         )
     return result
+
+
+def get_surface_colors():
+    from cms.models import SurfaceItem
+
+    placeholder = get_placeholder()
+    items = (
+        SurfaceItem.objects.filter(is_active=True, surface_type__is_active=True)
+        .select_related("surface_type")
+        .order_by("sort_order", "title")
+    )
+    grouped = {}
+    for item in items:
+        key = slugify(item.title)
+        if not key:
+            continue
+        current = grouped.get(key)
+        image = _image_url(item.image, "")
+        if current is None:
+            grouped[key] = {
+                "slug": key,
+                "title": item.title,
+                "image": image or placeholder,
+                "sort_order": item.sort_order,
+            }
+            continue
+        if (not current.get("image") or current["image"] == placeholder) and image:
+            current["image"] = image
+    return sorted(grouped.values(), key=lambda item: (item["sort_order"], item["title"].lower()))
+
+
+def get_surface_color(slug):
+    from cms.models import Product, SurfaceItem
+
+    placeholder = get_placeholder()
+    items = list(
+        SurfaceItem.objects.filter(is_active=True, surface_type__is_active=True)
+        .select_related("surface_type")
+        .order_by("sort_order", "title")
+    )
+    matching_items = [item for item in items if slugify(item.title) == slug]
+    if not matching_items:
+        return None
+
+    titles = {strip_tags(item.title or "").strip().lower() for item in matching_items}
+    products = (
+        Product.objects.filter(is_active=True)
+        .select_related("group")
+        .prefetch_related("attribute_assignments__option__attribute", "colors")
+        .order_by("group__sort_order", "sort_order", "title")
+    )
+    entries = []
+    for product in products:
+        color_names = []
+        surface_names = []
+        for assignment in product.attribute_assignments.all():
+            attribute = assignment.option.attribute
+            value = strip_tags(assignment.option.value or "").strip().lower()
+            if not value:
+                continue
+            if _is_color_label(attribute.name, attribute.slug):
+                color_names.append(value)
+            normalized = _normalize_load_text(attribute.name)
+            slug_norm = (attribute.slug or "").lower()
+            if "powierzchn" in normalized or "powierzchn" in slug_norm or "rodzaj" in normalized:
+                surface_names.append(value)
+        if not any(
+            name in titles or slugify(name) == slug for name in color_names
+        ):
+            continue
+        texture_item = matching_items[0]
+        for item in matching_items:
+            type_name = strip_tags(item.surface_type.name or "").strip().lower()
+            if any(type_name == name or type_name in name or name in type_name for name in surface_names):
+                texture_item = item
+                break
+        closeup = ""
+        for color in product.colors.all():
+            caption = color.caption or ""
+            if slugify(caption) == slug or strip_tags(caption).strip().lower() in titles:
+                closeup = _media_url(color.image) or ""
+                if closeup:
+                    break
+        surface_type = texture_item.surface_type
+        icon = _media_url(getattr(surface_type, "icon", None)) or _media_url(surface_type.image)
+        entries.append(
+            {
+                "title": product.title,
+                "group_title": product.group.title,
+                "label": f"{product.group.title} {product.title}".strip(),
+                "url": f"/produkty/{product.group.slug}/{product.slug}/",
+                "image": closeup or _image_url(texture_item.image, placeholder),
+                "surface_name": surface_type.name,
+                "surface_icon": icon,
+            }
+        )
+    return {
+        "slug": slug,
+        "title": matching_items[0].title,
+        "image": _image_url(matching_items[0].image, placeholder),
+        "products": entries,
+    }
 
 
 def _unique_filter_values(values):

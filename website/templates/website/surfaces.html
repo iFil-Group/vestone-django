@@ -4,7 +4,7 @@
 {% block title %}Barwy i powierzchnie — Vestone{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261016a">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261110a">
 {% endblock %}
 
 {% block main %}
@@ -19,7 +19,7 @@
                 </div>
                 <div class="product-filters__actions">
                     <label class="product-filters__search">
-                        <span class="visually-hidden">Szukaj barw i powierzchni</span>
+                        <span class="visually-hidden">Szukaj koloru</span>
                         <svg class="product-filters__search-icon" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
                             <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.75"/>
                             <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
@@ -32,86 +32,36 @@
                             autocomplete="off"
                         >
                     </label>
-                    <button type="button" class="product-filters__reset" data-surface-reset hidden>
-                        Wyczyść filtry
-                    </button>
                 </div>
-            </div>
-
-            <div class="product-filters__grid" role="group" aria-label="Filtry barw i powierzchni">
-                {% for filter in surface_filters %}
-                <label class="product-filters__field">
-                    <span class="product-filters__label">{{ filter.label }}</span>
-                    <span class="product-filters__control">
-                        <select class="product-filters__select" data-surface-filter="{{ filter.field }}">
-                            <option value="">Wszystkie</option>
-                            {% for value in filter.values %}
-                            <option value="{{ value }}">{{ value }}</option>
-                            {% endfor %}
-                        </select>
-                    </span>
-                </label>
-                {% endfor %}
             </div>
         </div>
     </form>
 
     <div class="surface-page__body">
-        <p class="surface-page__empty" data-surface-empty {% if surface_groups %}hidden{% endif %}>
-            {% if surface_groups %}
-            Brak wyników dla podanych filtrów.
+        <p class="surface-page__empty" data-surface-empty {% if surface_colors %}hidden{% endif %}>
+            {% if surface_colors %}
+            Brak kolorów dla podanej nazwy.
             {% else %}
-            Brak barw i powierzchni do wyświetlenia.
+            Brak barw do wyświetlenia.
             {% endif %}
         </p>
 
-        {% for group in surface_groups %}
-        <section class="surface-group surface-group--split" data-surface-group aria-label="{{ group.name }}">
-            <div class="surface-group__head">
-                <span class="surface-group__bar" aria-hidden="true"></span>
-                <img
-                    class="surface-group__image"
-                    src="{{ group.image|default:placeholder_img }}"
-                    alt="{{ group.name }}"
-                    loading="lazy"
-                >
-            </div>
-            <ul class="surface-group__grid">
-                {% for item in group.items %}
-                <li
-                    class="surface-group__item"
-                    data-surface-item
-                    data-search="{{ item.search_text }}"
-                    data-filter-product-name="{{ item.filter_product_name }}"
-                    data-filter-category="{{ item.filter_category }}"
-                    data-filter-application="{{ item.filter_application }}"
-                    data-filter-surface="{{ item.filter_surface }}"
-                    data-filter-format="{{ item.filter_format }}"
-                    data-filter-thickness="{{ item.filter_thickness }}"
-                    data-filter-color="{{ item.filter_color }}"
-                    data-filter-load="{{ item.filter_load }}"
-                >
-                    <article class="surface-swatch">
-                        <span class="surface-swatch__media">
-                            <img
-                                src="{{ item.image|default:placeholder_img }}"
-                                alt="{{ item.title }}"
-                                loading="lazy"
-                                width="400"
-                                height="300"
-                            >
-                        </span>
-                        <span class="surface-swatch__title">{{ item.title }}</span>
-                    </article>
-                </li>
-                {% endfor %}
-            </ul>
-        </section>
-        {% endfor %}
+        <ul class="surface-color-index">
+            {% for color in surface_colors %}
+            <li class="surface-color-index__item" data-surface-color data-search="{{ color.title|lower }}">
+                <a class="surface-color-card" href="{% url 'surface_color' color.slug %}">
+                    <span class="surface-color-card__swatch">
+                        <img src="{{ color.image|default:placeholder_img }}" alt="" loading="lazy" width="96" height="96">
+                    </span>
+                    <span class="surface-color-card__title">{{ color.title }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'theme/js/surface-catalog.js' %}?v=20261007d" defer></script>
+<script src="{% static 'theme/js/surface-catalog.js' %}?v=20261110a" defer></script>
 {% endblock %}

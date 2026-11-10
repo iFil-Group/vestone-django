@@ -7,6 +7,8 @@
             {% for val in spec.values %}
                 {% if val.icon_display %}
                     {% include "website/partials/load_capacity_icons.html" with mode=val.icon_display %}
+                {% elif val.color_anchor %}
+                    <a class="product-detail__color-link" href="#kolor-{{ val.color_anchor }}" data-color-jump="kolor-{{ val.color_anchor }}">{{ val.html|safe }}</a>
                 {% elif val.html %}
                     <span class="rich-text">{{ val.html|safe }}</span>
                 {% endif %}

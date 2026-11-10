@@ -1158,6 +1158,18 @@ button.cms-row-action {
 
 /* —— Media library grid —— */
 
+.cms-media-library__search {
+    min-width: min(18rem, 100%);
+    margin: 0;
+}
+
+.cms-attr-card__head-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+}
+
 .cms-media-library__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));

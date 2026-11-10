@@ -160,8 +160,11 @@ class ContentBlockForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["key"].help_text = (
-            "Strona główna: bloki z grupy „Strona główna” wyświetlają się wg kolejności z listy w panelu. "
-            "Znane klucze (np. home-products-lead) mają dedykowany układ; pozostałe — sekcja uniwersalna."
+            "Strona główna: blok z grupy „Strona główna” pojawia się jako sekcja na stronie głównej "
+            "(kolejność strzałkami na liście). Znane klucze (np. home-products-lead) mają dedykowany układ; "
+            "pozostałe — sekcja uniwersalna. "
+            "O nas: blok z grupy „O nas” to kolejna sekcja na /o-nas/, nie nowy adres URL. "
+            "Osobne podstrony to Dla mediów, Warunki gwarancji i Praca i kariera."
         )
         self.fields["image"].help_text = (
             "Zdjęcie wyświetlane na podstronie (m.in. O nas, Dla mediów). "
@@ -486,18 +489,19 @@ class ProductForm(StyledModelForm):
         self.fields["related_tips"].queryset = Tip.objects.filter(is_published=True).order_by(
             "-published_at", "title"
         )
-        self.fields["related_tips"].widget = forms.CheckboxSelectMultiple()
-        self.fields["related_tips"].help_text = (
-            "Wybrane porady pojawią się na dole karty produktu."
-        )
+        self.fields["related_tips"].widget = forms.MultipleHiddenInput()
+        self.fields["related_tips"].required = False
         self.fields["show_related_products"].help_text = (
             "Odznacz, jeśli sekcja „Sprawdź inne produkty” ma zniknąć ze strony."
         )
         self.fields["slug"].help_text = (
             "Zmiana adresu zachowuje stary link i przekierowuje na nowy."
         )
+        self.fields["subtitle"].help_text = (
+            "Tekst pod nazwą produktu na pasku kategorii karty. Może zostać puste."
+        )
         self.fields["card_type"].widget = forms.HiddenInput()
-        self.fields["packshot_columns"].widget.attrs["class"] = "cms-card-type"
+        self.fields["packshot_columns"].widget = forms.HiddenInput()
 
 
 
@@ -720,6 +724,8 @@ class ProductPinInlineForm(StyledModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["text"].required = False
+        self.fields["gallery_image"].required = False
         self.fields["text"].widget = forms.Textarea(attrs={"class": "cms-textarea", "rows": 3})
         # Queryset is finalized in BaseProductPinFormSet._construct_form after the
         # parent product FK is assigned (instance.product_id is still None here).
@@ -727,10 +733,21 @@ class ProductPinInlineForm(StyledModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        text = (cleaned.get("text") or "").strip()
         gallery_image = cleaned.get("gallery_image")
+        pending = (cleaned.get("gallery_pending") or "").strip()
         product_id = getattr(self.instance, "product_id", None)
+        if cleaned.get("DELETE"):
+            return cleaned
+        if not text and not gallery_image and not pending:
+            cleaned["DELETE"] = True
+            self.cleaned_data["DELETE"] = True
+            return cleaned
+        if not text:
+            self.add_error("text", "Wpisz treść pinu.")
         if gallery_image and product_id and gallery_image.product_id != product_id:
             self.add_error("gallery_image", "Wybrane zdjęcie nie należy do tego produktu.")
+        cleaned["text"] = text
         return cleaned
 
 
@@ -738,9 +755,14 @@ class BaseProductPinFormSet(forms.BaseInlineFormSet):
     def _construct_form(self, i, **kwargs):
         form = super()._construct_form(i, **kwargs)
         product_id = getattr(self.instance, "pk", None) or getattr(form.instance, "product_id", None)
-        form.fields["gallery_image"].queryset = ProductGalleryImage.objects.filter(
-            product_id=product_id
-        )
+        queryset = ProductGalleryImage.objects.filter(product_id=product_id)
+        posted = ""
+        if self.data:
+            posted = str(self.data.get(f"{form.prefix}-gallery_image") or "").strip()
+        if posted.isdigit():
+            queryset = ProductGalleryImage.objects.filter(pk=posted) | queryset
+        form.fields["gallery_image"].queryset = queryset.distinct()
+        form.empty_permitted = True
         return form
 
     def apply_pending_gallery_images(self, gallery_formset):
@@ -935,8 +957,12 @@ class SurfaceItemForm(StyledModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["surface_type"].label = "Grupa produktowa"
+        self.fields["surface_type"].label = "Grupa produktowa / rodzaj powierzchni"
         self.fields["surface_type"].queryset = SurfaceType.objects.order_by("sort_order", "name")
+        self.fields["title"].help_text = (
+            "Nazwa koloru, np. agat. Produkty z atrybutem KOLOR o tej samej nazwie pojawią się po kliknięciu koloru."
+        )
+        self.fields["image"].help_text = "Zdjęcie faktury koloru — małe okno na liście i powiększenie przy produktach."
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
 
 
@@ -949,13 +975,18 @@ class SurfaceCategoryForm(StyledModelForm):
 class SurfaceTypeForm(StyledModelForm):
     class Meta:
         model = SurfaceType
-        fields = ("name", "slug", "image", "sort_order", "is_active")
+        fields = ("name", "slug", "image", "icon", "sort_order", "is_active")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["image"].label = "Zdjęcie grupy"
-        self.fields["image"].help_text = "Wyświetlane wyśrodkowane nad siatką barw na stronie barw i powierzchni."
+        self.fields["image"].help_text = "Opcjonalne zdjęcie grupy w panelu."
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["icon"].help_text = (
+            "Mała ikona rodzaju powierzchni przy produktach po kliknięciu koloru. "
+            "Możesz wgrać TOP ARTE, AVANGARDE, COLORATTO, DIAMENTI, MAŁA ARCHITEKTURA."
+        )
+        self.fields["icon"].widget.attrs.setdefault("accept", "image/*")
 
 
 class TipForm(StyledModelForm):

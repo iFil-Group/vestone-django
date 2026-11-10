@@ -10,17 +10,27 @@ def _normalize_path(path):
     return path
 
 
-ABOUT_LINKS = [
-    {"label": "O firmie", "url": "/o-nas/"},
-    {"label": "Aktualności", "url": "/o-nas/aktualnosci/"},
-    {"label": "Praca i kariera", "url": "/o-nas/praca-i-kariera/"},
-    {"label": "Warunki gwarancji", "url": "/o-nas/warunki-gwarancji/"},
-    {"label": "Dla mediów", "url": "/o-nas/dla-mediow/"},
-]
+def _about_links():
+    from cms.models import JobOpening
+
+    links = [
+        {"label": "O firmie", "url": "/o-nas/"},
+        {"label": "Aktualności", "url": "/o-nas/aktualnosci/"},
+    ]
+    if JobOpening.objects.filter(is_active=True).exists():
+        links.append({"label": "Praca i kariera", "url": "/o-nas/praca-i-kariera/"})
+    links.extend(
+        [
+            {"label": "Warunki gwarancji", "url": "/o-nas/warunki-gwarancji/"},
+            {"label": "Dla mediów", "url": "/o-nas/dla-mediow/"},
+        ]
+    )
+    return links
 
 
 def site_navigation(request):
     path = request.path
+    about_links = _about_links()
 
     def active(prefix):
         base = prefix.rstrip("/")
@@ -44,11 +54,11 @@ def site_navigation(request):
                 "label": "O nas",
                 "url": "/o-nas/",
                 "active": active("/o-nas"),
-                "children": ABOUT_LINKS,
+                "children": about_links,
             },
         ],
         "nav_home_active": "is-active" if path == "/" else "",
-        "about_footer_links": ABOUT_LINKS,
+        "about_footer_links": about_links,
         "footer_product_groups": _footer_product_groups(),
     }
 
@@ -94,6 +104,20 @@ def page_breadcrumbs(request):
 
     if path in static_trails:
         return {"breadcrumbs": static_trails[path]}
+
+    if path.startswith("/barwy-i-powierzchnie/") and path != "/barwy-i-powierzchnie":
+        from cms.services import get_surface_color
+
+        slug = path.rsplit("/", 1)[-1]
+        color = get_surface_color(slug)
+        title = color["title"] if color else slug
+        return {
+            "breadcrumbs": [
+                home,
+                {"label": "Barwy i powierzchnie", "url": "/barwy-i-powierzchnie/"},
+                {"label": title, "url": None},
+            ]
+        }
 
     if path.startswith("/produkty/") and path != "/produkty":
         from cms.services import get_product, get_product_group

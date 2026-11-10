@@ -1130,6 +1130,19 @@ DELETE_MODELS = {
 
 
 @login_required
+def delete_attribute(request, pk):
+    from django.http import JsonResponse
+
+    from .models import ProductAttribute
+
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    attribute = get_object_or_404(ProductAttribute, pk=pk)
+    attribute.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
 def delete_attribute_option(request, pk):
     from django.http import JsonResponse
 
@@ -1182,12 +1195,18 @@ def media_library(request):
     files.sort(key=lambda item: item["path"].lower())
 
     if request.method == "POST":
+        from django.http import JsonResponse
+
         rel_path = (request.POST.get("path") or "").strip()
+        deleted = False
         if rel_path and ".." not in rel_path:
             full_path = os.path.join(media_root, rel_path)
             if os.path.isfile(full_path):
                 os.remove(full_path)
+                deleted = True
                 messages.success(request, f"Usunięto plik: {rel_path}")
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"ok": deleted})
         return redirect("cms_media_library")
 
     return render(

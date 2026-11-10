@@ -48,7 +48,7 @@
                 <h2 class="site-footer__heading">Nasza oferta</h2>
                 <ul class="site-footer__links">
                     {% for group in footer_product_groups %}
-                    <li><a href="/produkty/{{ group.slug }}/">{{ group.title }}</a></li>
+                    <li><a href="{{ group.href|default:'/produkty/' }}">{{ group.title }}</a></li>
                     {% endfor %}
                 </ul>
             </div>

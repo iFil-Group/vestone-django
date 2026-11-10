@@ -13,7 +13,7 @@
         <ul class="home-products__grid">
             {% for group in product_groups %}
             <li>
-                <a href="/produkty/{{ group.slug }}/" class="home-product-card">
+                <a href="{{ group.href|default:'/produkty/' }}" class="home-product-card">
                     <span class="home-product-card__media">
                         <img src="{{ group.image|default:placeholder_img }}" alt="" loading="lazy" width="400" height="300">
                     </span>

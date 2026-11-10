@@ -35,7 +35,7 @@
 <section class="cms-section">
     <div class="cms-toolbar">
         <h2 class="cms-section__title">Strona główna — bloki treści</h2>
-        <p class="cms-section__help">Kolejność na stronie głównej — strzałkami. Nieaktywne bloki nie są widoczne na stronie.</p>
+        <p class="cms-section__help">Nowy blok z grupy „Strona główna” pojawia się jako sekcja na stronie głównej, nie jako osobny adres. Kolejność — strzałkami. Nieaktywne bloki nie są widoczne.</p>
         <a href="{% url 'cms_page_block_add' %}" class="cms-btn cms-btn--ghost">Dodaj blok</a>
     </div>
     <div class="cms-table-wrap">
@@ -67,7 +67,8 @@
 
 <section class="cms-section">
     <div class="cms-toolbar">
-        <h2 class="cms-section__title">O nas — podstrony</h2>
+        <h2 class="cms-section__title">O nas — bloki treści</h2>
+        <p class="cms-section__help">Nowy blok pojawia się jako kolejna sekcja na stronie O nas. Nie tworzy osobnej podstrony w menu. Osobne adresy: Dla mediów, Warunki gwarancji, Praca i kariera. Nieaktywny blok nie wyświetla się. Bloki kariery (intro, podziękowanie) nie wchodzą w treść O nas.</p>
         <a href="{% url 'cms_jobs' %}" class="cms-btn cms-btn--ghost">Oferty pracy</a>
         <a href="{% url 'cms_page_block_add' %}" class="cms-btn cms-btn--ghost">Dodaj blok</a>
     </div>

@@ -87,5 +87,10 @@ urlpatterns = [
         views.delete_attribute_option,
         name="cms_attribute_option_delete",
     ),
+    path(
+        "ifil-log/panel/atrybuty/<int:pk>/usun/",
+        views.delete_attribute,
+        name="cms_attribute_delete",
+    ),
     path("ifil-log/panel/usun/<slug:model_name>/<int:pk>/", views.delete_object, name="cms_delete"),
 ]

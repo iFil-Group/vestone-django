@@ -1,7 +1,8 @@
 {% extends "cms/base_panel.html" %}
+{% load static %}
 
 {% block panel_content %}
-<section class="cms-section cms-media-library">
+<section class="cms-section cms-media-library" data-media-library>
     <div class="cms-toolbar cms-toolbar--split">
         <div>
             <h2 class="cms-section__title">Biblioteka plików</h2>
@@ -9,12 +10,18 @@
                 Pliki wgrane na serwer ({{ files|length }}). Usunięcie kasuje plik z dysku — upewnij się, że nie jest używany w CMS.
             </p>
         </div>
+        {% if files %}
+        <label class="cms-field cms-media-library__search">
+            <span class="visually-hidden">Szukaj zdjęcia po nazwie</span>
+            <input type="search" class="cms-input" data-media-search placeholder="Szukaj po nazwie…" autocomplete="off">
+        </label>
+        {% endif %}
     </div>
 
     {% if files %}
-    <ul class="cms-media-library__grid">
+    <ul class="cms-media-library__grid" data-media-grid>
         {% for file in files %}
-        <li class="cms-media-library__card">
+        <li class="cms-media-library__card" data-media-card data-media-name="{{ file.basename }} {{ file.path }}">
             <a href="{{ file.url }}" class="cms-media-library__preview cms-media-library__preview--{{ file.kind }}" target="_blank" rel="noopener" title="Otwórz {{ file.basename }}">
                 {% if file.kind == "image" %}
                 <img src="{{ file.url }}" alt="" loading="lazy" decoding="async">
@@ -32,7 +39,7 @@
                 <p class="cms-media-library__path">{{ file.path }}</p>
                 <div class="cms-media-library__footer">
                     <span class="cms-media-library__size">{{ file.size|filesizeformat }}</span>
-                    <form method="post" class="cms-row-action-form" onsubmit="return confirm('Usunąć ten plik z serwera?');">
+                    <form method="post" class="cms-row-action-form" data-media-delete>
                         {% csrf_token %}
                         <input type="hidden" name="path" value="{{ file.path }}">
                         <button type="submit" class="cms-btn cms-btn--ghost cms-btn--danger cms-btn--small">Usuń</button>
@@ -46,4 +53,8 @@
     <p class="cms-table__empty">Brak plików w bibliotece.</p>
     {% endif %}
 </section>
+{% endblock %}
+
+{% block panel_scripts %}
+<script src="{% static 'theme/js/cms-media-library.js' %}?v=20261110a" defer></script>
 {% endblock %}

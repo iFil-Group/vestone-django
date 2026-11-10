@@ -148,6 +148,14 @@ def product_category(request, category_slug):
     if category is None:
         raise Http404
 
+    products = category_products(category_slug)
+    if len(products) == 1:
+        return redirect(
+            "product_detail",
+            category_slug=category_slug,
+            product_slug=products[0]["slug"],
+        )
+
     return render(
         request,
         "website/product_category.html",
@@ -155,7 +163,7 @@ def product_category(request, category_slug):
             "page_title": category["title"],
             "page_heading": category["title"],
             "category": category,
-            "products": category_products(category_slug),
+            "products": products,
             "product_filters": get_product_filters(category_slug),
             "placeholder_img": get_placeholder(),
         },
@@ -213,6 +221,7 @@ def product_detail(request, category_slug, product_slug):
         {
             "page_title": product["title"],
             "page_heading": product["title"],
+            "page_lead": product.get("subtitle") or "",
             "category": category,
             "product": product,
             "related_products": related,
@@ -234,7 +243,7 @@ def product_detail(request, category_slug, product_slug):
 
 
 def surfaces(request):
-    from cms.services import get_placeholder, get_surface_filter_options, get_surface_groups
+    from cms.services import get_placeholder, get_surface_colors
 
     return render(
         request,
@@ -243,8 +252,27 @@ def surfaces(request):
             "page_title": "Barwy i powierzchnie",
             "page_heading": "Barwy i powierzchnie",
             "placeholder_img": get_placeholder(),
-            "surface_groups": get_surface_groups(),
-            "surface_filters": get_surface_filter_options(),
+            "surface_colors": get_surface_colors(),
+        },
+    )
+
+
+def surface_color(request, slug):
+    from django.http import Http404
+
+    from cms.services import get_placeholder, get_surface_color
+
+    color = get_surface_color(slug)
+    if color is None:
+        raise Http404
+    return render(
+        request,
+        "website/surface_color.html",
+        {
+            "page_title": color["title"],
+            "page_heading": color["title"],
+            "placeholder_img": get_placeholder(),
+            "surface_color": color,
         },
     )
 
@@ -336,7 +364,12 @@ def downloads(request):
 def about_company(request):
     from cms.models import ContentBlock
 
-    reserved = {"page-careers-intro", "page-warranty", "page-media"}
+    reserved = {
+        "page-careers-intro",
+        "page-careers-thanks",
+        "page-warranty",
+        "page-media",
+    }
     sections = (
         ContentBlock.objects.filter(group=ContentBlock.GROUP_ABOUT, is_active=True)
         .exclude(key__in=reserved)
@@ -401,10 +434,7 @@ def careers(request):
     from cms.services import get_content_block, get_job_openings
     from website.forms import JobApplicationForm
 
-    intro = get_content_block(
-        "page-careers-intro",
-        {"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."},
-    )
+    intro = get_content_block("page-careers-intro", {})
     careers_thanks = get_content_block("page-careers-thanks", {})
     application_sent = False
     application_job_id = request.POST.get("job", "") if request.method == "POST" else ""

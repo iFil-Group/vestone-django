@@ -195,7 +195,7 @@ class ProductGallerySaveTests(TestCase):
         self.assertEqual(product.gallery.count(), 1)
         self.assertTrue(product.gallery.first().image)
 
-    def test_gallery_is_saved_when_pins_are_invalid(self):
+    def test_gallery_is_saved_when_empty_pins_are_skipped(self):
         from django.test import override_settings
 
         group = ProductGroup.objects.create(title="Kostka", slug="kostka-brukowa-test")
@@ -258,7 +258,8 @@ class ProductGallerySaveTests(TestCase):
             )
         product.refresh_from_db()
         self.assertEqual(product.gallery.count(), 1)
-        self.assertContains(response, "Zdjęcia zostały zapisane")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(product.pins.count(), 0)
 
 
 class HeroSlideDisplayTests(TestCase):

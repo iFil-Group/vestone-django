@@ -675,15 +675,13 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(115deg, transparent 55%, rgba(225, 25, 70, 0.18) 55%),
-        repeating-linear-gradient(
-            -12deg,
-            transparent,
-            transparent 18px,
-            rgba(255, 255, 255, 0.03) 18px,
-            rgba(255, 255, 255, 0.03) 19px
-        );
+    background: repeating-linear-gradient(
+        -12deg,
+        transparent,
+        transparent 18px,
+        rgba(255, 255, 255, 0.03) 18px,
+        rgba(255, 255, 255, 0.03) 19px
+    );
     pointer-events: none;
 }
 
