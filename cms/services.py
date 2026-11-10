@@ -977,32 +977,65 @@ def get_surface_groups():
     return result
 
 
+def _surface_color_key(title):
+    text = strip_tags(title or "").strip()
+    if not text:
+        return ""
+    parts = text.split()
+    candidate = parts[-1] if len(parts) > 1 else text
+    return slugify(candidate)
+
+
+def _surface_color_label(title):
+    text = strip_tags(title or "").strip()
+    if not text:
+        return ""
+    parts = text.split()
+    return parts[-1] if len(parts) > 1 else text
+
+
 def get_surface_colors():
-    from cms.models import SurfaceItem
+    from cms.models import ProductAttributeOption, SurfaceItem
 
     placeholder = get_placeholder()
+    grouped = {}
+
+    def add_color(key, title, image, sort_order):
+        if not key:
+            return
+        current = grouped.get(key)
+        if current is None:
+            grouped[key] = {
+                "slug": key,
+                "title": title,
+                "image": image or placeholder,
+                "sort_order": sort_order,
+            }
+            return
+        if (not current.get("image") or current["image"] == placeholder) and image:
+            current["image"] = image
+        if current["sort_order"] > sort_order:
+            current["sort_order"] = sort_order
+
     items = (
         SurfaceItem.objects.filter(is_active=True, surface_type__is_active=True)
         .select_related("surface_type")
         .order_by("sort_order", "title")
     )
-    grouped = {}
     for item in items:
-        key = slugify(item.title)
-        if not key:
+        add_color(
+            _surface_color_key(item.title),
+            _surface_color_label(item.title),
+            _image_url(item.image, ""),
+            item.sort_order,
+        )
+
+    options = ProductAttributeOption.objects.select_related("attribute")
+    for option in options:
+        if not _is_color_label(option.attribute.name, option.attribute.slug):
             continue
-        current = grouped.get(key)
-        image = _image_url(item.image, "")
-        if current is None:
-            grouped[key] = {
-                "slug": key,
-                "title": item.title,
-                "image": image or placeholder,
-                "sort_order": item.sort_order,
-            }
-            continue
-        if (not current.get("image") or current["image"] == placeholder) and image:
-            current["image"] = image
+        label = strip_tags(option.value or "").strip()
+        add_color(_surface_color_key(label), _surface_color_label(label) or label, "", 1000)
     return sorted(grouped.values(), key=lambda item: (item["sort_order"], item["title"].lower()))
 
 
@@ -1015,11 +1048,15 @@ def get_surface_color(slug):
         .select_related("surface_type")
         .order_by("sort_order", "title")
     )
-    matching_items = [item for item in items if slugify(item.title) == slug]
-    if not matching_items:
+    matching_items = [item for item in items if _surface_color_key(item.title) == slug]
+    colors = get_surface_colors()
+    color_meta = next((item for item in colors if item["slug"] == slug), None)
+    if color_meta is None and not matching_items:
         return None
 
-    titles = {strip_tags(item.title or "").strip().lower() for item in matching_items}
+    titles = {
+        strip_tags(item.title or "").strip().lower() for item in matching_items
+    }
     products = (
         Product.objects.filter(is_active=True)
         .select_related("group")
@@ -1041,12 +1078,17 @@ def get_surface_color(slug):
             slug_norm = (attribute.slug or "").lower()
             if "powierzchn" in normalized or "powierzchn" in slug_norm or "rodzaj" in normalized:
                 surface_names.append(value)
-        if not any(
-            name in titles or slugify(name) == slug for name in color_names
-        ):
+        product_matches_color = any(_surface_color_key(name) == slug for name in color_names)
+        item_matches_product = any(
+            slugify(product.title) in slugify(item.title) for item in matching_items
+        )
+        if not product_matches_color and not item_matches_product:
             continue
-        texture_item = matching_items[0]
+        texture_item = matching_items[0] if matching_items else None
         for item in matching_items:
+            if slugify(product.title) in slugify(item.title):
+                texture_item = item
+                break
             type_name = strip_tags(item.surface_type.name or "").strip().lower()
             if any(type_name == name or type_name in name or name in type_name for name in surface_names):
                 texture_item = item
@@ -1054,27 +1096,39 @@ def get_surface_color(slug):
         closeup = ""
         for color in product.colors.all():
             caption = color.caption or ""
-            if slugify(caption) == slug or strip_tags(caption).strip().lower() in titles:
+            if _surface_color_key(caption) == slug or strip_tags(caption).strip().lower() in titles:
                 closeup = _media_url(color.image) or ""
                 if closeup:
                     break
-        surface_type = texture_item.surface_type
-        icon = _media_url(getattr(surface_type, "icon", None)) or _media_url(surface_type.image)
+        surface_type = texture_item.surface_type if texture_item else None
+        icon = ""
+        surface_name = ""
+        texture = placeholder
+        if surface_type:
+            icon = _media_url(getattr(surface_type, "icon", None)) or _media_url(surface_type.image)
+            surface_name = surface_type.name
+            texture = _image_url(texture_item.image, placeholder)
         entries.append(
             {
                 "title": product.title,
                 "group_title": product.group.title,
                 "label": f"{product.group.title} {product.title}".strip(),
                 "url": f"/produkty/{product.group.slug}/{product.slug}/",
-                "image": closeup or _image_url(texture_item.image, placeholder),
-                "surface_name": surface_type.name,
+                "image": closeup or texture,
+                "surface_name": surface_name,
                 "surface_icon": icon,
             }
         )
+    title = (color_meta or {}).get("title") or (
+        _surface_color_label(matching_items[0].title) if matching_items else slug
+    )
+    image = (color_meta or {}).get("image") or (
+        _image_url(matching_items[0].image, placeholder) if matching_items else placeholder
+    )
     return {
         "slug": slug,
-        "title": matching_items[0].title,
-        "image": _image_url(matching_items[0].image, placeholder),
+        "title": title,
+        "image": image,
         "products": entries,
     }
 
