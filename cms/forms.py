@@ -29,6 +29,7 @@ from .models import (
     SalesPoint,
     SiteSettings,
     SurfaceCategory,
+    SurfaceColorEntry,
     SurfaceItem,
     SurfaceType,
     Tip,
@@ -960,10 +961,52 @@ class SurfaceItemForm(StyledModelForm):
         self.fields["surface_type"].label = "Grupa produktowa / rodzaj powierzchni"
         self.fields["surface_type"].queryset = SurfaceType.objects.order_by("sort_order", "name")
         self.fields["title"].help_text = (
-            "Nazwa koloru, np. agat. Produkty z atrybutem KOLOR o tej samej nazwie pojawią się po kliknięciu koloru."
+            "Nazwa koloru, np. onyx. Pozycje na stronie koloru dodajesz ręcznie poniżej — nic nie zaciąga się z produktów."
         )
-        self.fields["image"].help_text = "Zdjęcie faktury koloru — małe okno na liście i powiększenie przy produktach."
+        self.fields["image"].help_text = "Zdjęcie faktury koloru — miniatura na liście barw."
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+
+
+class SurfaceColorEntryForm(StyledModelForm):
+    class Meta:
+        model = SurfaceColorEntry
+        fields = ("image", "name", "surface_type", "sort_order")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["image"].widget.attrs.setdefault("accept", "image/*")
+        self.fields["sort_order"].widget = forms.HiddenInput()
+        self.fields["name"].required = False
+        self.fields["surface_type"].required = False
+        self.fields["surface_type"].queryset = SurfaceType.objects.order_by("sort_order", "name")
+        self.fields["surface_type"].label = "Grupa produktowa / rodzaj powierzchni"
+        self.fields["surface_type"].empty_label = "— wybierz —"
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("DELETE"):
+            return cleaned
+        name = (cleaned.get("name") or "").strip()
+        image = cleaned.get("image")
+        surface_type = cleaned.get("surface_type")
+        has_existing_image = bool(self.instance.pk and self.instance.image)
+        has_image = bool(image) and image is not False
+        if not name and not has_image and not has_existing_image and not surface_type:
+            cleaned["DELETE"] = True
+            return cleaned
+        if not name:
+            self.add_error("name", "Podaj nazwę pozycji.")
+        return cleaned
+
+
+SurfaceColorEntryFormSet = inlineformset_factory(
+    SurfaceItem,
+    SurfaceColorEntry,
+    form=SurfaceColorEntryForm,
+    fields=("image", "name", "surface_type", "sort_order"),
+    extra=1,
+    can_delete=True,
+)
 
 
 class SurfaceCategoryForm(StyledModelForm):
@@ -983,7 +1026,7 @@ class SurfaceTypeForm(StyledModelForm):
         self.fields["image"].help_text = "Opcjonalne zdjęcie grupy w panelu."
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["icon"].help_text = (
-            "Mała ikona rodzaju powierzchni przy produktach po kliknięciu koloru. "
+            "Mała ikona rodzaju powierzchni przy ręcznych pozycjach na stronie koloru. "
             "Możesz wgrać TOP ARTE, AVANGARDE, COLORATTO, DIAMENTI, MAŁA ARCHITEKTURA."
         )
         self.fields["icon"].widget.attrs.setdefault("accept", "image/*")

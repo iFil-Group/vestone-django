@@ -1611,14 +1611,11 @@
 }
 
 .surface-color-product__name {
+    margin: 0;
     font-size: 0.98rem;
     font-weight: 700;
     text-decoration: none;
     color: var(--vestone-gray-deep, #374650);
-}
-
-.surface-color-product__name:hover {
-    color: var(--vestone-red, #e11946);
 }
 
 .surface-color-product__type {

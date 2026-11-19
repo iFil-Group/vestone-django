@@ -720,7 +720,7 @@ class SurfaceType(models.Model):
         "Ikona rodzaju powierzchni",
         upload_to="cms/surfaces/icons/",
         blank=True,
-        help_text="Mała ikona przy produktach na stronie koloru (np. TOP ARTE, AVANGARDE).",
+        help_text="Mała ikona przy ręcznych pozycjach na stronie koloru (np. TOP ARTE, AVANGARDE).",
     )
     sort_order = models.PositiveIntegerField("Kolejność", default=0)
     is_active = models.BooleanField("Aktywna", default=True)
@@ -774,6 +774,36 @@ class SurfaceItem(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+
+class SurfaceColorEntry(models.Model):
+    """Ręczna pozycja na stronie konkretnej barwy (zdjęcie, nazwa, grupa)."""
+
+    surface_item = models.ForeignKey(
+        SurfaceItem,
+        on_delete=models.CASCADE,
+        related_name="entries",
+        verbose_name="Barwa / powierzchnia",
+    )
+    image = models.ImageField("Zdjęcie", upload_to="cms/surfaces/entries/", blank=True)
+    name = models.CharField("Nazwa", max_length=200)
+    surface_type = models.ForeignKey(
+        SurfaceType,
+        on_delete=models.SET_NULL,
+        related_name="color_entries",
+        verbose_name="Grupa produktowa / rodzaj powierzchni",
+        blank=True,
+        null=True,
+    )
+    sort_order = models.PositiveIntegerField("Kolejność", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Pozycja barwy"
+        verbose_name_plural = "Pozycje barwy"
+
+    def __str__(self):
+        return self.name or f"Pozycja #{self.pk}"
 
 
 class SurfaceCategory(models.Model):

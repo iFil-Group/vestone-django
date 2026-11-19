@@ -25,6 +25,7 @@ from .models import (
     Review,
     SiteSettings,
     SurfaceItem,
+    SurfaceColorEntry,
     SurfaceCategory,
     SurfaceType,
     Tip,
@@ -54,6 +55,7 @@ admin.site.register(ProductColorImage)
 admin.site.register(ProductTechPack)
 admin.site.register(ProductTechRow)
 admin.site.register(SurfaceItem)
+admin.site.register(SurfaceColorEntry)
 admin.site.register(SurfaceCategory)
 admin.site.register(SurfaceType)
 admin.site.register(Tip)

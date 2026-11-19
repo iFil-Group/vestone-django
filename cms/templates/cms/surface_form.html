@@ -1,0 +1,48 @@
+{% extends "cms/base_panel.html" %}
+{% load static %}
+
+{% block panel_content %}
+<div class="cms-toolbar">
+    <a href="{{ back_url }}" class="cms-btn cms-btn--ghost">Wróć</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="cms-form">
+    {% csrf_token %}
+    {% if form.errors or entry_formset.non_form_errors or entry_formset.is_bound and not entry_formset.is_valid %}
+    <div class="cms-form-errors" role="alert">
+        <p class="cms-form-errors__title">Formularz zawiera błędy — popraw zaznaczone pola i zapisz ponownie.</p>
+        {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+        {% endif %}
+        {% for error in entry_formset.non_form_errors %}<p class="cms-field__error">{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% for field in form %}
+    {% include "cms/partials/field.html" with field=field %}
+    {% endfor %}
+
+    <section class="cms-card cms-card__subsection" data-gallery-formset data-formset-prefix="entries">
+        <h2 class="cms-section__title">Pozycje na stronie koloru</h2>
+        <p class="cms-section__help">
+            Te pozycje widać po wejściu w barwę na stronie (zdjęcie, nazwa, grupa produktowa / rodzaj powierzchni).
+            Nic nie zaciąga się automatycznie z produktów — dodaj tylko wybrane opcje.
+        </p>
+        {{ entry_formset.management_form }}
+        <div data-gallery-rows>
+            {% for entry_form in entry_formset %}
+            {% include "cms/partials/formset_row.html" with form=entry_form %}
+            {% endfor %}
+        </div>
+        <template data-gallery-template>
+            {% include "cms/partials/formset_row.html" with form=entry_formset.empty_form %}
+        </template>
+        <button type="button" class="cms-btn cms-btn--ghost" data-gallery-add>Dodaj pozycję</button>
+    </section>
+    <button type="submit" class="cms-btn cms-btn--primary">Zapisz</button>
+</form>
+{% endblock %}
+
+{% block panel_scripts %}
+<script src="{% static 'theme/js/cms-gallery-formset.js' %}?v=20261119a" defer></script>
+{% endblock %}

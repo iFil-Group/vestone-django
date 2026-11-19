@@ -33,6 +33,7 @@ from .forms import (
     SiteSettingsForm,
     SalesPointForm,
     SurfaceCategoryForm,
+    SurfaceColorEntryFormSet,
     SurfaceItemForm,
     SurfaceTypeForm,
     TipForm,
@@ -545,17 +546,30 @@ def surface_list(request):
 def surface_edit(request, pk=None):
     instance = get_object_or_404(SurfaceItem, pk=pk) if pk else None
     form = SurfaceItemForm(request.POST or None, request.FILES or None, instance=instance)
-    if request.method == "POST" and form.is_valid():
-        form.save()
+    entries_bound = request.method == "POST" and "entries-TOTAL_FORMS" in request.POST
+    entry_formset = SurfaceColorEntryFormSet(
+        request.POST if entries_bound else None,
+        request.FILES if entries_bound else None,
+        instance=instance,
+        prefix="entries",
+    )
+    if request.method == "POST" and form.is_valid() and (
+        not entries_bound or entry_formset.is_valid()
+    ):
+        surface = form.save()
+        if entries_bound:
+            entry_formset.instance = surface
+            entry_formset.save()
         messages.success(request, "Barwa / powierzchnia została zapisana.")
         return redirect("cms_surfaces")
     return render(
         request,
-        "cms/form.html",
+        "cms/surface_form.html",
         _panel_context(
             "surfaces",
             "Edycja barwy / powierzchni" if instance else "Nowa barwa / powierzchnia",
             form=form,
+            entry_formset=entry_formset,
             back_url=reverse("cms_surfaces"),
         ),
     )

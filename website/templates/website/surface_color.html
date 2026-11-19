@@ -4,7 +4,7 @@
 {% block title %}{{ surface_color.title }} — Barwy i powierzchnie — Vestone{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261110a">
+<link rel="stylesheet" href="{% static 'theme/css/products.css' %}?v=20261119a">
 {% endblock %}
 
 {% block main %}
@@ -43,7 +43,7 @@
                     >
                 </button>
                 <div class="surface-color-product__meta">
-                    <a class="surface-color-product__name" href="{{ item.url }}">{{ item.label }}</a>
+                    <p class="surface-color-product__name">{{ item.label }}</p>
                     {% if item.surface_icon or item.surface_name %}
                     <p class="surface-color-product__type">
                         {% if item.surface_icon %}
@@ -57,7 +57,7 @@
             {% endfor %}
         </ul>
         {% else %}
-        <p class="surface-page__empty">Brak produktów w tym kolorze.</p>
+        <p class="surface-page__empty">Brak pozycji w tym kolorze.</p>
         {% endif %}
     </div>
 

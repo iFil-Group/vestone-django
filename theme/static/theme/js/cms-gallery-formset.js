@@ -5,8 +5,22 @@
     var rows = root.querySelector("[data-gallery-rows]");
     var template = root.querySelector("[data-gallery-template]");
     var add = root.querySelector("[data-gallery-add]");
-    var total = document.getElementById("id_gallery-TOTAL_FORMS");
+    var prefix = root.getAttribute("data-formset-prefix") || "gallery";
+    var total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
     if (!rows || !template || !add || !total) return;
+
+    function visibleRows() {
+        return Array.prototype.filter.call(rows.querySelectorAll("[data-cms-formset-row]"), function (row) {
+            return !row.hidden && !row.classList.contains("is-removed");
+        });
+    }
+
+    function syncSortOrder() {
+        visibleRows().forEach(function (row, index) {
+            var sortInput = row.querySelector('input[name$="-sort_order"]');
+            if (sortInput) sortInput.value = String(index);
+        });
+    }
 
     add.addEventListener("click", function () {
         var index = parseInt(total.value, 10);
@@ -18,5 +32,11 @@
             if (window.cmsBindFileField) window.cmsBindFileField(field);
         });
         if (window.cmsBindFormsetRow) window.cmsBindFormsetRow(row);
+        syncSortOrder();
     });
+
+    var form = root.closest("form");
+    if (form) {
+        form.addEventListener("submit", syncSortOrder);
+    }
 })();

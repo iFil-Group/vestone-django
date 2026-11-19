@@ -14,6 +14,9 @@ from cms.models import (
     JobOpening,
     LegalDocument,
     Product,
+    ProductAttribute,
+    ProductAttributeAssignment,
+    ProductAttributeOption,
     ProductColorImage,
     ProductGalleryImage,
     ProductPackshotImage,
@@ -26,6 +29,7 @@ from cms.models import (
     TipGalleryImage,
     DownloadCategory,
     DownloadItem,
+    SurfaceColorEntry,
     SurfaceItem,
     SurfaceType,
 )
@@ -36,6 +40,7 @@ from cms.services import (
     get_promotion_slides,
     get_related_products,
     resolve_product,
+    get_surface_color,
     get_surface_groups,
     get_tip,
 )
@@ -233,6 +238,35 @@ class SurfaceCatalogTests(TestCase):
         top = next(group for group in groups if group["slug"] == "top-arte")
         self.assertEqual(top["name"], "TOP ARTE")
         self.assertEqual([item["title"] for item in top["items"]], ["Opal"])
+
+    def test_color_page_uses_manual_entries_not_products(self):
+        surface_type = SurfaceType.objects.get(slug="top-arte")
+        item = SurfaceItem.objects.create(
+            title="Onyx",
+            slug="onyx",
+            surface_type=surface_type,
+        )
+        group = ProductGroup.objects.create(title="Płyty", slug="plyty-onyx")
+        product = Product.objects.create(
+            group=group, title="Produkt Onyx", slug="produkt-onyx", is_active=True
+        )
+        attribute = ProductAttribute.objects.create(name="KOLOR", slug="kolor")
+        option = ProductAttributeOption.objects.create(attribute=attribute, value="Onyx")
+        ProductAttributeAssignment.objects.create(product=product, option=option)
+
+        empty = get_surface_color("onyx")
+        self.assertEqual(empty["products"], [])
+
+        SurfaceColorEntry.objects.create(
+            surface_item=item,
+            name="Płyta tarasowa",
+            surface_type=surface_type,
+            sort_order=0,
+        )
+        filled = get_surface_color("onyx")
+        self.assertEqual([entry["label"] for entry in filled["products"]], ["Płyta tarasowa"])
+        self.assertEqual(filled["products"][0]["surface_name"], "TOP ARTE")
+        self.assertNotIn("url", filled["products"][0])
 
 
 class ContentModuleTests(TestCase):
