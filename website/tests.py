@@ -260,13 +260,14 @@ class SurfaceCatalogTests(TestCase):
         SurfaceColorEntry.objects.create(
             surface_item=item,
             name="Płyta tarasowa",
+            url="/produkty/plyty-tarasowe/plyta/",
             surface_type=surface_type,
             sort_order=0,
         )
         filled = get_surface_color("onyx")
         self.assertEqual([entry["label"] for entry in filled["products"]], ["Płyta tarasowa"])
         self.assertEqual(filled["products"][0]["surface_name"], "TOP ARTE")
-        self.assertNotIn("url", filled["products"][0])
+        self.assertEqual(filled["products"][0]["url"], "/produkty/plyty-tarasowe/plyta/")
 
 
 class ContentModuleTests(TestCase):

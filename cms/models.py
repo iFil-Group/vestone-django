@@ -787,6 +787,12 @@ class SurfaceColorEntry(models.Model):
     )
     image = models.ImageField("Zdjęcie", upload_to="cms/surfaces/entries/", blank=True)
     name = models.CharField("Nazwa", max_length=200)
+    url = models.CharField(
+        "Link do produktu",
+        max_length=500,
+        blank=True,
+        help_text="Adres strony produktu, np. /produkty/plyty-tarasowe/cortina/. Kliknięcie nazwy otworzy ten link.",
+    )
     surface_type = models.ForeignKey(
         SurfaceType,
         on_delete=models.SET_NULL,

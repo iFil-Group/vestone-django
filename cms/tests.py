@@ -14,6 +14,7 @@ from .forms import (
     ProductGalleryFormSet,
     ProductPinFormSet,
     PromotionSlideForm,
+    SurfaceColorEntryFormSet,
 )
 from .models import (
     FloatingPromotion,
@@ -23,6 +24,9 @@ from .models import (
     ProductGroup,
     ProductPin,
     PromotionSlide,
+    SurfaceColorEntry,
+    SurfaceItem,
+    SurfaceType,
     Tip,
 )
 from .services import get_hero_slides, get_promotion_slides, promotion_text_lines, unseen_floating_promotions
@@ -394,6 +398,44 @@ class FloatingPromotionClearTests(TestCase):
         response = self.client.get(reverse("cms_promotions"))
         self.assertContains(response, "Wyczyść")
         self.assertContains(response, reverse("cms_floating_promotion_clear", args=[self.promo.pk]))
+
+
+class SurfaceColorEntryFormSetTests(TestCase):
+    def test_resave_does_not_duplicate_empty_or_copied_extra_row(self):
+        surface_type = SurfaceType.objects.get(slug="top-arte")
+        item = SurfaceItem.objects.create(
+            title="CORTINA topaz",
+            slug="cortina-topaz-test",
+            surface_type=surface_type,
+        )
+        entry = SurfaceColorEntry.objects.create(
+            surface_item=item,
+            name="kostka dekoracyjna CORTINA",
+            surface_type=surface_type,
+            sort_order=0,
+        )
+        data = {
+            "entries-TOTAL_FORMS": "2",
+            "entries-INITIAL_FORMS": "1",
+            "entries-MIN_NUM_FORMS": "0",
+            "entries-MAX_NUM_FORMS": "1000",
+            "entries-0-id": str(entry.pk),
+            "entries-0-name": "kostka dekoracyjna CORTINA",
+            "entries-0-url": "/produkty/kostka-brukowa/cortina/",
+            "entries-0-surface_type": str(surface_type.pk),
+            "entries-0-sort_order": "0",
+            "entries-1-id": "",
+            "entries-1-name": "kostka dekoracyjna CORTINA",
+            "entries-1-url": "",
+            "entries-1-surface_type": str(surface_type.pk),
+            "entries-1-sort_order": "1",
+        }
+        formset = SurfaceColorEntryFormSet(data, instance=item, prefix="entries")
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        self.assertEqual(item.entries.count(), 1)
+        entry.refresh_from_db()
+        self.assertEqual(entry.url, "/produkty/kostka-brukowa/cortina/")
 
 
 class SeedTipsTests(TestCase):

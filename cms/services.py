@@ -1058,6 +1058,7 @@ def get_surface_color(slug):
             entries.append(
                 {
                     "label": entry.name,
+                    "url": (entry.url or "").strip(),
                     "image": _image_url(entry.image, placeholder),
                     "surface_name": surface_name,
                     "surface_icon": icon,

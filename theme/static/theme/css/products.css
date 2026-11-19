@@ -1618,6 +1618,10 @@
     color: var(--vestone-gray-deep, #374650);
 }
 
+a.surface-color-product__name:hover {
+    color: var(--vestone-red, #e11946);
+}
+
 .surface-color-product__type {
     display: inline-flex;
     align-items: center;

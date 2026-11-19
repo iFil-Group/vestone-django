@@ -970,28 +970,40 @@ class SurfaceItemForm(StyledModelForm):
 class SurfaceColorEntryForm(StyledModelForm):
     class Meta:
         model = SurfaceColorEntry
-        fields = ("image", "name", "surface_type", "sort_order")
+        fields = ("image", "name", "url", "surface_type", "sort_order")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["image"].widget.attrs.setdefault("accept", "image/*")
         self.fields["sort_order"].widget = forms.HiddenInput()
         self.fields["name"].required = False
+        self.fields["url"].required = False
+        self.fields["url"].label = "Link do produktu"
         self.fields["surface_type"].required = False
         self.fields["surface_type"].queryset = SurfaceType.objects.order_by("sort_order", "name")
         self.fields["surface_type"].label = "Grupa produktowa / rodzaj powierzchni"
         self.fields["surface_type"].empty_label = "— wybierz —"
+
+    def clean_url(self):
+        url = (self.cleaned_data.get("url") or "").strip()
+        if not url:
+            return ""
+        if url.startswith(("http://", "https://", "/")):
+            return url
+        raise forms.ValidationError("Podaj adres zaczynający się od / albo https://")
 
     def clean(self):
         cleaned = super().clean()
         if cleaned.get("DELETE"):
             return cleaned
         name = (cleaned.get("name") or "").strip()
+        cleaned["name"] = name
         image = cleaned.get("image")
+        url = (cleaned.get("url") or "").strip()
         surface_type = cleaned.get("surface_type")
         has_existing_image = bool(self.instance.pk and self.instance.image)
         has_image = bool(image) and image is not False
-        if not name and not has_image and not has_existing_image and not surface_type:
+        if not name and not has_image and not has_existing_image and not url and not surface_type:
             cleaned["DELETE"] = True
             return cleaned
         if not name:
@@ -999,12 +1011,39 @@ class SurfaceColorEntryForm(StyledModelForm):
         return cleaned
 
 
+class BaseSurfaceColorEntryFormSet(forms.BaseInlineFormSet):
+    def _should_delete_form(self, form):
+        if super()._should_delete_form(form):
+            return True
+        if not getattr(form, "cleaned_data", None):
+            return False
+        name = (form.cleaned_data.get("name") or "").strip()
+        return not name
+
+    def save(self, commit=True):
+        seen = set()
+        for form in self.forms:
+            data = getattr(form, "cleaned_data", None)
+            if not data or self._should_delete_form(form):
+                continue
+            key = (
+                (data.get("name") or "").strip().lower(),
+                getattr(data.get("surface_type"), "pk", data.get("surface_type")),
+            )
+            if key in seen and not form.instance.pk:
+                form.cleaned_data["DELETE"] = True
+                continue
+            seen.add(key)
+        return super().save(commit=commit)
+
+
 SurfaceColorEntryFormSet = inlineformset_factory(
     SurfaceItem,
     SurfaceColorEntry,
     form=SurfaceColorEntryForm,
-    fields=("image", "name", "surface_type", "sort_order"),
-    extra=1,
+    formset=BaseSurfaceColorEntryFormSet,
+    fields=("image", "name", "url", "surface_type", "sort_order"),
+    extra=0,
     can_delete=True,
 )
 
